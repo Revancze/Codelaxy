@@ -14,13 +14,47 @@ public sealed class GitProcessRunner
         _gitExecutable = gitExecutable;
     }
 
-    public async Task<GitCommandResult> RunAsync(
+    public Task<GitCommandResult> RunAsync(
         string workingDirectory,
         IEnumerable<string> arguments,
         CancellationToken cancellationToken = default)
     {
+        return RunCoreAsync(
+            workingDirectory,
+            arguments,
+            timeout: null,
+            cancellationToken);
+    }
+
+    public Task<GitCommandResult> RunAsync(
+        string workingDirectory,
+        IEnumerable<string> arguments,
+        TimeSpan timeout,
+        CancellationToken cancellationToken = default)
+    {
+        if (timeout <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(timeout),
+                "Timeout must be greater than zero.");
+        }
+
+        return RunCoreAsync(
+            workingDirectory,
+            arguments,
+            timeout,
+            cancellationToken);
+    }
+
+    private async Task<GitCommandResult> RunCoreAsync(
+        string workingDirectory,
+        IEnumerable<string> arguments,
+        TimeSpan? timeout,
+        CancellationToken cancellationToken)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory);
         ArgumentNullException.ThrowIfNull(arguments);
+
         cancellationToken.ThrowIfCancellationRequested();
 
         var startInfo = new ProcessStartInfo
@@ -61,45 +95,85 @@ public sealed class GitProcessRunner
         }
 
         var standardOutputTask =
-    process.StandardOutput.ReadToEndAsync();
+            process.StandardOutput.ReadToEndAsync();
 
-var standardErrorTask =
-    process.StandardError.ReadToEndAsync();
+        var standardErrorTask =
+            process.StandardError.ReadToEndAsync();
 
-try
-{
-    await process.WaitForExitAsync(cancellationToken);
-}
-catch (OperationCanceledException)
-    when (cancellationToken.IsCancellationRequested)
-{
-    try
-    {
-        if (!process.HasExited)
+        using var timeoutCancellation =
+            timeout.HasValue
+                ? new CancellationTokenSource(timeout.Value)
+                : null;
+
+        using var waitCancellation =
+            timeoutCancellation is not null
+                ? CancellationTokenSource.CreateLinkedTokenSource(
+                    cancellationToken,
+                    timeoutCancellation.Token)
+                : null;
+
+        var waitToken =
+            waitCancellation?.Token ??
+            cancellationToken;
+
+        try
         {
-            process.Kill(entireProcessTree: true);
+            await process.WaitForExitAsync(waitToken);
         }
-    }
-    catch (InvalidOperationException)
-    {
-        // The process exited between HasExited and Kill.
-    }
+        catch (OperationCanceledException)
+            when (waitToken.IsCancellationRequested)
+        {
+            await TerminateProcessTreeAsync(process);
 
-    await process.WaitForExitAsync();
+            await Task.WhenAll(
+                standardOutputTask,
+                standardErrorTask);
 
-    await Task.WhenAll(
-        standardOutputTask,
-        standardErrorTask);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
 
-    throw;
-}
+            if (timeoutCancellation?.IsCancellationRequested == true)
+            {
+                return new GitCommandResult(
+                    process.ExitCode,
+                    await standardOutputTask,
+                    await standardErrorTask,
+                    GitCommandFailureKind.Timeout);
+            }
 
-        var standardOutput = await standardOutputTask;
-        var standardError = await standardErrorTask;
+            throw;
+        }
+
+        var standardOutput =
+            await standardOutputTask;
+
+        var standardError =
+            await standardErrorTask;
 
         return new GitCommandResult(
             process.ExitCode,
             standardOutput,
             standardError);
+    }
+
+    private static async Task TerminateProcessTreeAsync(
+        Process process)
+    {
+        try
+        {
+            if (!process.HasExited)
+            {
+                process.Kill(
+                    entireProcessTree: true);
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // The process exited between HasExited and Kill.
+        }
+
+        await process.WaitForExitAsync();
     }
 }

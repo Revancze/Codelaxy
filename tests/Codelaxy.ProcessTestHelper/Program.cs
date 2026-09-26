@@ -1,13 +1,19 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
 if (args.Length != 1)
 {
     return 2;
 }
 
+var pidFile = args[0];
+var temporaryPidFile = pidFile + ".tmp";
+
 await File.WriteAllTextAsync(
-    args[0],
+    temporaryPidFile,
     Environment.ProcessId.ToString());
+
+File.Move(
+    temporaryPidFile,
+    pidFile,
+    overwrite: true);
 
 await Task.Delay(Timeout.InfiniteTimeSpan);
 
