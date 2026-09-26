@@ -36,6 +36,38 @@ public sealed class GitRepositoryDiscovery
                 "The requested directory is not inside a Git repository.");
         }
 
+        var bareResult = await _runner.RunAsync(
+            startDirectory,
+            ["rev-parse", "--is-bare-repository"],
+            cancellationToken);
+
+        if (!bareResult.Succeeded)
+        {
+            return CreateFailure(bareResult);
+        }
+
+        if (string.Equals(
+                bareResult.StandardOutput.Trim(),
+                "true",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return new GitRepositoryDiscoveryResult(
+                null,
+                GitRepositoryDiscoveryFailureKind.BareRepository,
+                "The requested Git repository is bare and has no worktree.");
+        }
+
+        if (!string.Equals(
+                workTreeResult.StandardOutput.Trim(),
+                "true",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return new GitRepositoryDiscoveryResult(
+                null,
+                GitRepositoryDiscoveryFailureKind.NotRepository,
+                "The requested directory is not inside a Git worktree.");
+        }
+
         var topLevelResult = await _runner.RunAsync(
             startDirectory,
             ["rev-parse", "--show-toplevel"],

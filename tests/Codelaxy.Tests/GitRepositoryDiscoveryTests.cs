@@ -196,24 +196,62 @@ public class GitRepositoryDiscoveryTests
         }
     }
     [Fact]
-public async Task DiscoverAsync_ReportsNotRepositoryOutsideRepository()
+    public async Task DiscoverAsync_ReportsNotRepositoryOutsideRepository()
+    {
+        var runner = new GitProcessRunner();
+        var directoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            var discovery =
+                new GitRepositoryDiscovery(runner);
+
+            var result =
+                await discovery.DiscoverAsync(directoryPath);
+
+            Assert.False(result.Succeeded);
+            Assert.Null(result.Repository);
+
+            Assert.Equal(
+                GitRepositoryDiscoveryFailureKind.NotRepository,
+                result.FailureKind);
+
+            Assert.False(
+                string.IsNullOrWhiteSpace(result.Diagnostic));
+        }
+        finally
+        {
+            DeleteDirectory(directoryPath);
+        }
+    }
+
+    [Fact]
+public async Task DiscoverAsync_ReportsBareRepository()
 {
     var runner = new GitProcessRunner();
-    var directoryPath = CreateTemporaryDirectory();
+    var repositoryPath = CreateTemporaryDirectory();
 
     try
     {
+        var initResult = await runner.RunAsync(
+            repositoryPath,
+            ["init", "--bare"]);
+
+        Assert.True(
+            initResult.Succeeded,
+            initResult.StandardError);
+
         var discovery =
             new GitRepositoryDiscovery(runner);
 
         var result =
-            await discovery.DiscoverAsync(directoryPath);
+            await discovery.DiscoverAsync(repositoryPath);
 
         Assert.False(result.Succeeded);
         Assert.Null(result.Repository);
 
         Assert.Equal(
-            GitRepositoryDiscoveryFailureKind.NotRepository,
+            GitRepositoryDiscoveryFailureKind.BareRepository,
             result.FailureKind);
 
         Assert.False(
@@ -221,9 +259,10 @@ public async Task DiscoverAsync_ReportsNotRepositoryOutsideRepository()
     }
     finally
     {
-        DeleteDirectory(directoryPath);
+        DeleteDirectory(repositoryPath);
     }
 }
+
     private static string CreateTemporaryDirectory()
     {
         var path = Path.Combine(
