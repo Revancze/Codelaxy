@@ -11,7 +11,7 @@ public sealed class GitRepositoryDiscovery
         _runner = runner;
     }
 
-    public async Task<GitRepository?> TryDiscoverAsync(
+    public async Task<GitRepositoryDiscoveryResult> DiscoverAsync(
         string startDirectory,
         CancellationToken cancellationToken = default)
     {
@@ -24,7 +24,7 @@ public sealed class GitRepositoryDiscovery
 
         if (!topLevelResult.Succeeded)
         {
-            return null;
+            return CreateFailure(topLevelResult);
         }
 
         var gitDirectoryResult = await _runner.RunAsync(
@@ -34,7 +34,7 @@ public sealed class GitRepositoryDiscovery
 
         if (!gitDirectoryResult.Succeeded)
         {
-            return null;
+            return CreateFailure(gitDirectoryResult);
         }
 
         var gitCommonDirectoryResult = await _runner.RunAsync(
@@ -48,12 +48,45 @@ public sealed class GitRepositoryDiscovery
 
         if (!gitCommonDirectoryResult.Succeeded)
         {
-            return null;
+            return CreateFailure(gitCommonDirectoryResult);
         }
 
-        return new GitRepository(
+        var repository = new GitRepository(
             topLevelResult.StandardOutput.Trim(),
             gitDirectoryResult.StandardOutput.Trim(),
             gitCommonDirectoryResult.StandardOutput.Trim());
+
+        return new GitRepositoryDiscoveryResult(
+            repository,
+            GitRepositoryDiscoveryFailureKind.None,
+            string.Empty);
+    }
+
+    public async Task<GitRepository?> TryDiscoverAsync(
+        string startDirectory,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await DiscoverAsync(
+            startDirectory,
+            cancellationToken);
+
+        return result.Repository;
+    }
+
+    private static GitRepositoryDiscoveryResult CreateFailure(
+        GitCommandResult result)
+    {
+        if (result.FailureKind == GitCommandFailureKind.LaunchFailure)
+        {
+            return new GitRepositoryDiscoveryResult(
+                null,
+                GitRepositoryDiscoveryFailureKind.LaunchFailure,
+                result.StandardError);
+        }
+
+        return new GitRepositoryDiscoveryResult(
+            null,
+            GitRepositoryDiscoveryFailureKind.CommandFailure,
+            result.StandardError);
     }
 }

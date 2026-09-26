@@ -207,6 +207,38 @@ public class GitRepositoryDiscoveryTests
         return path;
     }
 
+    [Fact]
+public async Task DiscoverAsync_ReportsLaunchFailureWhenGitCannotBeStarted()
+{
+    var runner = new GitProcessRunner(
+        "codelaxy-git-executable-that-does-not-exist");
+
+    var directoryPath = CreateTemporaryDirectory();
+
+    try
+    {
+        var discovery =
+            new GitRepositoryDiscovery(runner);
+
+        var result =
+            await discovery.DiscoverAsync(directoryPath);
+
+        Assert.False(result.Succeeded);
+        Assert.Null(result.Repository);
+
+        Assert.Equal(
+            GitRepositoryDiscoveryFailureKind.LaunchFailure,
+            result.FailureKind);
+
+        Assert.False(
+            string.IsNullOrWhiteSpace(result.Diagnostic));
+    }
+    finally
+    {
+        DeleteDirectory(directoryPath);
+    }
+}
+
     private static void DeleteDirectory(string path)
     {
         if (!Directory.Exists(path))
