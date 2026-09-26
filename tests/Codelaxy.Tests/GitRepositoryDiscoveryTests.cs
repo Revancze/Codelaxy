@@ -33,8 +33,13 @@ public class GitRepositoryDiscoveryTests
                 nestedPath,
                 ["rev-parse", "--absolute-git-dir"]);
 
-            Assert.True(expectedTopLevel.Succeeded);
-            Assert.True(expectedGitDirectory.Succeeded);
+            Assert.True(
+                expectedTopLevel.Succeeded,
+                expectedTopLevel.StandardError);
+
+            Assert.True(
+                expectedGitDirectory.Succeeded,
+                expectedGitDirectory.StandardError);
 
             var discovery =
                 new GitRepositoryDiscovery(runner);
@@ -54,7 +59,7 @@ public class GitRepositoryDiscoveryTests
         }
         finally
         {
-            Directory.Delete(repositoryPath, recursive: true);
+            DeleteDirectory(repositoryPath);
         }
     }
 
@@ -76,7 +81,118 @@ public class GitRepositoryDiscoveryTests
         }
         finally
         {
-            Directory.Delete(directoryPath, recursive: true);
+            DeleteDirectory(directoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task TryDiscoverAsync_DistinguishesGitDirectoryFromCommonDirectoryInLinkedWorktree()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+        var linkedWorktreePath = CreateTemporaryDirectory();
+
+        try
+        {
+            Directory.Delete(linkedWorktreePath);
+
+            var initResult = await runner.RunAsync(
+                repositoryPath,
+                ["init", "-b", "main"]);
+
+            Assert.True(
+                initResult.Succeeded,
+                initResult.StandardError);
+
+            await File.WriteAllTextAsync(
+                Path.Combine(repositoryPath, "README.md"),
+                "# test");
+
+            var addResult = await runner.RunAsync(
+                repositoryPath,
+                ["add", "README.md"]);
+
+            Assert.True(
+                addResult.Succeeded,
+                addResult.StandardError);
+
+            var commitResult = await runner.RunAsync(
+                repositoryPath,
+                [
+                    "-c", "user.name=Codelaxy Tests",
+                    "-c", "user.email=codelaxy@example.invalid",
+                    "commit",
+                    "-m",
+                    "initial"
+                ]);
+
+            Assert.True(
+                commitResult.Succeeded,
+                commitResult.StandardError);
+
+            var worktreeResult = await runner.RunAsync(
+                repositoryPath,
+                [
+                    "worktree",
+                    "add",
+                    "-b",
+                    "linked-test",
+                    linkedWorktreePath,
+                    "HEAD"
+                ]);
+
+            Assert.True(
+                worktreeResult.Succeeded,
+                worktreeResult.StandardError);
+
+            var expectedCommonDirectory = await runner.RunAsync(
+                linkedWorktreePath,
+                [
+                    "rev-parse",
+                    "--path-format=absolute",
+                    "--git-common-dir"
+                ]);
+
+            Assert.True(
+                expectedCommonDirectory.Succeeded,
+                expectedCommonDirectory.StandardError);
+
+            var discovery =
+                new GitRepositoryDiscovery(runner);
+
+            var repository =
+                await discovery.TryDiscoverAsync(linkedWorktreePath);
+
+            Assert.NotNull(repository);
+
+            Assert.Equal(
+                expectedCommonDirectory.StandardOutput.Trim(),
+                repository.GitCommonDirectory);
+
+            Assert.NotEqual(
+                repository.GitDirectory,
+                repository.GitCommonDirectory);
+        }
+        finally
+        {
+            if (Directory.Exists(linkedWorktreePath))
+            {
+                var removeResult = await runner.RunAsync(
+                    repositoryPath,
+                    [
+                        "worktree",
+                        "remove",
+                        "--force",
+                        linkedWorktreePath
+                    ]);
+
+                if (!removeResult.Succeeded)
+                {
+                    DeleteDirectory(linkedWorktreePath);
+                }
+            }
+
+            DeleteDirectory(repositoryPath);
         }
     }
 
@@ -89,5 +205,33 @@ public class GitRepositoryDiscoveryTests
         Directory.CreateDirectory(path);
 
         return path;
+    }
+
+    private static void DeleteDirectory(string path)
+    {
+        if (!Directory.Exists(path))
+        {
+            return;
+        }
+
+        foreach (var file in Directory.EnumerateFiles(
+                     path,
+                     "*",
+                     SearchOption.AllDirectories))
+        {
+            File.SetAttributes(file, FileAttributes.Normal);
+        }
+
+        foreach (var directory in Directory.EnumerateDirectories(
+                     path,
+                     "*",
+                     SearchOption.AllDirectories))
+        {
+            File.SetAttributes(directory, FileAttributes.Normal);
+        }
+
+        File.SetAttributes(path, FileAttributes.Normal);
+
+        Directory.Delete(path, recursive: true);
     }
 }

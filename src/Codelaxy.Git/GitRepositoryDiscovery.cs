@@ -37,8 +37,23 @@ public sealed class GitRepositoryDiscovery
             return null;
         }
 
+        var gitCommonDirectoryResult = await _runner.RunAsync(
+            startDirectory,
+            [
+                "rev-parse",
+                "--path-format=absolute",
+                "--git-common-dir"
+            ],
+            cancellationToken);
+
+        if (!gitCommonDirectoryResult.Succeeded)
+        {
+            return null;
+        }
+
         return new GitRepository(
             topLevelResult.StandardOutput.Trim(),
-            gitDirectoryResult.StandardOutput.Trim());
+            gitDirectoryResult.StandardOutput.Trim(),
+            gitCommonDirectoryResult.StandardOutput.Trim());
     }
 }
