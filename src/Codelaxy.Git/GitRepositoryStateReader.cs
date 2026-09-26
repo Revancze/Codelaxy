@@ -17,7 +17,7 @@ public sealed class GitRepositoryStateReader
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryPath);
 
-        var headResult = await _runner.RunAsync(
+        var headResult = await _runner.RunReadOnlyAsync(
             repositoryPath,
             ["rev-parse", "HEAD"],
             cancellationToken);
@@ -28,7 +28,7 @@ public sealed class GitRepositoryStateReader
                 $"Unable to read Git HEAD: {headResult.StandardError.Trim()}");
         }
 
-        var branchResult = await _runner.RunAsync(
+        var branchResult = await _runner.RunReadOnlyAsync(
             repositoryPath,
             ["branch", "--show-current"],
             cancellationToken);
@@ -39,7 +39,7 @@ public sealed class GitRepositoryStateReader
                 $"Unable to read Git branch: {branchResult.StandardError.Trim()}");
         }
 
-        var workTreeResult = await _runner.RunAsync(
+        var workTreeResult = await _runner.RunReadOnlyAsync(
             repositoryPath,
             ["rev-parse", "--is-inside-work-tree"],
             cancellationToken);
@@ -50,7 +50,7 @@ public sealed class GitRepositoryStateReader
                 $"Unable to read Git worktree state: {workTreeResult.StandardError.Trim()}");
         }
 
-        var bareResult = await _runner.RunAsync(
+        var bareResult = await _runner.RunReadOnlyAsync(
             repositoryPath,
             ["rev-parse", "--is-bare-repository"],
             cancellationToken);

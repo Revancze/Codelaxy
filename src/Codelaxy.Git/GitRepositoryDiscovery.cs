@@ -17,7 +17,7 @@ public sealed class GitRepositoryDiscovery
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(startDirectory);
 
-        var workTreeResult = await _runner.RunAsync(
+        var workTreeResult = await _runner.RunReadOnlyAsync(
             startDirectory,
             ["rev-parse", "--is-inside-work-tree"],
             cancellationToken);
@@ -36,7 +36,7 @@ public sealed class GitRepositoryDiscovery
                 "The requested directory is not inside a Git repository.");
         }
 
-        var bareResult = await _runner.RunAsync(
+        var bareResult = await _runner.RunReadOnlyAsync(
             startDirectory,
             ["rev-parse", "--is-bare-repository"],
             cancellationToken);
@@ -68,7 +68,7 @@ public sealed class GitRepositoryDiscovery
                 "The requested directory is not inside a Git worktree.");
         }
 
-        var topLevelResult = await _runner.RunAsync(
+        var topLevelResult = await _runner.RunReadOnlyAsync(
             startDirectory,
             ["rev-parse", "--show-toplevel"],
             cancellationToken);
@@ -78,7 +78,7 @@ public sealed class GitRepositoryDiscovery
             return CreateFailure(topLevelResult);
         }
 
-        var gitDirectoryResult = await _runner.RunAsync(
+        var gitDirectoryResult = await _runner.RunReadOnlyAsync(
             startDirectory,
             ["rev-parse", "--absolute-git-dir"],
             cancellationToken);
@@ -88,7 +88,7 @@ public sealed class GitRepositoryDiscovery
             return CreateFailure(gitDirectoryResult);
         }
 
-        var gitCommonDirectoryResult = await _runner.RunAsync(
+        var gitCommonDirectoryResult = await _runner.RunReadOnlyAsync(
             startDirectory,
             [
                 "rev-parse",
