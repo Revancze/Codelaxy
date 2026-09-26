@@ -61,12 +61,38 @@ public sealed class GitProcessRunner
         }
 
         var standardOutputTask =
-            process.StandardOutput.ReadToEndAsync(cancellationToken);
+    process.StandardOutput.ReadToEndAsync();
 
-        var standardErrorTask =
-            process.StandardError.ReadToEndAsync(cancellationToken);
+var standardErrorTask =
+    process.StandardError.ReadToEndAsync();
 
-        await process.WaitForExitAsync(cancellationToken);
+try
+{
+    await process.WaitForExitAsync(cancellationToken);
+}
+catch (OperationCanceledException)
+    when (cancellationToken.IsCancellationRequested)
+{
+    try
+    {
+        if (!process.HasExited)
+        {
+            process.Kill(entireProcessTree: true);
+        }
+    }
+    catch (InvalidOperationException)
+    {
+        // The process exited between HasExited and Kill.
+    }
+
+    await process.WaitForExitAsync();
+
+    await Task.WhenAll(
+        standardOutputTask,
+        standardErrorTask);
+
+    throw;
+}
 
         var standardOutput = await standardOutputTask;
         var standardError = await standardErrorTask;

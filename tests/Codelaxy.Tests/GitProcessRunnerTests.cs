@@ -1,4 +1,5 @@
 using Codelaxy.Git;
+using System.Diagnostics;
 
 namespace Codelaxy.Tests;
 
@@ -154,6 +155,121 @@ public class GitProcessRunnerTests
                 cancellation.Token));
     }
 
+        [Fact]
+    public async Task RunAsync_KillsStartedProcessWhenCancelled()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var testOutputDirectory =
+            new DirectoryInfo(AppContext.BaseDirectory);
+
+        var targetFramework =
+            testOutputDirectory.Name;
+
+        var configuration =
+            testOutputDirectory.Parent!.Name;
+
+        var testsDirectory =
+            testOutputDirectory
+                .Parent!
+                .Parent!
+                .Parent!
+                .Parent!;
+
+        var helperPath = Path.Combine(
+            testsDirectory.FullName,
+            "Codelaxy.ProcessTestHelper",
+            "bin",
+            configuration,
+            targetFramework,
+            "Codelaxy.ProcessTestHelper.dll");
+
+        Assert.True(
+            File.Exists(helperPath),
+            $"Process test helper not found: {helperPath}");
+
+        var pidFile = Path.Combine(
+            Path.GetTempPath(),
+            $"Codelaxy Process {Guid.NewGuid():N}.pid");
+
+        using var cancellation =
+            new CancellationTokenSource();
+
+        Process? helperProcess = null;
+
+        try
+        {
+            var runTask = runner.RunAsync(
+                Directory.GetCurrentDirectory(),
+                [helperPath, pidFile],
+                cancellation.Token);
+
+            using var startTimeout =
+                new CancellationTokenSource(
+                    TimeSpan.FromSeconds(10));
+
+            while (!File.Exists(pidFile))
+            {
+                await Task.Delay(
+                    20,
+                    startTimeout.Token);
+            }
+
+            var processId = int.Parse(
+                await File.ReadAllTextAsync(
+                    pidFile,
+                    startTimeout.Token));
+
+            helperProcess =
+                Process.GetProcessById(processId);
+
+            cancellation.Cancel();
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                () => runTask);
+
+            var exitTask =
+                helperProcess.WaitForExitAsync();
+
+            var completedTask =
+                await Task.WhenAny(
+                    exitTask,
+                    Task.Delay(TimeSpan.FromSeconds(2)));
+
+            Assert.Same(
+                exitTask,
+                completedTask);
+        }
+        finally
+        {
+            cancellation.Cancel();
+
+            if (helperProcess is not null)
+            {
+                try
+                {
+                    if (!helperProcess.HasExited)
+                    {
+                        helperProcess.Kill(
+                            entireProcessTree: true);
+
+                        await helperProcess.WaitForExitAsync();
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    // Process exited between HasExited and Kill.
+                }
+
+                helperProcess.Dispose();
+            }
+
+            if (File.Exists(pidFile))
+            {
+                File.Delete(pidFile);
+            }
+        }
+    }
     private static string CreateTemporaryDirectory()
     {
         var path = Path.Combine(
