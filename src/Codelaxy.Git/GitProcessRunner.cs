@@ -22,6 +22,10 @@ public sealed class GitProcessRunner
             CreateNoWindow = true,
         };
 
+        startInfo.Environment.Remove("GIT_DIR");
+        startInfo.Environment.Remove("GIT_WORK_TREE");
+        startInfo.Environment.Remove("GIT_INDEX_FILE");
+
         foreach (var argument in arguments)
         {
             startInfo.ArgumentList.Add(argument);
