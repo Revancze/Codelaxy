@@ -1,0 +1,14 @@
+bin/
+obj/
+
+.vs/
+.vscode/
+
+*.user
+*.suo
+
+TestResults/
+artifacts/
+
+.DS_Store
+Thumbs.db
