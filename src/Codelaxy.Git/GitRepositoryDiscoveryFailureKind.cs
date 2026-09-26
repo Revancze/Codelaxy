@@ -4,5 +4,6 @@ public enum GitRepositoryDiscoveryFailureKind
 {
     None,
     LaunchFailure,
+    NotRepository,
     CommandFailure,
 }

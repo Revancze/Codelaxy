@@ -195,7 +195,35 @@ public class GitRepositoryDiscoveryTests
             DeleteDirectory(repositoryPath);
         }
     }
+    [Fact]
+public async Task DiscoverAsync_ReportsNotRepositoryOutsideRepository()
+{
+    var runner = new GitProcessRunner();
+    var directoryPath = CreateTemporaryDirectory();
 
+    try
+    {
+        var discovery =
+            new GitRepositoryDiscovery(runner);
+
+        var result =
+            await discovery.DiscoverAsync(directoryPath);
+
+        Assert.False(result.Succeeded);
+        Assert.Null(result.Repository);
+
+        Assert.Equal(
+            GitRepositoryDiscoveryFailureKind.NotRepository,
+            result.FailureKind);
+
+        Assert.False(
+            string.IsNullOrWhiteSpace(result.Diagnostic));
+    }
+    finally
+    {
+        DeleteDirectory(directoryPath);
+    }
+}
     private static string CreateTemporaryDirectory()
     {
         var path = Path.Combine(

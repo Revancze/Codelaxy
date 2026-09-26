@@ -17,6 +17,25 @@ public sealed class GitRepositoryDiscovery
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(startDirectory);
 
+        var workTreeResult = await _runner.RunAsync(
+            startDirectory,
+            ["rev-parse", "--is-inside-work-tree"],
+            cancellationToken);
+
+        if (!workTreeResult.Succeeded)
+        {
+            if (workTreeResult.FailureKind ==
+                GitCommandFailureKind.LaunchFailure)
+            {
+                return CreateFailure(workTreeResult);
+            }
+
+            return new GitRepositoryDiscoveryResult(
+                null,
+                GitRepositoryDiscoveryFailureKind.NotRepository,
+                "The requested directory is not inside a Git repository.");
+        }
+
         var topLevelResult = await _runner.RunAsync(
             startDirectory,
             ["rev-parse", "--show-toplevel"],
