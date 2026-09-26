@@ -272,7 +272,122 @@ public class GitProcessRunnerTests
     }
 
     [Fact]
-public async Task RunAsync_ReportsTimeoutAndKillsProcess()
+    public async Task RunAsync_ReportsTimeoutAndKillsProcess()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var testOutputDirectory =
+            new DirectoryInfo(AppContext.BaseDirectory);
+
+        var targetFramework =
+            testOutputDirectory.Name;
+
+        var configuration =
+            testOutputDirectory.Parent!.Name;
+
+        var testsDirectory =
+            testOutputDirectory
+                .Parent!
+                .Parent!
+                .Parent!
+                .Parent!;
+
+        var helperPath = Path.Combine(
+            testsDirectory.FullName,
+            "Codelaxy.ProcessTestHelper",
+            "bin",
+            configuration,
+            targetFramework,
+            "Codelaxy.ProcessTestHelper.dll");
+
+        Assert.True(File.Exists(helperPath));
+
+        var pidFile = Path.Combine(
+            Path.GetTempPath(),
+            $"Codelaxy Timeout {Guid.NewGuid():N}.pid");
+
+        Process? helperProcess = null;
+
+        try
+        {
+            var runTask = runner.RunAsync(
+                Directory.GetCurrentDirectory(),
+                [helperPath, pidFile],
+                TimeSpan.FromSeconds(2));
+
+            using var startTimeout =
+                new CancellationTokenSource(
+                    TimeSpan.FromSeconds(10));
+
+            while (!File.Exists(pidFile))
+            {
+                await Task.Delay(
+                    20,
+                    startTimeout.Token);
+            }
+
+            var processId = int.Parse(
+                await File.ReadAllTextAsync(
+                    pidFile,
+                    startTimeout.Token));
+
+            helperProcess =
+                Process.GetProcessById(processId);
+
+            var result = await runTask;
+
+            Assert.Equal(
+                GitCommandFailureKind.Timeout,
+                result.FailureKind);
+
+            await helperProcess.WaitForExitAsync(
+                startTimeout.Token);
+
+            Assert.True(helperProcess.HasExited);
+        }
+        finally
+        {
+            if (helperProcess is not null)
+            {
+                try
+                {
+                    if (!helperProcess.HasExited)
+                    {
+                        helperProcess.Kill(
+                            entireProcessTree: true);
+
+                        await helperProcess.WaitForExitAsync();
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                }
+
+                helperProcess.Dispose();
+            }
+
+            if (File.Exists(pidFile))
+            {
+                File.Delete(pidFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_CanExecuteGit()
+    {
+        var runner = new GitProcessRunner();
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            ["--version"]);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(0, result.ExitCode);
+    }
+
+[Fact]
+public async Task RunReadOnlyAsync_DisablesOptionalGitLocks()
 {
     var runner = new GitProcessRunner("dotnet");
 
@@ -300,77 +415,25 @@ public async Task RunAsync_ReportsTimeoutAndKillsProcess()
         targetFramework,
         "Codelaxy.ProcessTestHelper.dll");
 
-    Assert.True(File.Exists(helperPath));
+    Assert.True(
+        File.Exists(helperPath),
+        $"Process test helper not found: {helperPath}");
 
-    var pidFile = Path.Combine(
-        Path.GetTempPath(),
-        $"Codelaxy Timeout {Guid.NewGuid():N}.pid");
+    var result = await runner.RunReadOnlyAsync(
+        Directory.GetCurrentDirectory(),
+        [
+            helperPath,
+            "print-env",
+            "GIT_OPTIONAL_LOCKS"
+        ]);
 
-    Process? helperProcess = null;
+    Assert.True(
+        result.Succeeded,
+        result.StandardError);
 
-    try
-    {
-        var runTask = runner.RunAsync(
-            Directory.GetCurrentDirectory(),
-            [helperPath, pidFile],
-            TimeSpan.FromSeconds(2));
-
-        using var startTimeout =
-            new CancellationTokenSource(
-                TimeSpan.FromSeconds(10));
-
-        while (!File.Exists(pidFile))
-        {
-            await Task.Delay(
-                20,
-                startTimeout.Token);
-        }
-
-        var processId = int.Parse(
-            await File.ReadAllTextAsync(
-                pidFile,
-                startTimeout.Token));
-
-        helperProcess =
-            Process.GetProcessById(processId);
-
-        var result = await runTask;
-
-        Assert.Equal(
-            GitCommandFailureKind.Timeout,
-            result.FailureKind);
-
-        await helperProcess.WaitForExitAsync(
-            startTimeout.Token);
-
-        Assert.True(helperProcess.HasExited);
-    }
-    finally
-    {
-        if (helperProcess is not null)
-        {
-            try
-            {
-                if (!helperProcess.HasExited)
-                {
-                    helperProcess.Kill(
-                        entireProcessTree: true);
-
-                    await helperProcess.WaitForExitAsync();
-                }
-            }
-            catch (InvalidOperationException)
-            {
-            }
-
-            helperProcess.Dispose();
-        }
-
-        if (File.Exists(pidFile))
-        {
-            File.Delete(pidFile);
-        }
-    }
+    Assert.Equal(
+        "0",
+        result.StandardOutput);
 }
     private static string CreateTemporaryDirectory()
     {

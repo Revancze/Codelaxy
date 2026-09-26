@@ -15,22 +15,35 @@ public sealed class GitProcessRunner
     }
 
     public Task<GitCommandResult> RunAsync(
-        string workingDirectory,
-        IEnumerable<string> arguments,
-        CancellationToken cancellationToken = default)
+    string workingDirectory,
+    IEnumerable<string> arguments,
+    CancellationToken cancellationToken = default)
     {
         return RunCoreAsync(
             workingDirectory,
             arguments,
+            readOnly: false,
             timeout: null,
             cancellationToken);
     }
 
+public Task<GitCommandResult> RunReadOnlyAsync(
+    string workingDirectory,
+    IEnumerable<string> arguments,
+    CancellationToken cancellationToken = default)
+{
+    return RunCoreAsync(
+        workingDirectory,
+        arguments,
+        readOnly: true,
+        timeout: null,
+        cancellationToken);
+}
     public Task<GitCommandResult> RunAsync(
-        string workingDirectory,
-        IEnumerable<string> arguments,
-        TimeSpan timeout,
-        CancellationToken cancellationToken = default)
+    string workingDirectory,
+    IEnumerable<string> arguments,
+    TimeSpan timeout,
+    CancellationToken cancellationToken = default)
     {
         if (timeout <= TimeSpan.Zero)
         {
@@ -42,15 +55,17 @@ public sealed class GitProcessRunner
         return RunCoreAsync(
             workingDirectory,
             arguments,
+            readOnly: false,
             timeout,
             cancellationToken);
     }
 
-    private async Task<GitCommandResult> RunCoreAsync(
-        string workingDirectory,
-        IEnumerable<string> arguments,
-        TimeSpan? timeout,
-        CancellationToken cancellationToken)
+private async Task<GitCommandResult> RunCoreAsync(
+    string workingDirectory,
+    IEnumerable<string> arguments,
+    bool readOnly,
+    TimeSpan? timeout,
+    CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory);
         ArgumentNullException.ThrowIfNull(arguments);
@@ -70,6 +85,11 @@ public sealed class GitProcessRunner
         startInfo.Environment.Remove("GIT_DIR");
         startInfo.Environment.Remove("GIT_WORK_TREE");
         startInfo.Environment.Remove("GIT_INDEX_FILE");
+
+        if (readOnly)
+{
+    startInfo.Environment["GIT_OPTIONAL_LOCKS"] = "0";
+}
 
         foreach (var argument in arguments)
         {

@@ -1,3 +1,13 @@
+if (args.Length == 2 &&
+    args[0] == "print-env")
+{
+    Console.Write(
+        Environment.GetEnvironmentVariable(args[1]) ??
+        string.Empty);
+
+    return 0;
+}
+
 if (args.Length != 1)
 {
     return 2;
