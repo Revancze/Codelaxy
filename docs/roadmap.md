@@ -32,7 +32,7 @@ P0.4  Architecture and docs sync,
       standalone C#/.NET decision                      DONE
 
 P1.0  Standalone repository + .NET solution            DONE
-P1.1  Git process boundary                             IN PROGRESS
+P1.1  Git process boundary                             DONE
 P1.2  Snapshot engine                                  PLANNED
 P1.3  Requirement / Evidence / Verdict engine          PLANNED
 P1.4  Provider interface                               PLANNED
@@ -93,7 +93,7 @@ that produces no build evidence and satisfies no `BUILD` requirement (I14).
 
 ## P1.1 — Git process boundary
 
-Status: IN PROGRESS
+Status: DONE
 
 ### Goal
 
