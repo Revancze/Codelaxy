@@ -226,42 +226,42 @@ public class GitRepositoryDiscoveryTests
     }
 
     [Fact]
-public async Task DiscoverAsync_ReportsBareRepository()
-{
-    var runner = new GitProcessRunner();
-    var repositoryPath = CreateTemporaryDirectory();
-
-    try
+    public async Task DiscoverAsync_ReportsBareRepository()
     {
-        var initResult = await runner.RunAsync(
-            repositoryPath,
-            ["init", "--bare"]);
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
 
-        Assert.True(
-            initResult.Succeeded,
-            initResult.StandardError);
+        try
+        {
+            var initResult = await runner.RunAsync(
+                repositoryPath,
+                ["init", "--bare"]);
 
-        var discovery =
-            new GitRepositoryDiscovery(runner);
+            Assert.True(
+                initResult.Succeeded,
+                initResult.StandardError);
 
-        var result =
-            await discovery.DiscoverAsync(repositoryPath);
+            var discovery =
+                new GitRepositoryDiscovery(runner);
 
-        Assert.False(result.Succeeded);
-        Assert.Null(result.Repository);
+            var result =
+                await discovery.DiscoverAsync(repositoryPath);
 
-        Assert.Equal(
-            GitRepositoryDiscoveryFailureKind.BareRepository,
-            result.FailureKind);
+            Assert.False(result.Succeeded);
+            Assert.Null(result.Repository);
 
-        Assert.False(
-            string.IsNullOrWhiteSpace(result.Diagnostic));
+            Assert.Equal(
+                GitRepositoryDiscoveryFailureKind.BareRepository,
+                result.FailureKind);
+
+            Assert.False(
+                string.IsNullOrWhiteSpace(result.Diagnostic));
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
     }
-    finally
-    {
-        DeleteDirectory(repositoryPath);
-    }
-}
 
     private static string CreateTemporaryDirectory()
     {

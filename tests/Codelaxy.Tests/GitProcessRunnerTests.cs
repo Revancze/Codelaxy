@@ -136,6 +136,24 @@ public class GitProcessRunnerTests
         Assert.False(result.Succeeded);
     }
 
+       [Fact]
+    public async Task RunAsync_DoesNotStartProcessWhenAlreadyCancelled()
+    {
+        var runner = new GitProcessRunner(
+            "codelaxy-git-executable-that-does-not-exist");
+
+        using var cancellation =
+            new CancellationTokenSource();
+
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => runner.RunAsync(
+                Directory.GetCurrentDirectory(),
+                ["--version"],
+                cancellation.Token));
+    }
+
     private static string CreateTemporaryDirectory()
     {
         var path = Path.Combine(
