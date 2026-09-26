@@ -1,9 +1,15 @@
 namespace Codelaxy.Git;
 
 public sealed record GitCommandResult(
-    int ExitCode,
+    int? ExitCode,
     string StandardOutput,
-    string StandardError)
+    string StandardError,
+    GitCommandFailureKind FailureKind = GitCommandFailureKind.None)
 {
-    public bool Succeeded => ExitCode == 0;
+    public bool Started => ExitCode.HasValue;
+
+    public bool Succeeded =>
+        Started &&
+        FailureKind == GitCommandFailureKind.None &&
+        ExitCode == 0;
 }

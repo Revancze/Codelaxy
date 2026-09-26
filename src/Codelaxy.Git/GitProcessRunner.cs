@@ -1,9 +1,19 @@
+using System.ComponentModel;
 using System.Diagnostics;
 
 namespace Codelaxy.Git;
 
 public sealed class GitProcessRunner
 {
+    private readonly string _gitExecutable;
+
+    public GitProcessRunner(string gitExecutable = "git")
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(gitExecutable);
+
+        _gitExecutable = gitExecutable;
+    }
+
     public async Task<GitCommandResult> RunAsync(
         string workingDirectory,
         IEnumerable<string> arguments,
@@ -14,7 +24,7 @@ public sealed class GitProcessRunner
 
         var startInfo = new ProcessStartInfo
         {
-            FileName = "git",
+            FileName = _gitExecutable,
             WorkingDirectory = workingDirectory,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -36,10 +46,24 @@ public sealed class GitProcessRunner
             StartInfo = startInfo,
         };
 
-        process.Start();
+        try
+        {
+            process.Start();
+        }
+        catch (Win32Exception exception)
+        {
+            return new GitCommandResult(
+                null,
+                string.Empty,
+                exception.Message,
+                GitCommandFailureKind.LaunchFailure);
+        }
 
-        var standardOutputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-        var standardErrorTask = process.StandardError.ReadToEndAsync(cancellationToken);
+        var standardOutputTask =
+            process.StandardOutput.ReadToEndAsync(cancellationToken);
+
+        var standardErrorTask =
+            process.StandardError.ReadToEndAsync(cancellationToken);
 
         await process.WaitForExitAsync(cancellationToken);
 

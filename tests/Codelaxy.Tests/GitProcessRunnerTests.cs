@@ -19,44 +19,44 @@ public class GitProcessRunnerTests
         Assert.True(string.IsNullOrWhiteSpace(result.StandardError));
     }
 
-   [Fact]
-public async Task RunAsync_UsesRequestedWorkingDirectory()
-{
-    var runner = new GitProcessRunner();
-    var repositoryPath = CreateTemporaryDirectory();
-
-    try
+    [Fact]
+    public async Task RunAsync_UsesRequestedWorkingDirectory()
     {
-        var initResult = await runner.RunAsync(
-            repositoryPath,
-            ["init"]);
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
 
-        Assert.True(initResult.Succeeded);
+        try
+        {
+            var initResult = await runner.RunAsync(
+                repositoryPath,
+                ["init"]);
 
-        var nestedPath = Path.Combine(
-            repositoryPath,
-            "directory with spaces");
+            Assert.True(initResult.Succeeded);
 
-        Directory.CreateDirectory(nestedPath);
+            var nestedPath = Path.Combine(
+                repositoryPath,
+                "directory with spaces");
 
-        var result = await runner.RunAsync(
-            nestedPath,
-            ["rev-parse", "--show-prefix"]);
+            Directory.CreateDirectory(nestedPath);
 
-        Assert.True(result.Succeeded);
+            var result = await runner.RunAsync(
+                nestedPath,
+                ["rev-parse", "--show-prefix"]);
 
-        var actualPrefix =
-            result.StandardOutput.Trim().Replace('\\', '/');
+            Assert.True(result.Succeeded);
 
-        Assert.Equal(
-            "directory with spaces/",
-            actualPrefix);
+            var actualPrefix =
+                result.StandardOutput.Trim().Replace('\\', '/');
+
+            Assert.Equal(
+                "directory with spaces/",
+                actualPrefix);
+        }
+        finally
+        {
+            Directory.Delete(repositoryPath, recursive: true);
+        }
     }
-    finally
-    {
-        Directory.Delete(repositoryPath, recursive: true);
-    }
-}
 
     [Fact]
     public async Task RunAsync_PreservesArgumentContainingSpaces()
@@ -74,15 +74,26 @@ public async Task RunAsync_UsesRequestedWorkingDirectory()
 
             var setResult = await runner.RunAsync(
                 repositoryPath,
-                ["config", "--local", "codelaxy.test", "value with spaces"]);
+                [
+                    "config",
+                    "--local",
+                    "codelaxy.test",
+                    "value with spaces"
+                ]);
 
             Assert.True(setResult.Succeeded);
 
             var getResult = await runner.RunAsync(
                 repositoryPath,
-                ["config", "--local", "--get", "codelaxy.test"]);
+                [
+                    "config",
+                    "--local",
+                    "--get",
+                    "codelaxy.test"
+                ]);
 
             Assert.True(getResult.Succeeded);
+
             Assert.Equal(
                 "value with spaces",
                 getResult.StandardOutput.Trim());
@@ -105,6 +116,24 @@ public async Task RunAsync_UsesRequestedWorkingDirectory()
         Assert.False(result.Succeeded);
         Assert.NotEqual(0, result.ExitCode);
         Assert.False(string.IsNullOrWhiteSpace(result.StandardError));
+    }
+
+    [Fact]
+    public async Task RunAsync_ReturnsLaunchFailureWhenGitCannotBeStarted()
+    {
+        var runner = new GitProcessRunner(
+            "codelaxy-git-executable-that-does-not-exist");
+
+        var result = await runner.RunAsync(
+            Directory.GetCurrentDirectory(),
+            ["--version"]);
+
+        Assert.False(result.Started);
+        Assert.Null(result.ExitCode);
+        Assert.Equal(
+            GitCommandFailureKind.LaunchFailure,
+            result.FailureKind);
+        Assert.False(result.Succeeded);
     }
 
     private static string CreateTemporaryDirectory()
