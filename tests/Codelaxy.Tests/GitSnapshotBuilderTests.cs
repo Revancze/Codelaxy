@@ -1754,7 +1754,7 @@ public class GitSnapshotBuilderTests
                     indexResult.StandardOutput);
 
             var sourceEntry =
-             Assert.Single(
+                Assert.Single(
                  entries,
                  entry =>
                      entry.Path == "source.txt");
