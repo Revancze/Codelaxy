@@ -1814,6 +1814,153 @@ public class GitSnapshotBuilderTests
         }
     }
 
+    [Fact]
+    public async Task BuildAsync_ChangesStagedIdentityWhenExecutableBitChanges()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "init",
+                "-b",
+                "main");
+
+            var scriptPath =
+                Path.Combine(
+                    repositoryPath,
+                    "script.sh");
+
+            await File.WriteAllTextAsync(
+                scriptPath,
+                "#!/bin/sh\necho hello\n");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "add",
+                "script.sh");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial");
+
+            var builder =
+                new GitSnapshotBuilder(runner);
+
+            var beforeIndexResult =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "ls-files",
+                        "--stage",
+                        "-z"
+                    ]);
+
+            Assert.True(
+                beforeIndexResult.Succeeded,
+                beforeIndexResult.StandardError);
+
+            var beforeEntry =
+                Assert.Single(
+                    GitIndexEntryParser.Parse(
+                        beforeIndexResult.StandardOutput),
+                    entry =>
+                        entry.Path == "script.sh");
+
+            Assert.Equal(
+                "100644",
+                beforeEntry.Mode);
+
+            var beforeResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                beforeResult.Succeeded,
+                beforeResult.Diagnostic);
+
+            var beforeSnapshot =
+                Assert.IsType<Snapshot>(
+                    beforeResult.Snapshot);
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "update-index",
+                "--chmod=+x",
+                "script.sh");
+
+            var afterIndexResult =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "ls-files",
+                        "--stage",
+                        "-z"
+                    ]);
+
+            Assert.True(
+                afterIndexResult.Succeeded,
+                afterIndexResult.StandardError);
+
+            var afterEntry =
+                Assert.Single(
+                    GitIndexEntryParser.Parse(
+                        afterIndexResult.StandardOutput),
+                    entry =>
+                        entry.Path == "script.sh");
+
+            Assert.Equal(
+                "100755",
+                afterEntry.Mode);
+
+            Assert.Equal(
+                beforeEntry.ObjectId,
+                afterEntry.ObjectId);
+
+            var afterResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                afterResult.Succeeded,
+                afterResult.Diagnostic);
+
+            var afterSnapshot =
+                Assert.IsType<Snapshot>(
+                    afterResult.Snapshot);
+
+            Assert.Equal(
+                beforeSnapshot.HeadFingerprint,
+                afterSnapshot.HeadFingerprint);
+
+            Assert.NotEqual(
+                beforeSnapshot.IndexFingerprint,
+                afterSnapshot.IndexFingerprint);
+
+            Assert.NotEqual(
+                beforeSnapshot.StagedFingerprint,
+                afterSnapshot.StagedFingerprint);
+
+            Assert.Equal(
+                beforeSnapshot.WorkingTreeFingerprint,
+                afterSnapshot.WorkingTreeFingerprint);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
     private static async Task RunGitAsync(
         GitProcessRunner runner,
         string repositoryPath,
