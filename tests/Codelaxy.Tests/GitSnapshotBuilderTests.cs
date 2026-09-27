@@ -1665,6 +1665,154 @@ public class GitSnapshotBuilderTests
             DeleteDirectory(repositoryPath);
         }
     }
+    
+    [Fact]
+    public async Task BuildAsync_RepresentsStagedCopyByHardState()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "init",
+                "-b",
+                "main");
+
+            var sourcePath =
+                Path.Combine(
+                    repositoryPath,
+                    "source.txt");
+
+            var copyPath =
+                Path.Combine(
+                    repositoryPath,
+                    "copy.txt");
+
+            await File.WriteAllTextAsync(
+                sourcePath,
+                "same-content\n");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "add",
+                "source.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial");
+
+            var builder =
+                new GitSnapshotBuilder(runner);
+
+            var beforeResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                beforeResult.Succeeded,
+                beforeResult.Diagnostic);
+
+            var beforeSnapshot =
+                Assert.IsType<Snapshot>(
+                    beforeResult.Snapshot);
+
+            File.Copy(
+                sourcePath,
+                copyPath);
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "add",
+                "copy.txt");
+
+            var indexResult =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "ls-files",
+                        "--stage",
+                        "-z"
+                    ]);
+
+            Assert.True(
+                indexResult.Succeeded,
+                indexResult.StandardError);
+
+            var entries =
+                GitIndexEntryParser.Parse(
+                    indexResult.StandardOutput);
+
+               var sourceEntry =
+                Assert.Single(
+                    entries,
+                    entry =>
+                        entry.Path == "source.txt");
+
+            var copyEntry =
+                Assert.Single(
+                    entries,
+                    entry =>
+                        entry.Path == "copy.txt");
+
+            Assert.Equal(
+                0,
+                sourceEntry.Stage);
+
+            Assert.Equal(
+                0,
+                copyEntry.Stage);
+
+            Assert.Equal(
+                sourceEntry.ObjectId,
+                copyEntry.ObjectId);
+
+            Assert.NotEqual(
+                sourceEntry.Path,
+                copyEntry.Path);
+
+            var afterResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                afterResult.Succeeded,
+                afterResult.Diagnostic);
+
+            var afterSnapshot =
+                Assert.IsType<Snapshot>(
+                    afterResult.Snapshot);
+
+            Assert.Equal(
+                beforeSnapshot.HeadFingerprint,
+                afterSnapshot.HeadFingerprint);
+
+            Assert.NotEqual(
+                beforeSnapshot.IndexFingerprint,
+                afterSnapshot.IndexFingerprint);
+
+            Assert.NotEqual(
+                beforeSnapshot.StagedFingerprint,
+                afterSnapshot.StagedFingerprint);
+
+            Assert.NotEqual(
+                beforeSnapshot.WorkingTreeFingerprint,
+                afterSnapshot.WorkingTreeFingerprint);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
 
     private static async Task RunGitAsync(
         GitProcessRunner runner,
