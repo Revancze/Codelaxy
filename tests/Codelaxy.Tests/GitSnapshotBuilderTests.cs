@@ -1665,7 +1665,7 @@ public class GitSnapshotBuilderTests
             DeleteDirectory(repositoryPath);
         }
     }
-    
+
     [Fact]
     public async Task BuildAsync_RepresentsStagedCopyByHardState()
     {
@@ -1753,11 +1753,11 @@ public class GitSnapshotBuilderTests
                 GitIndexEntryParser.Parse(
                     indexResult.StandardOutput);
 
-               var sourceEntry =
-                Assert.Single(
-                    entries,
-                    entry =>
-                        entry.Path == "source.txt");
+            var sourceEntry =
+             Assert.Single(
+                 entries,
+                 entry =>
+                     entry.Path == "source.txt");
 
             var copyEntry =
                 Assert.Single(
