@@ -1480,6 +1480,192 @@ public class GitSnapshotBuilderTests
         }
     }
 
+    [Fact]
+    public async Task BuildAsync_SupportsUnmergedRepositoryState()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "init",
+                "-b",
+                "main");
+
+            var conflictPath =
+                Path.Combine(
+                    repositoryPath,
+                    "conflict.txt");
+
+            await File.WriteAllTextAsync(
+                conflictPath,
+                "base\n");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "add",
+                "conflict.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "base");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "switch",
+                "-c",
+                "theirs");
+
+            await File.WriteAllTextAsync(
+                conflictPath,
+                "theirs\n");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "add",
+                "conflict.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "theirs");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "switch",
+                "main");
+
+            await File.WriteAllTextAsync(
+                conflictPath,
+                "ours\n");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "add",
+                "conflict.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "ours");
+
+            var builder =
+                new GitSnapshotBuilder(runner);
+
+            var beforeResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                beforeResult.Succeeded,
+                beforeResult.Diagnostic);
+
+            var beforeSnapshot =
+                Assert.IsType<Snapshot>(
+                    beforeResult.Snapshot);
+
+            var mergeResult =
+                await runner.RunAsync(
+                    repositoryPath,
+                    [
+                        "merge",
+                        "theirs"
+                    ]);
+
+            Assert.False(
+                mergeResult.Succeeded);
+
+            var indexResult =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "ls-files",
+                        "--stage",
+                        "-z"
+                    ]);
+
+            Assert.True(
+                indexResult.Succeeded,
+                indexResult.StandardError);
+
+            var entries =
+                GitIndexEntryParser.Parse(
+                    indexResult.StandardOutput);
+
+            var conflictEntries =
+                entries
+                    .Where(
+                        entry =>
+                            entry.Path == "conflict.txt")
+                    .OrderBy(
+                        entry =>
+                            entry.Stage)
+                    .ToArray();
+
+            Assert.Equal(
+                [1, 2, 3],
+                conflictEntries.Select(
+                    entry => entry.Stage));
+
+            var afterResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                afterResult.Succeeded,
+                afterResult.Diagnostic);
+
+            var afterSnapshot =
+                Assert.IsType<Snapshot>(
+                    afterResult.Snapshot);
+
+            Assert.Equal(
+                beforeSnapshot.HeadFingerprint,
+                afterSnapshot.HeadFingerprint);
+
+            Assert.NotEqual(
+                beforeSnapshot.IndexFingerprint,
+                afterSnapshot.IndexFingerprint);
+
+            Assert.NotEqual(
+                beforeSnapshot.StagedFingerprint,
+                afterSnapshot.StagedFingerprint);
+
+            Assert.NotEqual(
+                beforeSnapshot.WorkingTreeFingerprint,
+                afterSnapshot.WorkingTreeFingerprint);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
     private static async Task RunGitAsync(
         GitProcessRunner runner,
         string repositoryPath,
