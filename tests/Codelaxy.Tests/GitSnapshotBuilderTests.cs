@@ -865,6 +865,532 @@ public class GitSnapshotBuilderTests
         }
     }
 
+    [Fact]
+    public async Task BuildAsync_FingerprintsDoNotDependOnStatusRenameConfiguration()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "init",
+                "-b",
+                "main");
+
+            var oldPath =
+                Path.Combine(repositoryPath, "old.txt");
+
+            var newPath =
+                Path.Combine(repositoryPath, "new.txt");
+
+            await File.WriteAllTextAsync(
+                oldPath,
+                "same-content\n");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "add",
+                "old.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial");
+
+            File.Move(
+                oldPath,
+                newPath);
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "add",
+                "-A");
+
+            var builder =
+                new GitSnapshotBuilder(runner);
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "config",
+                "status.renames",
+                "true");
+
+            var renameEnabledStatus =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "status",
+                        "--porcelain=v2",
+                        "-z",
+                        "--untracked-files=all"
+                    ]);
+
+            Assert.True(
+                renameEnabledStatus.Succeeded,
+                renameEnabledStatus.StandardError);
+
+            var firstResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                firstResult.Succeeded,
+                firstResult.Diagnostic);
+
+            var firstSnapshot =
+                Assert.IsType<Snapshot>(
+                    firstResult.Snapshot);
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "config",
+                "status.renames",
+                "false");
+
+            var renameDisabledStatus =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "status",
+                        "--porcelain=v2",
+                        "-z",
+                        "--untracked-files=all"
+                    ]);
+
+            Assert.True(
+                renameDisabledStatus.Succeeded,
+                renameDisabledStatus.StandardError);
+
+            Assert.NotEqual(
+                renameEnabledStatus.StandardOutput,
+                renameDisabledStatus.StandardOutput);
+
+            var secondResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                secondResult.Succeeded,
+                secondResult.Diagnostic);
+
+            var secondSnapshot =
+                Assert.IsType<Snapshot>(
+                    secondResult.Snapshot);
+
+            Assert.Equal(
+                firstSnapshot.HeadFingerprint,
+                secondSnapshot.HeadFingerprint);
+
+            Assert.Equal(
+                firstSnapshot.IndexFingerprint,
+                secondSnapshot.IndexFingerprint);
+
+            Assert.Equal(
+                firstSnapshot.StagedFingerprint,
+                secondSnapshot.StagedFingerprint);
+
+            Assert.Equal(
+                firstSnapshot.WorkingTreeFingerprint,
+                secondSnapshot.WorkingTreeFingerprint);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_FingerprintsDoNotDependOnCoreAutoCrlfConfiguration()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "init",
+                "-b",
+                "main");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "config",
+                "core.autocrlf",
+                "false");
+
+            var filePath =
+                Path.Combine(repositoryPath, "file.txt");
+
+            await File.WriteAllTextAsync(
+                filePath,
+                "line-one\nline-two\n");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "add",
+                "file.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial");
+
+            await File.WriteAllTextAsync(
+                filePath,
+                "line-one\r\nline-two\r\n");
+
+            var builder =
+                new GitSnapshotBuilder(runner);
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "config",
+                "core.autocrlf",
+                "false");
+
+            var autoCrlfDisabledDiff =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "diff",
+                        "--binary",
+                        "--no-ext-diff",
+                        "--no-textconv"
+                    ]);
+
+            Assert.True(
+                autoCrlfDisabledDiff.Succeeded,
+                autoCrlfDisabledDiff.StandardError);
+
+            var firstResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                firstResult.Succeeded,
+                firstResult.Diagnostic);
+
+            var firstSnapshot =
+                Assert.IsType<Snapshot>(
+                    firstResult.Snapshot);
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "config",
+                "core.autocrlf",
+                "true");
+
+            var autoCrlfEnabledDiff =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "diff",
+                        "--binary",
+                        "--no-ext-diff",
+                        "--no-textconv"
+                    ]);
+
+            Assert.True(
+                autoCrlfEnabledDiff.Succeeded,
+                autoCrlfEnabledDiff.StandardError);
+
+            Assert.NotEqual(
+                autoCrlfDisabledDiff.StandardOutput,
+                autoCrlfEnabledDiff.StandardOutput);
+
+            var secondResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                secondResult.Succeeded,
+                secondResult.Diagnostic);
+
+            var secondSnapshot =
+                Assert.IsType<Snapshot>(
+                    secondResult.Snapshot);
+
+            Assert.Equal(
+                firstSnapshot.HeadFingerprint,
+                secondSnapshot.HeadFingerprint);
+
+            Assert.Equal(
+                firstSnapshot.IndexFingerprint,
+                secondSnapshot.IndexFingerprint);
+
+            Assert.Equal(
+                firstSnapshot.StagedFingerprint,
+                secondSnapshot.StagedFingerprint);
+
+            Assert.Equal(
+                firstSnapshot.WorkingTreeFingerprint,
+                secondSnapshot.WorkingTreeFingerprint);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_DistinguishesDeletedAndEmptyTrackedFile()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "init",
+                "-b",
+                "main");
+
+            var trackedPath =
+                Path.Combine(repositoryPath, "tracked.txt");
+
+            await File.WriteAllTextAsync(
+                trackedPath,
+                "committed\n");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "add",
+                "tracked.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial");
+
+            var builder =
+                new GitSnapshotBuilder(runner);
+
+            File.Delete(trackedPath);
+
+            var deletedResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                deletedResult.Succeeded,
+                deletedResult.Diagnostic);
+
+            var deletedSnapshot =
+                Assert.IsType<Snapshot>(
+                    deletedResult.Snapshot);
+
+            await File.WriteAllTextAsync(
+                trackedPath,
+                string.Empty);
+
+            var emptyResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                emptyResult.Succeeded,
+                emptyResult.Diagnostic);
+
+            var emptySnapshot =
+                Assert.IsType<Snapshot>(
+                    emptyResult.Snapshot);
+
+            Assert.Equal(
+                deletedSnapshot.HeadFingerprint,
+                emptySnapshot.HeadFingerprint);
+
+            Assert.Equal(
+                deletedSnapshot.IndexFingerprint,
+                emptySnapshot.IndexFingerprint);
+
+            Assert.Equal(
+                deletedSnapshot.StagedFingerprint,
+                emptySnapshot.StagedFingerprint);
+
+            Assert.NotEqual(
+                deletedSnapshot.WorkingTreeFingerprint,
+                emptySnapshot.WorkingTreeFingerprint);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_FingerprintsDoNotDependOnCoreExcludesFile()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        var ignoreFilePath =
+            Path.Combine(
+                Path.GetTempPath(),
+                $"Codelaxy Ignore {Guid.NewGuid():N}.txt");
+
+        try
+        {
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "init",
+                "-b",
+                "main");
+
+            await File.WriteAllTextAsync(
+                Path.Combine(repositoryPath, "tracked.txt"),
+                "committed\n");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "add",
+                "tracked.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial");
+
+            await File.WriteAllTextAsync(
+                Path.Combine(repositoryPath, "untracked.tmp"),
+                "untracked\n");
+
+            await File.WriteAllTextAsync(
+     ignoreFilePath,
+     "*.tmp\n");
+
+            var builder =
+                new GitSnapshotBuilder(runner);
+
+            var visibleResult =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "ls-files",
+                        "--others",
+                        "--exclude-standard",
+                        "-z"
+                    ]);
+
+            Assert.True(
+                visibleResult.Succeeded,
+                visibleResult.StandardError);
+
+            Assert.Contains(
+                "untracked.tmp",
+                visibleResult.StandardOutput,
+                StringComparison.Ordinal);
+
+            var firstResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                firstResult.Succeeded,
+                firstResult.Diagnostic);
+
+            var firstSnapshot =
+                Assert.IsType<Snapshot>(
+                    firstResult.Snapshot);
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "config",
+                "core.excludesFile",
+                ignoreFilePath);
+
+            var ignoredResult =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "ls-files",
+                        "--others",
+                        "--exclude-standard",
+                        "-z"
+                    ]);
+
+            Assert.True(
+                ignoredResult.Succeeded,
+                ignoredResult.StandardError);
+
+            Assert.DoesNotContain(
+                "untracked.tmp",
+                ignoredResult.StandardOutput,
+                StringComparison.Ordinal);
+
+            var secondResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                secondResult.Succeeded,
+                secondResult.Diagnostic);
+
+            var secondSnapshot =
+                Assert.IsType<Snapshot>(
+                    secondResult.Snapshot);
+
+            Assert.Equal(
+                firstSnapshot.HeadFingerprint,
+                secondSnapshot.HeadFingerprint);
+
+            Assert.Equal(
+                firstSnapshot.IndexFingerprint,
+                secondSnapshot.IndexFingerprint);
+
+            Assert.Equal(
+                firstSnapshot.StagedFingerprint,
+                secondSnapshot.StagedFingerprint);
+
+            Assert.Equal(
+                firstSnapshot.WorkingTreeFingerprint,
+                secondSnapshot.WorkingTreeFingerprint);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+
+            if (File.Exists(ignoreFilePath))
+            {
+                File.Delete(ignoreFilePath);
+            }
+        }
+    }
+
     private static async Task RunGitAsync(
         GitProcessRunner runner,
         string repositoryPath,

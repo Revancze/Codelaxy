@@ -44,7 +44,11 @@ public sealed class GitSnapshotBuilder
             await RunRepositoryReadOnlyAsync(
                 startDirectory,
                 repository.TopLevel,
-                ["rev-parse", "--verify", "HEAD"],
+                [
+                    "rev-parse",
+                    "--verify",
+                    "HEAD"
+                ],
                 cancellationToken);
 
         if (!headResult.Succeeded)
@@ -59,7 +63,11 @@ public sealed class GitSnapshotBuilder
             await RunRepositoryReadOnlyAsync(
                 startDirectory,
                 repository.TopLevel,
-                ["ls-files", "--stage", "-z"],
+                [
+                    "ls-files",
+                    "--stage",
+                    "-z"
+                ],
                 cancellationToken);
 
         if (!indexResult.Succeeded)
@@ -70,57 +78,161 @@ public sealed class GitSnapshotBuilder
                     indexResult));
         }
 
-        var statusResult =
+        var trackedResult =
             await RunRepositoryReadOnlyAsync(
                 startDirectory,
                 repository.TopLevel,
                 [
-                    "status",
-                    "--porcelain=v2",
-                    "-z",
-                    "--untracked-files=all"
+                    "ls-files",
+                    "--cached",
+                    "--deduplicate",
+                    "-z"
                 ],
                 cancellationToken);
 
-        if (!statusResult.Succeeded)
+        if (!trackedResult.Succeeded)
         {
             return Failure(
                 CreateGitDiagnostic(
-                    "Unable to read working-tree status",
-                    statusResult));
+                    "Unable to enumerate tracked files",
+                    trackedResult));
         }
 
-        var diffResult =
+        var deletedResult =
             await RunRepositoryReadOnlyAsync(
                 startDirectory,
                 repository.TopLevel,
                 [
-                    "diff",
-                    "--binary",
-                    "--no-ext-diff",
-                    "--no-textconv"
+                    "ls-files",
+                    "--deleted",
+                    "--deduplicate",
+                    "-z"
                 ],
                 cancellationToken);
 
-        if (!diffResult.Succeeded)
+        if (!deletedResult.Succeeded)
         {
             return Failure(
                 CreateGitDiagnostic(
-                    "Unable to read working-tree changes",
-                    diffResult));
+                    "Unable to enumerate deleted tracked files",
+                    deletedResult));
         }
+
+        var trackedPaths =
+            trackedResult.StandardOutput.Split(
+                '\0',
+                StringSplitOptions.RemoveEmptyEntries);
+
+        var deletedPaths =
+            deletedResult.StandardOutput.Split(
+                '\0',
+                StringSplitOptions.RemoveEmptyEntries);
+
+        Array.Sort(
+            trackedPaths,
+            StringComparer.Ordinal);
+
+        var deletedPathSet =
+            new HashSet<string>(
+                deletedPaths,
+                StringComparer.Ordinal);
+
+        var existingTrackedPaths =
+            trackedPaths
+                .Where(
+                    path =>
+                        !deletedPathSet.Contains(path))
+                .ToArray();
+
+        var trackedObjectIds =
+            Array.Empty<string>();
+
+        if (existingTrackedPaths.Length > 0)
+        {
+            var hashArguments =
+                new List<string>
+                {
+                    "hash-object",
+                    "--no-filters",
+                    "--",
+                };
+
+            hashArguments.AddRange(
+                existingTrackedPaths);
+
+            var trackedHashResult =
+                await RunRepositoryReadOnlyAsync(
+                    startDirectory,
+                    repository.TopLevel,
+                    hashArguments,
+                    cancellationToken);
+
+            if (!trackedHashResult.Succeeded)
+            {
+                return Failure(
+                    CreateGitDiagnostic(
+                        "Unable to hash tracked working-tree files",
+                        trackedHashResult));
+            }
+
+            trackedObjectIds =
+                trackedHashResult.StandardOutput.Split(
+                    '\n',
+                    StringSplitOptions.RemoveEmptyEntries |
+                    StringSplitOptions.TrimEntries);
+
+            if (trackedObjectIds.Length !=
+                existingTrackedPaths.Length)
+            {
+                return Failure(
+                    "Git returned an unexpected number " +
+                    "of tracked working-tree object hashes.");
+            }
+        }
+
+        var trackedParts =
+            new List<string>();
+
+        var objectIndex = 0;
+
+        foreach (var trackedPath in trackedPaths)
+        {
+            trackedParts.Add("path");
+            trackedParts.Add(trackedPath);
+
+            if (deletedPathSet.Contains(trackedPath))
+            {
+                trackedParts.Add("state");
+                trackedParts.Add("missing");
+                continue;
+            }
+
+            trackedParts.Add("state");
+            trackedParts.Add("present");
+
+            trackedParts.Add("oid");
+            trackedParts.Add(
+                trackedObjectIds[objectIndex]);
+
+            ++objectIndex;
+        }
+
+        var trackedFingerprint =
+            CreateFingerprint(
+                "codelaxy.snapshot.tracked-worktree.v1",
+                trackedParts.ToArray());
 
         var untrackedResult =
-    await RunRepositoryReadOnlyAsync(
-        startDirectory,
-        repository.TopLevel,
-        [
-            "ls-files",
+            await RunRepositoryReadOnlyAsync(
+                startDirectory,
+                repository.TopLevel,
+                [
+                    "ls-files",
                     "--others",
-                    "--exclude-standard",
+                    "--exclude-per-directory=.gitignore",
                     "-z"
-        ],
-        cancellationToken);
+                ],
+                cancellationToken);
 
         if (!untrackedResult.Succeeded)
         {
@@ -221,8 +333,7 @@ public sealed class GitSnapshotBuilder
         var workingTreeFingerprint =
             CreateFingerprint(
                 "codelaxy.snapshot.worktree.v1",
-                statusResult.StandardOutput,
-                diffResult.StandardOutput,
+                trackedFingerprint,
                 untrackedFingerprint);
 
         var snapshot = new Snapshot
