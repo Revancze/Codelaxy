@@ -331,8 +331,15 @@ public class GitProcessRunnerTests
                     pidFile,
                     startTimeout.Token));
 
-            helperProcess =
-                Process.GetProcessById(processId);
+            try
+            {
+                helperProcess =
+                    Process.GetProcessById(processId);
+            }
+            catch (ArgumentException)
+            {
+                // The timed-out process already exited.
+            }
 
             var result = await runTask;
 
@@ -340,10 +347,13 @@ public class GitProcessRunnerTests
                 GitCommandFailureKind.Timeout,
                 result.FailureKind);
 
-            await helperProcess.WaitForExitAsync(
-                startTimeout.Token);
+            if (helperProcess is not null)
+            {
+                await helperProcess.WaitForExitAsync(
+                    startTimeout.Token);
 
-            Assert.True(helperProcess.HasExited);
+                Assert.True(helperProcess.HasExited);
+            }
         }
         finally
         {
