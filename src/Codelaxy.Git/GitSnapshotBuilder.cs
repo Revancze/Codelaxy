@@ -78,6 +78,24 @@ public sealed class GitSnapshotBuilder
                     indexResult));
         }
 
+        IReadOnlyList<GitIndexEntry> indexEntries;
+
+        try
+        {
+            indexEntries =
+                GitIndexEntryParser.Parse(
+                    indexResult.StandardOutput);
+        }
+        catch (FormatException exception)
+        {
+            return Failure(
+                $"Unable to parse Git index: {exception.Message}");
+        }
+
+        var canonicalIndexParts =
+            GitIndexEntryCanonicalizer.Canonicalize(
+                indexEntries);
+
         var trackedResult =
             await RunRepositoryReadOnlyAsync(
                 startDirectory,
@@ -320,9 +338,9 @@ public sealed class GitSnapshotBuilder
                 headResult.StandardOutput.Trim());
 
         var indexFingerprint =
-            CreateFingerprint(
-                "codelaxy.snapshot.index.v1",
-                indexResult.StandardOutput);
+           CreateFingerprint(
+               "codelaxy.snapshot.index.v2",
+               canonicalIndexParts.ToArray());
 
         var stagedFingerprint =
             CreateFingerprint(
