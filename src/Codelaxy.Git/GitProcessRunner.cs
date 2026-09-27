@@ -27,18 +27,18 @@ public sealed class GitProcessRunner
             cancellationToken);
     }
 
-public Task<GitCommandResult> RunReadOnlyAsync(
-    string workingDirectory,
-    IEnumerable<string> arguments,
-    CancellationToken cancellationToken = default)
-{
-    return RunCoreAsync(
-        workingDirectory,
-        arguments,
-        readOnly: true,
-        timeout: null,
-        cancellationToken);
-}
+    public Task<GitCommandResult> RunReadOnlyAsync(
+        string workingDirectory,
+        IEnumerable<string> arguments,
+        CancellationToken cancellationToken = default)
+    {
+        return RunCoreAsync(
+            workingDirectory,
+            arguments,
+            readOnly: true,
+            timeout: null,
+            cancellationToken);
+    }
     public Task<GitCommandResult> RunAsync(
     string workingDirectory,
     IEnumerable<string> arguments,
@@ -60,12 +60,12 @@ public Task<GitCommandResult> RunReadOnlyAsync(
             cancellationToken);
     }
 
-private async Task<GitCommandResult> RunCoreAsync(
-    string workingDirectory,
-    IEnumerable<string> arguments,
-    bool readOnly,
-    TimeSpan? timeout,
-    CancellationToken cancellationToken)
+    private async Task<GitCommandResult> RunCoreAsync(
+        string workingDirectory,
+        IEnumerable<string> arguments,
+        bool readOnly,
+        TimeSpan? timeout,
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory);
         ArgumentNullException.ThrowIfNull(arguments);
@@ -82,14 +82,12 @@ private async Task<GitCommandResult> RunCoreAsync(
             CreateNoWindow = true,
         };
 
-        startInfo.Environment.Remove("GIT_DIR");
-        startInfo.Environment.Remove("GIT_WORK_TREE");
-        startInfo.Environment.Remove("GIT_INDEX_FILE");
+        RemoveInheritedGitEnvironment(startInfo);
 
         if (readOnly)
-{
-    startInfo.Environment["GIT_OPTIONAL_LOCKS"] = "0";
-}
+        {
+            startInfo.Environment["GIT_OPTIONAL_LOCKS"] = "0";
+        }
 
         foreach (var argument in arguments)
         {
@@ -176,6 +174,37 @@ private async Task<GitCommandResult> RunCoreAsync(
             process.ExitCode,
             standardOutput,
             standardError);
+    }
+
+    private static void RemoveInheritedGitEnvironment(
+        ProcessStartInfo startInfo)
+    {
+        startInfo.Environment.Remove("GIT_DIR");
+        startInfo.Environment.Remove("GIT_WORK_TREE");
+        startInfo.Environment.Remove("GIT_INDEX_FILE");
+
+        startInfo.Environment.Remove("GIT_CONFIG");
+        startInfo.Environment.Remove("GIT_CONFIG_COUNT");
+        startInfo.Environment.Remove("GIT_CONFIG_PARAMETERS");
+        startInfo.Environment.Remove("GIT_CONFIG_GLOBAL");
+        startInfo.Environment.Remove("GIT_CONFIG_SYSTEM");
+        startInfo.Environment.Remove("GIT_CONFIG_NOSYSTEM");
+
+        var inheritedVariables =
+            startInfo.Environment.Keys.ToArray();
+
+        foreach (var variableName in inheritedVariables)
+        {
+            if (variableName.StartsWith(
+                    "GIT_CONFIG_KEY_",
+                    StringComparison.OrdinalIgnoreCase) ||
+                variableName.StartsWith(
+                    "GIT_CONFIG_VALUE_",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                startInfo.Environment.Remove(variableName);
+            }
+        }
     }
 
     private static async Task TerminateProcessTreeAsync(
