@@ -1391,6 +1391,95 @@ public class GitSnapshotBuilderTests
         }
     }
 
+    [Fact]
+    public async Task BuildAsync_SupportsSha256Repository()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "init",
+                "--object-format=sha256",
+                "-b",
+                "main");
+
+            await File.WriteAllTextAsync(
+                Path.Combine(repositoryPath, "tracked.txt"),
+                "committed\n");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "add",
+                "tracked.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial");
+
+            var objectFormat =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "rev-parse",
+                    "--show-object-format"
+                    ]);
+
+            Assert.True(
+                objectFormat.Succeeded,
+                objectFormat.StandardError);
+
+            Assert.Equal(
+                "sha256",
+                objectFormat.StandardOutput.Trim());
+
+            var head =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                    "rev-parse",
+                    "--verify",
+                    "HEAD"
+                    ]);
+
+            Assert.True(
+                head.Succeeded,
+                head.StandardError);
+
+            Assert.Equal(
+                64,
+                head.StandardOutput.Trim().Length);
+
+            var builder =
+                new GitSnapshotBuilder(runner);
+
+            var result =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                result.Succeeded,
+                result.Diagnostic);
+
+            Assert.IsType<Snapshot>(
+                result.Snapshot);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
     private static async Task RunGitAsync(
         GitProcessRunner runner,
         string repositoryPath,
