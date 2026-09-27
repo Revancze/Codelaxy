@@ -137,7 +137,7 @@ public class GitProcessRunnerTests
         Assert.False(result.Succeeded);
     }
 
-       [Fact]
+    [Fact]
     public async Task RunAsync_DoesNotStartProcessWhenAlreadyCancelled()
     {
         var runner = new GitProcessRunner(
@@ -319,17 +319,10 @@ public class GitProcessRunnerTests
                 new CancellationTokenSource(
                     TimeSpan.FromSeconds(10));
 
-            while (!File.Exists(pidFile))
-            {
-                await Task.Delay(
-                    20,
-                    startTimeout.Token);
-            }
-
-            var processId = int.Parse(
-                await File.ReadAllTextAsync(
-                    pidFile,
-                    startTimeout.Token));
+            var processId =
+       await WaitForProcessIdAsync(
+           pidFile,
+           startTimeout.Token);
 
             try
             {
@@ -396,55 +389,87 @@ public class GitProcessRunnerTests
         Assert.Equal(0, result.ExitCode);
     }
 
-[Fact]
-public async Task RunReadOnlyAsync_DisablesOptionalGitLocks()
-{
-    var runner = new GitProcessRunner("dotnet");
+    [Fact]
+    public async Task RunReadOnlyAsync_DisablesOptionalGitLocks()
+    {
+        var runner = new GitProcessRunner("dotnet");
 
-    var testOutputDirectory =
-        new DirectoryInfo(AppContext.BaseDirectory);
+        var testOutputDirectory =
+            new DirectoryInfo(AppContext.BaseDirectory);
 
-    var targetFramework =
-        testOutputDirectory.Name;
+        var targetFramework =
+            testOutputDirectory.Name;
 
-    var configuration =
-        testOutputDirectory.Parent!.Name;
+        var configuration =
+            testOutputDirectory.Parent!.Name;
 
-    var testsDirectory =
-        testOutputDirectory
-            .Parent!
-            .Parent!
-            .Parent!
-            .Parent!;
+        var testsDirectory =
+            testOutputDirectory
+                .Parent!
+                .Parent!
+                .Parent!
+                .Parent!;
 
-    var helperPath = Path.Combine(
-        testsDirectory.FullName,
-        "Codelaxy.ProcessTestHelper",
-        "bin",
-        configuration,
-        targetFramework,
-        "Codelaxy.ProcessTestHelper.dll");
+        var helperPath = Path.Combine(
+            testsDirectory.FullName,
+            "Codelaxy.ProcessTestHelper",
+            "bin",
+            configuration,
+            targetFramework,
+            "Codelaxy.ProcessTestHelper.dll");
 
-    Assert.True(
-        File.Exists(helperPath),
-        $"Process test helper not found: {helperPath}");
+        Assert.True(
+            File.Exists(helperPath),
+            $"Process test helper not found: {helperPath}");
 
-    var result = await runner.RunReadOnlyAsync(
-        Directory.GetCurrentDirectory(),
-        [
-            helperPath,
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            [
+                helperPath,
             "print-env",
             "GIT_OPTIONAL_LOCKS"
-        ]);
+            ]);
 
-    Assert.True(
-        result.Succeeded,
-        result.StandardError);
+        Assert.True(
+            result.Succeeded,
+            result.StandardError);
 
-    Assert.Equal(
-        "0",
-        result.StandardOutput);
-}
+        Assert.Equal(
+            "0",
+            result.StandardOutput);
+    }
+
+    private static async Task<int> WaitForProcessIdAsync(
+        string pidFile,
+        CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (File.Exists(pidFile))
+            {
+                try
+                {
+                    var contents =
+                        await File.ReadAllTextAsync(
+                            pidFile,
+                            cancellationToken);
+
+                    return int.Parse(contents);
+                }
+                catch (IOException)
+                {
+                    // The helper has published the PID file,
+                    // but Windows may still briefly hold it.
+                }
+            }
+
+            await Task.Delay(
+                20,
+                cancellationToken);
+        }
+    }
     private static string CreateTemporaryDirectory()
     {
         var path = Path.Combine(
