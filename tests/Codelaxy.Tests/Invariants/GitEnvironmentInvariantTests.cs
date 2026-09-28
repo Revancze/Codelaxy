@@ -385,6 +385,103 @@ public class GitEnvironmentIsolationTests
         }
     }
 
+    [Fact]
+    public async Task RepositoryLocalEnvironmentVariables_CoverGitReportedVariables()
+    {
+        var runner =
+            new GitProcessRunner();
+
+        var repositoryPath =
+            CreateTemporaryDirectory();
+
+        try
+        {
+            var initResult =
+                await runner.RunAsync(
+                    repositoryPath,
+                    ["init"]);
+
+            Assert.True(
+                initResult.Succeeded,
+                initResult.StandardError);
+
+            var localEnvironmentResult =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "rev-parse",
+                        "--local-env-vars"
+                    ],
+                    TimeSpan.FromSeconds(30));
+
+            Assert.True(
+                localEnvironmentResult.Succeeded,
+                localEnvironmentResult.StandardError);
+
+            var variableNames =
+                localEnvironmentResult.StandardOutput
+                    .Split(
+                        ['\r', '\n'],
+                        StringSplitOptions.RemoveEmptyEntries |
+                        StringSplitOptions.TrimEntries);
+
+            Assert.NotEmpty(
+                variableNames);
+
+            var originalValues =
+                variableNames.ToDictionary(
+                    variableName => variableName,
+                    Environment.GetEnvironmentVariable,
+                    StringComparer.Ordinal);
+
+            try
+            {
+                foreach (var variableName in variableNames)
+                {
+                    Environment.SetEnvironmentVariable(
+                        variableName,
+                        "codelaxy-poisoned");
+                }
+
+                var startInfo =
+                    runner.CreateProcessStartInfo(
+                        repositoryPath,
+                        ["status", "--short"],
+                        readOnly: true);
+
+                var remainingVariables =
+                    variableNames
+                        .Where(
+                            startInfo.Environment.ContainsKey)
+                        .OrderBy(
+                            variableName => variableName,
+                            StringComparer.Ordinal)
+                        .ToArray();
+
+                Assert.True(
+                    remainingVariables.Length == 0,
+                    "Git reports repository-local environment variables " +
+                    "that Codelaxy does not isolate: " +
+                    string.Join(", ", remainingVariables));
+            }
+            finally
+            {
+                foreach (var originalValue in originalValues)
+                {
+                    Environment.SetEnvironmentVariable(
+                        originalValue.Key,
+                        originalValue.Value);
+                }
+            }
+        }
+        finally
+        {
+            Directory.Delete(
+                repositoryPath,
+                recursive: true);
+        }
+    }
+
     private static async Task AssertVariableIsIgnoredAsync(
         string variableName,
         IEnumerable<string> arguments)
