@@ -160,29 +160,8 @@ public class GitProcessRunnerTests
     {
         var runner = new GitProcessRunner("dotnet");
 
-        var testOutputDirectory =
-            new DirectoryInfo(AppContext.BaseDirectory);
-
-        var targetFramework =
-            testOutputDirectory.Name;
-
-        var configuration =
-            testOutputDirectory.Parent!.Name;
-
-        var testsDirectory =
-            testOutputDirectory
-                .Parent!
-                .Parent!
-                .Parent!
-                .Parent!;
-
-        var helperPath = Path.Combine(
-            testsDirectory.FullName,
-            "Codelaxy.ProcessTestHelper",
-            "bin",
-            configuration,
-            targetFramework,
-            "Codelaxy.ProcessTestHelper.dll");
+        var helperPath =
+            GetProcessTestHelperPath();
 
         Assert.True(
             File.Exists(helperPath),
@@ -276,31 +255,12 @@ public class GitProcessRunnerTests
     {
         var runner = new GitProcessRunner("dotnet");
 
-        var testOutputDirectory =
-            new DirectoryInfo(AppContext.BaseDirectory);
+        var helperPath =
+            GetProcessTestHelperPath();
 
-        var targetFramework =
-            testOutputDirectory.Name;
-
-        var configuration =
-            testOutputDirectory.Parent!.Name;
-
-        var testsDirectory =
-            testOutputDirectory
-                .Parent!
-                .Parent!
-                .Parent!
-                .Parent!;
-
-        var helperPath = Path.Combine(
-            testsDirectory.FullName,
-            "Codelaxy.ProcessTestHelper",
-            "bin",
-            configuration,
-            targetFramework,
-            "Codelaxy.ProcessTestHelper.dll");
-
-        Assert.True(File.Exists(helperPath));
+        Assert.True(
+            File.Exists(helperPath),
+            $"Process test helper not found: {helperPath}");
 
         var pidFile = Path.Combine(
             Path.GetTempPath(),
@@ -320,9 +280,9 @@ public class GitProcessRunnerTests
                     TimeSpan.FromSeconds(10));
 
             var processId =
-       await WaitForProcessIdAsync(
-           pidFile,
-           startTimeout.Token);
+                await WaitForProcessIdAsync(
+                    pidFile,
+                    startTimeout.Token);
 
             try
             {
@@ -394,29 +354,8 @@ public class GitProcessRunnerTests
     {
         var runner = new GitProcessRunner("dotnet");
 
-        var testOutputDirectory =
-            new DirectoryInfo(AppContext.BaseDirectory);
-
-        var targetFramework =
-            testOutputDirectory.Name;
-
-        var configuration =
-            testOutputDirectory.Parent!.Name;
-
-        var testsDirectory =
-            testOutputDirectory
-                .Parent!
-                .Parent!
-                .Parent!
-                .Parent!;
-
-        var helperPath = Path.Combine(
-            testsDirectory.FullName,
-            "Codelaxy.ProcessTestHelper",
-            "bin",
-            configuration,
-            targetFramework,
-            "Codelaxy.ProcessTestHelper.dll");
+        var helperPath =
+            GetProcessTestHelperPath();
 
         Assert.True(
             File.Exists(helperPath),
@@ -426,8 +365,8 @@ public class GitProcessRunnerTests
             Directory.GetCurrentDirectory(),
             [
                 helperPath,
-            "print-env",
-            "GIT_OPTIONAL_LOCKS"
+                "print-env",
+                "GIT_OPTIONAL_LOCKS"
             ]);
 
         Assert.True(
@@ -437,6 +376,39 @@ public class GitProcessRunnerTests
         Assert.Equal(
             "0",
             result.StandardOutput);
+    }
+
+    private static string GetProcessTestHelperPath()
+    {
+        var testOutputDirectory =
+            new DirectoryInfo(AppContext.BaseDirectory);
+
+        var targetFramework =
+            testOutputDirectory.Name;
+
+        var configurationDirectory =
+            testOutputDirectory.Parent!;
+
+        var hostDirectory =
+            configurationDirectory.Parent!;
+
+        var binDirectory =
+            hostDirectory.Parent!;
+
+        var testsProjectDirectory =
+            binDirectory.Parent!;
+
+        var testsDirectory =
+            testsProjectDirectory.Parent!;
+
+        return Path.Combine(
+            testsDirectory.FullName,
+            "Codelaxy.ProcessTestHelper",
+            "bin",
+            hostDirectory.Name,
+            configurationDirectory.Name,
+            targetFramework,
+            "Codelaxy.ProcessTestHelper.dll");
     }
 
     private static async Task<int> WaitForProcessIdAsync(
@@ -470,6 +442,7 @@ public class GitProcessRunnerTests
                 cancellationToken);
         }
     }
+
     private static string CreateTemporaryDirectory()
     {
         var path = Path.Combine(
