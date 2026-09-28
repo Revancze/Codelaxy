@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Text;
 
 namespace Codelaxy.Git;
 
@@ -93,27 +94,10 @@ public sealed class GitProcessRunner
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = _gitExecutable,
-            WorkingDirectory = workingDirectory,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        };
-
-        RemoveInheritedGitEnvironment(startInfo);
-
-        if (readOnly)
-        {
-            startInfo.Environment["GIT_OPTIONAL_LOCKS"] = "0";
-        }
-
-        foreach (var argument in arguments)
-        {
-            startInfo.ArgumentList.Add(argument);
-        }
+        var startInfo = CreateProcessStartInfo(
+            workingDirectory,
+            arguments,
+            readOnly);
 
         using var process = new Process
         {
@@ -195,6 +179,38 @@ public sealed class GitProcessRunner
             process.ExitCode,
             standardOutput,
             standardError);
+    }
+
+    internal ProcessStartInfo CreateProcessStartInfo(
+        string workingDirectory,
+        IEnumerable<string> arguments,
+        bool readOnly)
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = _gitExecutable,
+            WorkingDirectory = workingDirectory,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+
+        RemoveInheritedGitEnvironment(startInfo);
+
+        if (readOnly)
+        {
+            startInfo.Environment["GIT_OPTIONAL_LOCKS"] = "0";
+        }
+
+        foreach (var argument in arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        return startInfo;
     }
 
     private static void RemoveInheritedGitEnvironment(

@@ -60,6 +60,27 @@ public class GitProcessRunnerTests
     }
 
     [Fact]
+    public void CreateProcessStartInfo_PinsRedirectedGitOutputToUtf8()
+    {
+        var runner = new GitProcessRunner();
+
+        var startInfo = runner.CreateProcessStartInfo(
+            Environment.CurrentDirectory,
+            ["status", "--short"],
+            readOnly: true);
+
+        Assert.All(
+            new[]
+            {
+                startInfo.StandardOutputEncoding,
+                startInfo.StandardErrorEncoding,
+            },
+            encoding => Assert.Equal(
+                System.Text.Encoding.UTF8.CodePage,
+                encoding?.CodePage));
+    }
+
+    [Fact]
     public async Task RunAsync_PreservesArgumentContainingSpaces()
     {
         var runner = new GitProcessRunner();
