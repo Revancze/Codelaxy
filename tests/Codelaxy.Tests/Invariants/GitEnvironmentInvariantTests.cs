@@ -25,6 +25,14 @@ public class GitEnvironmentIsolationTests
     }
 
     [Fact]
+    public async Task RunAsync_IgnoresInheritedGitCommonDir()
+    {
+        await AssertVariableIsIgnoredAsync(
+            "GIT_COMMON_DIR",
+            ["rev-parse", "--git-common-dir"]);
+    }
+
+    [Fact]
     public async Task RunAsync_IgnoresInheritedGitIndexFile()
     {
         await AssertVariableIsIgnoredAsync(

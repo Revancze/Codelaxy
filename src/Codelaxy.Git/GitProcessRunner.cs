@@ -5,6 +5,26 @@ namespace Codelaxy.Git;
 
 public sealed class GitProcessRunner
 {
+    private static readonly string[]
+        RepositoryLocalEnvironmentVariables =
+        [
+            "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+            "GIT_CONFIG",
+            "GIT_CONFIG_PARAMETERS",
+            "GIT_CONFIG_COUNT",
+            "GIT_OBJECT_DIRECTORY",
+            "GIT_DIR",
+            "GIT_WORK_TREE",
+            "GIT_IMPLICIT_WORK_TREE",
+            "GIT_GRAFT_FILE",
+            "GIT_INDEX_FILE",
+            "GIT_NO_REPLACE_OBJECTS",
+            "GIT_REPLACE_REF_BASE",
+            "GIT_PREFIX",
+            "GIT_SHALLOW_FILE",
+            "GIT_COMMON_DIR",
+        ];
+
     private readonly string _gitExecutable;
 
     public GitProcessRunner(string gitExecutable = "git")
@@ -15,9 +35,9 @@ public sealed class GitProcessRunner
     }
 
     public Task<GitCommandResult> RunAsync(
-    string workingDirectory,
-    IEnumerable<string> arguments,
-    CancellationToken cancellationToken = default)
+        string workingDirectory,
+        IEnumerable<string> arguments,
+        CancellationToken cancellationToken = default)
     {
         return RunCoreAsync(
             workingDirectory,
@@ -39,11 +59,12 @@ public sealed class GitProcessRunner
             timeout: null,
             cancellationToken);
     }
+
     public Task<GitCommandResult> RunAsync(
-    string workingDirectory,
-    IEnumerable<string> arguments,
-    TimeSpan timeout,
-    CancellationToken cancellationToken = default)
+        string workingDirectory,
+        IEnumerable<string> arguments,
+        TimeSpan timeout,
+        CancellationToken cancellationToken = default)
     {
         if (timeout <= TimeSpan.Zero)
         {
@@ -179,13 +200,12 @@ public sealed class GitProcessRunner
     private static void RemoveInheritedGitEnvironment(
         ProcessStartInfo startInfo)
     {
-        startInfo.Environment.Remove("GIT_DIR");
-        startInfo.Environment.Remove("GIT_WORK_TREE");
-        startInfo.Environment.Remove("GIT_INDEX_FILE");
+        foreach (var variableName in
+                 RepositoryLocalEnvironmentVariables)
+        {
+            startInfo.Environment.Remove(variableName);
+        }
 
-        startInfo.Environment.Remove("GIT_CONFIG");
-        startInfo.Environment.Remove("GIT_CONFIG_COUNT");
-        startInfo.Environment.Remove("GIT_CONFIG_PARAMETERS");
         startInfo.Environment.Remove("GIT_CONFIG_GLOBAL");
         startInfo.Environment.Remove("GIT_CONFIG_SYSTEM");
         startInfo.Environment.Remove("GIT_CONFIG_NOSYSTEM");
