@@ -1,12 +1,12 @@
-using Codelaxy.Git;
 using System.Diagnostics;
+using Codelaxy.Git;
 
 namespace Codelaxy.Tests;
 
 public class GitProcessRunnerTests
 {
     private static readonly TimeSpan GitCommandTimeout =
-    TimeSpan.FromSeconds(30);
+        TimeSpan.FromSeconds(30);
     [Fact]
     public async Task RunAsync_CanExecuteGit()
     {
@@ -80,6 +80,82 @@ public class GitProcessRunnerTests
             encoding => Assert.Equal(
                 System.Text.Encoding.UTF8.CodePage,
                 encoding?.CodePage));
+    }
+
+    [Fact]
+    public void CreateProcessStartInfo_DisablesInteractiveInput()
+    {
+        var runner = new GitProcessRunner();
+
+        var startInfo = runner.CreateProcessStartInfo(
+            Environment.CurrentDirectory,
+            ["status", "--short"],
+            readOnly: true);
+
+        Assert.True(startInfo.RedirectStandardInput);
+
+        Assert.Equal(
+            "0",
+            startInfo.Environment["GIT_TERMINAL_PROMPT"]);
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_ClosesStandardInput()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var helperPath =
+            GetProcessTestHelperPath();
+
+        Assert.True(
+            File.Exists(helperPath),
+            $"Process test helper not found: {helperPath}");
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            [
+                helperPath,
+            "read-stdin"
+            ],
+            TimeSpan.FromSeconds(5));
+
+        Assert.True(
+            result.Succeeded,
+            result.StandardError);
+
+        Assert.Equal(
+            "EOF",
+            result.StandardOutput);
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_DisablesTerminalPrompt()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var helperPath =
+            GetProcessTestHelperPath();
+
+        Assert.True(
+            File.Exists(helperPath),
+            $"Process test helper not found: {helperPath}");
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            [
+                helperPath,
+            "print-env",
+            "GIT_TERMINAL_PROMPT"
+            ],
+            TimeSpan.FromSeconds(5));
+
+        Assert.True(
+            result.Succeeded,
+            result.StandardError);
+
+        Assert.Equal(
+            "0",
+            result.StandardOutput);
     }
 
     [Fact]

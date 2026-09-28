@@ -115,6 +115,7 @@ public sealed class GitProcessRunner
         try
         {
             process.Start();
+            process.StandardInput.Close();
         }
         catch (Win32Exception exception)
         {
@@ -198,6 +199,7 @@ public sealed class GitProcessRunner
         {
             FileName = _gitExecutable,
             WorkingDirectory = workingDirectory,
+            RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             StandardOutputEncoding = Encoding.UTF8,
@@ -207,6 +209,7 @@ public sealed class GitProcessRunner
         };
 
         RemoveInheritedGitEnvironment(startInfo);
+        startInfo.Environment["GIT_TERMINAL_PROMPT"] = "0";
 
         if (readOnly)
         {

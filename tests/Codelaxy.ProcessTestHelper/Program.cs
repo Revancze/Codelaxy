@@ -1,3 +1,17 @@
+if (args.Length == 1 &&
+    args[0] == "read-stdin")
+{
+    var input =
+        await Console.In.ReadToEndAsync();
+
+    Console.Write(
+        input.Length == 0
+            ? "EOF"
+            : input);
+
+    return 0;
+}
+
 if (args.Length == 2 &&
     args[0] == "print-env")
 {
