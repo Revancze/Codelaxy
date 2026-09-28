@@ -5,8 +5,8 @@ namespace Codelaxy.Tests;
 
 public class GitSnapshotBuilderTests
 {
-    private static readonly TimeSpan GitCommandTimeout =
-    TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan GitCommandTimeout = TimeSpan.FromSeconds(30);
+
     [Fact]
     public async Task BuildAsync_ChangesWorkingTreeFingerprintWhenContentChanges()
     {
@@ -15,25 +15,13 @@ public class GitSnapshotBuilderTests
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
-            var trackedPath =
-                Path.Combine(repositoryPath, "tracked.txt");
+            var trackedPath = Path.Combine(repositoryPath, "tracked.txt");
 
-            await File.WriteAllTextAsync(
-                trackedPath,
-                "committed\n");
+            await File.WriteAllTextAsync(trackedPath, "committed\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "tracked.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
 
             await RunGitAsync(
                 runner,
@@ -44,90 +32,55 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
-            await File.WriteAllTextAsync(
-                trackedPath,
-                "unstaged-one\n");
+            await File.WriteAllTextAsync(trackedPath, "unstaged-one\n");
 
-            var firstStatus =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "status",
-                    "--porcelain=v2",
-                    "-z",
-                    "--untracked-files=all"
-                    ],
-                    GitCommandTimeout);
+            var firstStatus = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["status", "--porcelain=v2", "-z", "--untracked-files=all"],
+                GitCommandTimeout
+            );
 
-            Assert.True(
-                firstStatus.Succeeded,
-                firstStatus.StandardError);
+            Assert.True(firstStatus.Succeeded, firstStatus.StandardError);
 
-            var firstResult =
-                await builder.BuildAsync(repositoryPath);
+            var firstResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                firstResult.Succeeded,
-                firstResult.Diagnostic);
+            Assert.True(firstResult.Succeeded, firstResult.Diagnostic);
 
-            var firstSnapshot =
-                Assert.IsType<Snapshot>(
-                    firstResult.Snapshot);
+            var firstSnapshot = Assert.IsType<Snapshot>(firstResult.Snapshot);
 
-            await File.WriteAllTextAsync(
-                trackedPath,
-                "unstaged-two\n");
+            await File.WriteAllTextAsync(trackedPath, "unstaged-two\n");
 
-            var secondStatus =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "status",
-                    "--porcelain=v2",
-                    "-z",
-                    "--untracked-files=all"
-                    ],
-                    GitCommandTimeout);
+            var secondStatus = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["status", "--porcelain=v2", "-z", "--untracked-files=all"],
+                GitCommandTimeout
+            );
 
-            Assert.True(
-                secondStatus.Succeeded,
-                secondStatus.StandardError);
+            Assert.True(secondStatus.Succeeded, secondStatus.StandardError);
 
-            var secondResult =
-                await builder.BuildAsync(repositoryPath);
+            var secondResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                secondResult.Succeeded,
-                secondResult.Diagnostic);
+            Assert.True(secondResult.Succeeded, secondResult.Diagnostic);
 
-            var secondSnapshot =
-                Assert.IsType<Snapshot>(
-                    secondResult.Snapshot);
+            var secondSnapshot = Assert.IsType<Snapshot>(secondResult.Snapshot);
 
-            Assert.Equal(
-                firstStatus.StandardOutput,
-                secondStatus.StandardOutput);
+            Assert.Equal(firstStatus.StandardOutput, secondStatus.StandardOutput);
 
-            Assert.Equal(
-                firstSnapshot.HeadFingerprint,
-                secondSnapshot.HeadFingerprint);
+            Assert.Equal(firstSnapshot.HeadFingerprint, secondSnapshot.HeadFingerprint);
 
-            Assert.Equal(
-                firstSnapshot.IndexFingerprint,
-                secondSnapshot.IndexFingerprint);
+            Assert.Equal(firstSnapshot.IndexFingerprint, secondSnapshot.IndexFingerprint);
 
-            Assert.Equal(
-                firstSnapshot.StagedFingerprint,
-                secondSnapshot.StagedFingerprint);
+            Assert.Equal(firstSnapshot.StagedFingerprint, secondSnapshot.StagedFingerprint);
 
             Assert.NotEqual(
                 firstSnapshot.WorkingTreeFingerprint,
-                secondSnapshot.WorkingTreeFingerprint);
+                secondSnapshot.WorkingTreeFingerprint
+            );
         }
         finally
         {
@@ -143,22 +96,14 @@ public class GitSnapshotBuilderTests
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
             await File.WriteAllTextAsync(
                 Path.Combine(repositoryPath, "tracked.txt"),
-                "committed\n");
+                "committed\n"
+            );
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "tracked.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
 
             await RunGitAsync(
                 runner,
@@ -169,95 +114,57 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
-            var untrackedPath =
-                Path.Combine(
-                    repositoryPath,
-                    "untracked.txt");
+            var untrackedPath = Path.Combine(repositoryPath, "untracked.txt");
 
-            await File.WriteAllTextAsync(
-                untrackedPath,
-                "untracked-one\n");
+            await File.WriteAllTextAsync(untrackedPath, "untracked-one\n");
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
-            var firstStatus =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "status",
-                        "--porcelain=v2",
-                        "-z",
-                        "--untracked-files=all"
-                    ],
-                    GitCommandTimeout);
+            var firstStatus = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["status", "--porcelain=v2", "-z", "--untracked-files=all"],
+                GitCommandTimeout
+            );
 
-            Assert.True(
-                firstStatus.Succeeded,
-                firstStatus.StandardError);
+            Assert.True(firstStatus.Succeeded, firstStatus.StandardError);
 
-            var firstResult =
-                await builder.BuildAsync(repositoryPath);
+            var firstResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                firstResult.Succeeded,
-                firstResult.Diagnostic);
+            Assert.True(firstResult.Succeeded, firstResult.Diagnostic);
 
-            var firstSnapshot =
-                Assert.IsType<Snapshot>(
-                    firstResult.Snapshot);
+            var firstSnapshot = Assert.IsType<Snapshot>(firstResult.Snapshot);
 
-            await File.WriteAllTextAsync(
-                untrackedPath,
-                "untracked-two\n");
+            await File.WriteAllTextAsync(untrackedPath, "untracked-two\n");
 
-            var secondStatus =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "status",
-                        "--porcelain=v2",
-                        "-z",
-                        "--untracked-files=all"
-                    ],
-                    GitCommandTimeout);
+            var secondStatus = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["status", "--porcelain=v2", "-z", "--untracked-files=all"],
+                GitCommandTimeout
+            );
 
-            Assert.True(
-                secondStatus.Succeeded,
-                secondStatus.StandardError);
+            Assert.True(secondStatus.Succeeded, secondStatus.StandardError);
 
-            var secondResult =
-                await builder.BuildAsync(repositoryPath);
+            var secondResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                secondResult.Succeeded,
-                secondResult.Diagnostic);
+            Assert.True(secondResult.Succeeded, secondResult.Diagnostic);
 
-            var secondSnapshot =
-                Assert.IsType<Snapshot>(
-                    secondResult.Snapshot);
+            var secondSnapshot = Assert.IsType<Snapshot>(secondResult.Snapshot);
 
-            Assert.Equal(
-                firstStatus.StandardOutput,
-                secondStatus.StandardOutput);
+            Assert.Equal(firstStatus.StandardOutput, secondStatus.StandardOutput);
 
-            Assert.Equal(
-                firstSnapshot.HeadFingerprint,
-                secondSnapshot.HeadFingerprint);
+            Assert.Equal(firstSnapshot.HeadFingerprint, secondSnapshot.HeadFingerprint);
 
-            Assert.Equal(
-                firstSnapshot.IndexFingerprint,
-                secondSnapshot.IndexFingerprint);
+            Assert.Equal(firstSnapshot.IndexFingerprint, secondSnapshot.IndexFingerprint);
 
-            Assert.Equal(
-                firstSnapshot.StagedFingerprint,
-                secondSnapshot.StagedFingerprint);
+            Assert.Equal(firstSnapshot.StagedFingerprint, secondSnapshot.StagedFingerprint);
 
             Assert.NotEqual(
                 firstSnapshot.WorkingTreeFingerprint,
-                secondSnapshot.WorkingTreeFingerprint);
+                secondSnapshot.WorkingTreeFingerprint
+            );
         }
         finally
         {
@@ -273,25 +180,13 @@ public class GitSnapshotBuilderTests
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
-            var trackedPath =
-                Path.Combine(repositoryPath, "tracked.txt");
+            var trackedPath = Path.Combine(repositoryPath, "tracked.txt");
 
-            await File.WriteAllTextAsync(
-                trackedPath,
-                "committed\n");
+            await File.WriteAllTextAsync(trackedPath, "committed\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "tracked.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
 
             await RunGitAsync(
                 runner,
@@ -302,98 +197,64 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
-            await File.WriteAllTextAsync(
-                trackedPath,
-                "staged\n");
+            await File.WriteAllTextAsync(trackedPath, "staged\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "tracked.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
             // A — staged state
-            var stagedResult =
-                await builder.BuildAsync(repositoryPath);
+            var stagedResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                stagedResult.Succeeded,
-                stagedResult.Diagnostic);
+            Assert.True(stagedResult.Succeeded, stagedResult.Diagnostic);
 
-            var stagedSnapshot =
-                Assert.IsType<Snapshot>(
-                    stagedResult.Snapshot);
+            var stagedSnapshot = Assert.IsType<Snapshot>(stagedResult.Snapshot);
 
             // B — same HEAD/index, different unstaged content
-            await File.WriteAllTextAsync(
-                trackedPath,
-                "unstaged\n");
+            await File.WriteAllTextAsync(trackedPath, "unstaged\n");
 
-            var unstagedResult =
-                await builder.BuildAsync(repositoryPath);
+            var unstagedResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                unstagedResult.Succeeded,
-                unstagedResult.Diagnostic);
+            Assert.True(unstagedResult.Succeeded, unstagedResult.Diagnostic);
 
-            var unstagedSnapshot =
-                Assert.IsType<Snapshot>(
-                    unstagedResult.Snapshot);
+            var unstagedSnapshot = Assert.IsType<Snapshot>(unstagedResult.Snapshot);
 
-            Assert.Equal(
-                stagedSnapshot.HeadFingerprint,
-                unstagedSnapshot.HeadFingerprint);
+            Assert.Equal(stagedSnapshot.HeadFingerprint, unstagedSnapshot.HeadFingerprint);
 
-            Assert.Equal(
-                stagedSnapshot.IndexFingerprint,
-                unstagedSnapshot.IndexFingerprint);
+            Assert.Equal(stagedSnapshot.IndexFingerprint, unstagedSnapshot.IndexFingerprint);
 
-            Assert.Equal(
-                stagedSnapshot.StagedFingerprint,
-                unstagedSnapshot.StagedFingerprint);
+            Assert.Equal(stagedSnapshot.StagedFingerprint, unstagedSnapshot.StagedFingerprint);
 
             Assert.NotEqual(
                 stagedSnapshot.WorkingTreeFingerprint,
-                unstagedSnapshot.WorkingTreeFingerprint);
+                unstagedSnapshot.WorkingTreeFingerprint
+            );
 
             // C — same HEAD/index/staged identity, plus untracked file
             await File.WriteAllTextAsync(
-                Path.Combine(
-                    repositoryPath,
-                    "untracked.txt"),
-                "untracked\n");
+                Path.Combine(repositoryPath, "untracked.txt"),
+                "untracked\n"
+            );
 
-            var untrackedResult =
-                await builder.BuildAsync(repositoryPath);
+            var untrackedResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                untrackedResult.Succeeded,
-                untrackedResult.Diagnostic);
+            Assert.True(untrackedResult.Succeeded, untrackedResult.Diagnostic);
 
-            var untrackedSnapshot =
-                Assert.IsType<Snapshot>(
-                    untrackedResult.Snapshot);
+            var untrackedSnapshot = Assert.IsType<Snapshot>(untrackedResult.Snapshot);
 
-            Assert.Equal(
-                unstagedSnapshot.HeadFingerprint,
-                untrackedSnapshot.HeadFingerprint);
+            Assert.Equal(unstagedSnapshot.HeadFingerprint, untrackedSnapshot.HeadFingerprint);
 
-            Assert.Equal(
-                unstagedSnapshot.IndexFingerprint,
-                untrackedSnapshot.IndexFingerprint);
+            Assert.Equal(unstagedSnapshot.IndexFingerprint, untrackedSnapshot.IndexFingerprint);
 
-            Assert.Equal(
-                unstagedSnapshot.StagedFingerprint,
-                untrackedSnapshot.StagedFingerprint);
+            Assert.Equal(unstagedSnapshot.StagedFingerprint, untrackedSnapshot.StagedFingerprint);
 
             Assert.NotEqual(
                 unstagedSnapshot.WorkingTreeFingerprint,
-                untrackedSnapshot.WorkingTreeFingerprint);
+                untrackedSnapshot.WorkingTreeFingerprint
+            );
         }
         finally
         {
@@ -409,22 +270,14 @@ public class GitSnapshotBuilderTests
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
             await File.WriteAllTextAsync(
                 Path.Combine(repositoryPath, "tracked.txt"),
-                "committed\n");
+                "committed\n"
+            );
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "tracked.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
 
             await RunGitAsync(
                 runner,
@@ -435,60 +288,42 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
-            await File.WriteAllTextAsync(
-                Path.Combine(repositoryPath, "tracked.txt"),
-                "unstaged\n");
+            await File.WriteAllTextAsync(Path.Combine(repositoryPath, "tracked.txt"), "unstaged\n");
 
             await File.WriteAllTextAsync(
                 Path.Combine(repositoryPath, "untracked.txt"),
-                "untracked\n");
+                "untracked\n"
+            );
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
-            var firstResult =
-                await builder.BuildAsync(repositoryPath);
+            var firstResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                firstResult.Succeeded,
-                firstResult.Diagnostic);
+            Assert.True(firstResult.Succeeded, firstResult.Diagnostic);
 
-            var firstSnapshot =
-                Assert.IsType<Snapshot>(
-                    firstResult.Snapshot);
+            var firstSnapshot = Assert.IsType<Snapshot>(firstResult.Snapshot);
 
-            var secondResult =
-                await builder.BuildAsync(repositoryPath);
+            var secondResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                secondResult.Succeeded,
-                secondResult.Diagnostic);
+            Assert.True(secondResult.Succeeded, secondResult.Diagnostic);
 
-            var secondSnapshot =
-                Assert.IsType<Snapshot>(
-                    secondResult.Snapshot);
+            var secondSnapshot = Assert.IsType<Snapshot>(secondResult.Snapshot);
 
-            Assert.Equal(
-                firstSnapshot.SchemaVersion,
-                secondSnapshot.SchemaVersion);
+            Assert.Equal(firstSnapshot.SchemaVersion, secondSnapshot.SchemaVersion);
 
-            Assert.Equal(
-                firstSnapshot.HeadFingerprint,
-                secondSnapshot.HeadFingerprint);
+            Assert.Equal(firstSnapshot.HeadFingerprint, secondSnapshot.HeadFingerprint);
 
-            Assert.Equal(
-                firstSnapshot.IndexFingerprint,
-                secondSnapshot.IndexFingerprint);
+            Assert.Equal(firstSnapshot.IndexFingerprint, secondSnapshot.IndexFingerprint);
 
-            Assert.Equal(
-                firstSnapshot.StagedFingerprint,
-                secondSnapshot.StagedFingerprint);
+            Assert.Equal(firstSnapshot.StagedFingerprint, secondSnapshot.StagedFingerprint);
 
             Assert.Equal(
                 firstSnapshot.WorkingTreeFingerprint,
-                secondSnapshot.WorkingTreeFingerprint);
+                secondSnapshot.WorkingTreeFingerprint
+            );
         }
         finally
         {
@@ -504,25 +339,13 @@ public class GitSnapshotBuilderTests
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
-            var trackedPath =
-                Path.Combine(repositoryPath, "tracked.txt");
+            var trackedPath = Path.Combine(repositoryPath, "tracked.txt");
 
-            await File.WriteAllTextAsync(
-                trackedPath,
-                "committed\n");
+            await File.WriteAllTextAsync(trackedPath, "committed\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "tracked.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
 
             await RunGitAsync(
                 runner,
@@ -533,64 +356,36 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
-            await File.WriteAllTextAsync(
-                trackedPath,
-                "staged-one\n");
+            await File.WriteAllTextAsync(trackedPath, "staged-one\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "tracked.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
 
-            var firstResult =
-                await builder.BuildAsync(repositoryPath);
+            var firstResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                firstResult.Succeeded,
-                firstResult.Diagnostic);
+            Assert.True(firstResult.Succeeded, firstResult.Diagnostic);
 
-            var firstSnapshot =
-                Assert.IsType<Snapshot>(
-                    firstResult.Snapshot);
+            var firstSnapshot = Assert.IsType<Snapshot>(firstResult.Snapshot);
 
-            await File.WriteAllTextAsync(
-                trackedPath,
-                "staged-two\n");
+            await File.WriteAllTextAsync(trackedPath, "staged-two\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "tracked.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
 
-            var secondResult =
-                await builder.BuildAsync(repositoryPath);
+            var secondResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                secondResult.Succeeded,
-                secondResult.Diagnostic);
+            Assert.True(secondResult.Succeeded, secondResult.Diagnostic);
 
-            var secondSnapshot =
-                Assert.IsType<Snapshot>(
-                    secondResult.Snapshot);
+            var secondSnapshot = Assert.IsType<Snapshot>(secondResult.Snapshot);
 
-            Assert.Equal(
-                firstSnapshot.HeadFingerprint,
-                secondSnapshot.HeadFingerprint);
+            Assert.Equal(firstSnapshot.HeadFingerprint, secondSnapshot.HeadFingerprint);
 
-            Assert.NotEqual(
-                firstSnapshot.IndexFingerprint,
-                secondSnapshot.IndexFingerprint);
+            Assert.NotEqual(firstSnapshot.IndexFingerprint, secondSnapshot.IndexFingerprint);
 
-            Assert.NotEqual(
-                firstSnapshot.StagedFingerprint,
-                secondSnapshot.StagedFingerprint);
+            Assert.NotEqual(firstSnapshot.StagedFingerprint, secondSnapshot.StagedFingerprint);
         }
         finally
         {
@@ -606,25 +401,13 @@ public class GitSnapshotBuilderTests
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
-            var trackedPath =
-                Path.Combine(repositoryPath, "tracked.txt");
+            var trackedPath = Path.Combine(repositoryPath, "tracked.txt");
 
-            await File.WriteAllTextAsync(
-                trackedPath,
-                "committed\n");
+            await File.WriteAllTextAsync(trackedPath, "committed\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "tracked.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
 
             await RunGitAsync(
                 runner,
@@ -635,50 +418,35 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
-            var beforeResult =
-                await builder.BuildAsync(repositoryPath);
+            var beforeResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                beforeResult.Succeeded,
-                beforeResult.Diagnostic);
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
 
-            var beforeSnapshot =
-                Assert.IsType<Snapshot>(
-                    beforeResult.Snapshot);
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
 
             File.Delete(trackedPath);
 
-            var afterResult =
-                await builder.BuildAsync(repositoryPath);
+            var afterResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                afterResult.Succeeded,
-                afterResult.Diagnostic);
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
 
-            var afterSnapshot =
-                Assert.IsType<Snapshot>(
-                    afterResult.Snapshot);
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
 
-            Assert.Equal(
-                beforeSnapshot.HeadFingerprint,
-                afterSnapshot.HeadFingerprint);
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
 
-            Assert.Equal(
-                beforeSnapshot.IndexFingerprint,
-                afterSnapshot.IndexFingerprint);
+            Assert.Equal(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
 
-            Assert.Equal(
-                beforeSnapshot.StagedFingerprint,
-                afterSnapshot.StagedFingerprint);
+            Assert.Equal(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
 
             Assert.NotEqual(
                 beforeSnapshot.WorkingTreeFingerprint,
-                afterSnapshot.WorkingTreeFingerprint);
+                afterSnapshot.WorkingTreeFingerprint
+            );
         }
         finally
         {
@@ -694,25 +462,13 @@ public class GitSnapshotBuilderTests
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
-            var trackedPath =
-                Path.Combine(repositoryPath, "tracked.txt");
+            var trackedPath = Path.Combine(repositoryPath, "tracked.txt");
 
-            await File.WriteAllTextAsync(
-                trackedPath,
-                "committed\n");
+            await File.WriteAllTextAsync(trackedPath, "committed\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "tracked.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
 
             await RunGitAsync(
                 runner,
@@ -723,52 +479,32 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
-            var beforeResult =
-                await builder.BuildAsync(repositoryPath);
+            var beforeResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                beforeResult.Succeeded,
-                beforeResult.Diagnostic);
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
 
-            var beforeSnapshot =
-                Assert.IsType<Snapshot>(
-                    beforeResult.Snapshot);
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
 
             File.Delete(trackedPath);
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "-u");
+            await RunGitAsync(runner, repositoryPath, "add", "-u");
 
-            var afterResult =
-                await builder.BuildAsync(repositoryPath);
+            var afterResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                afterResult.Succeeded,
-                afterResult.Diagnostic);
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
 
-            var afterSnapshot =
-                Assert.IsType<Snapshot>(
-                    afterResult.Snapshot);
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
 
-            Assert.Equal(
-                beforeSnapshot.HeadFingerprint,
-                afterSnapshot.HeadFingerprint);
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
 
-            Assert.NotEqual(
-                beforeSnapshot.IndexFingerprint,
-                afterSnapshot.IndexFingerprint);
+            Assert.NotEqual(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
 
-            Assert.NotEqual(
-                beforeSnapshot.StagedFingerprint,
-                afterSnapshot.StagedFingerprint);
+            Assert.NotEqual(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
         }
         finally
         {
@@ -784,28 +520,15 @@ public class GitSnapshotBuilderTests
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
-            var oldPath =
-                Path.Combine(repositoryPath, "old.txt");
+            var oldPath = Path.Combine(repositoryPath, "old.txt");
 
-            var newPath =
-                Path.Combine(repositoryPath, "new.txt");
+            var newPath = Path.Combine(repositoryPath, "new.txt");
 
-            await File.WriteAllTextAsync(
-                oldPath,
-                "same-content\n");
+            await File.WriteAllTextAsync(oldPath, "same-content\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "old.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "old.txt");
 
             await RunGitAsync(
                 runner,
@@ -816,54 +539,32 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
-            var beforeResult =
-                await builder.BuildAsync(repositoryPath);
+            var beforeResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                beforeResult.Succeeded,
-                beforeResult.Diagnostic);
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
 
-            var beforeSnapshot =
-                Assert.IsType<Snapshot>(
-                    beforeResult.Snapshot);
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
 
-            File.Move(
-                oldPath,
-                newPath);
+            File.Move(oldPath, newPath);
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "-A");
+            await RunGitAsync(runner, repositoryPath, "add", "-A");
 
-            var afterResult =
-                await builder.BuildAsync(repositoryPath);
+            var afterResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                afterResult.Succeeded,
-                afterResult.Diagnostic);
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
 
-            var afterSnapshot =
-                Assert.IsType<Snapshot>(
-                    afterResult.Snapshot);
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
 
-            Assert.Equal(
-                beforeSnapshot.HeadFingerprint,
-                afterSnapshot.HeadFingerprint);
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
 
-            Assert.NotEqual(
-                beforeSnapshot.IndexFingerprint,
-                afterSnapshot.IndexFingerprint);
+            Assert.NotEqual(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
 
-            Assert.NotEqual(
-                beforeSnapshot.StagedFingerprint,
-                afterSnapshot.StagedFingerprint);
+            Assert.NotEqual(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
         }
         finally
         {
@@ -879,28 +580,15 @@ public class GitSnapshotBuilderTests
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
-            var oldPath =
-                Path.Combine(repositoryPath, "old.txt");
+            var oldPath = Path.Combine(repositoryPath, "old.txt");
 
-            var newPath =
-                Path.Combine(repositoryPath, "new.txt");
+            var newPath = Path.Combine(repositoryPath, "new.txt");
 
-            await File.WriteAllTextAsync(
-                oldPath,
-                "same-content\n");
+            await File.WriteAllTextAsync(oldPath, "same-content\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "old.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "old.txt");
 
             await RunGitAsync(
                 runner,
@@ -911,106 +599,62 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
-            File.Move(
-                oldPath,
-                newPath);
+            File.Move(oldPath, newPath);
 
-            await RunGitAsync(
-                runner,
+            await RunGitAsync(runner, repositoryPath, "add", "-A");
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            await RunGitAsync(runner, repositoryPath, "config", "status.renames", "true");
+
+            var renameEnabledStatus = await runner.RunReadOnlyAsync(
                 repositoryPath,
-                "add",
-                "-A");
+                ["status", "--porcelain=v2", "-z", "--untracked-files=all"],
+                GitCommandTimeout
+            );
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            Assert.True(renameEnabledStatus.Succeeded, renameEnabledStatus.StandardError);
 
-            await RunGitAsync(
-                runner,
+            var firstResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(firstResult.Succeeded, firstResult.Diagnostic);
+
+            var firstSnapshot = Assert.IsType<Snapshot>(firstResult.Snapshot);
+
+            await RunGitAsync(runner, repositoryPath, "config", "status.renames", "false");
+
+            var renameDisabledStatus = await runner.RunReadOnlyAsync(
                 repositoryPath,
-                "config",
-                "status.renames",
-                "true");
+                ["status", "--porcelain=v2", "-z", "--untracked-files=all"],
+                GitCommandTimeout
+            );
 
-            var renameEnabledStatus =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "status",
-                        "--porcelain=v2",
-                        "-z",
-                        "--untracked-files=all"
-                    ],
-                    GitCommandTimeout);
-
-            Assert.True(
-                renameEnabledStatus.Succeeded,
-                renameEnabledStatus.StandardError);
-
-            var firstResult =
-                await builder.BuildAsync(repositoryPath);
-
-            Assert.True(
-                firstResult.Succeeded,
-                firstResult.Diagnostic);
-
-            var firstSnapshot =
-                Assert.IsType<Snapshot>(
-                    firstResult.Snapshot);
-
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "config",
-                "status.renames",
-                "false");
-
-            var renameDisabledStatus =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "status",
-                        "--porcelain=v2",
-                        "-z",
-                        "--untracked-files=all"
-                    ],
-                    GitCommandTimeout);
-
-            Assert.True(
-                renameDisabledStatus.Succeeded,
-                renameDisabledStatus.StandardError);
+            Assert.True(renameDisabledStatus.Succeeded, renameDisabledStatus.StandardError);
 
             Assert.NotEqual(
                 renameEnabledStatus.StandardOutput,
-                renameDisabledStatus.StandardOutput);
+                renameDisabledStatus.StandardOutput
+            );
 
-            var secondResult =
-                await builder.BuildAsync(repositoryPath);
+            var secondResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                secondResult.Succeeded,
-                secondResult.Diagnostic);
+            Assert.True(secondResult.Succeeded, secondResult.Diagnostic);
 
-            var secondSnapshot =
-                Assert.IsType<Snapshot>(
-                    secondResult.Snapshot);
+            var secondSnapshot = Assert.IsType<Snapshot>(secondResult.Snapshot);
 
-            Assert.Equal(
-                firstSnapshot.HeadFingerprint,
-                secondSnapshot.HeadFingerprint);
+            Assert.Equal(firstSnapshot.HeadFingerprint, secondSnapshot.HeadFingerprint);
 
-            Assert.Equal(
-                firstSnapshot.IndexFingerprint,
-                secondSnapshot.IndexFingerprint);
+            Assert.Equal(firstSnapshot.IndexFingerprint, secondSnapshot.IndexFingerprint);
 
-            Assert.Equal(
-                firstSnapshot.StagedFingerprint,
-                secondSnapshot.StagedFingerprint);
+            Assert.Equal(firstSnapshot.StagedFingerprint, secondSnapshot.StagedFingerprint);
 
             Assert.Equal(
                 firstSnapshot.WorkingTreeFingerprint,
-                secondSnapshot.WorkingTreeFingerprint);
+                secondSnapshot.WorkingTreeFingerprint
+            );
         }
         finally
         {
@@ -1026,32 +670,15 @@ public class GitSnapshotBuilderTests
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "config",
-                "core.autocrlf",
-                "false");
+            await RunGitAsync(runner, repositoryPath, "config", "core.autocrlf", "false");
 
-            var filePath =
-                Path.Combine(repositoryPath, "file.txt");
+            var filePath = Path.Combine(repositoryPath, "file.txt");
 
-            await File.WriteAllTextAsync(
-                filePath,
-                "line-one\nline-two\n");
+            await File.WriteAllTextAsync(filePath, "line-one\nline-two\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "file.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "file.txt");
 
             await RunGitAsync(
                 runner,
@@ -1062,100 +689,60 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
-            await File.WriteAllTextAsync(
-                filePath,
-                "line-one\r\nline-two\r\n");
+            await File.WriteAllTextAsync(filePath, "line-one\r\nline-two\r\n");
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
-            await RunGitAsync(
-                runner,
+            await RunGitAsync(runner, repositoryPath, "config", "core.autocrlf", "false");
+
+            var autoCrlfDisabledDiff = await runner.RunReadOnlyAsync(
                 repositoryPath,
-                "config",
-                "core.autocrlf",
-                "false");
+                ["diff", "--binary", "--no-ext-diff", "--no-textconv"],
+                GitCommandTimeout
+            );
 
-            var autoCrlfDisabledDiff =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "diff",
-                        "--binary",
-                        "--no-ext-diff",
-                        "--no-textconv"
-                    ],
-                    GitCommandTimeout);
+            Assert.True(autoCrlfDisabledDiff.Succeeded, autoCrlfDisabledDiff.StandardError);
 
-            Assert.True(
-                autoCrlfDisabledDiff.Succeeded,
-                autoCrlfDisabledDiff.StandardError);
+            var firstResult = await builder.BuildAsync(repositoryPath);
 
-            var firstResult =
-                await builder.BuildAsync(repositoryPath);
+            Assert.True(firstResult.Succeeded, firstResult.Diagnostic);
 
-            Assert.True(
-                firstResult.Succeeded,
-                firstResult.Diagnostic);
+            var firstSnapshot = Assert.IsType<Snapshot>(firstResult.Snapshot);
 
-            var firstSnapshot =
-                Assert.IsType<Snapshot>(
-                    firstResult.Snapshot);
+            await RunGitAsync(runner, repositoryPath, "config", "core.autocrlf", "true");
 
-            await RunGitAsync(
-                runner,
+            var autoCrlfEnabledDiff = await runner.RunReadOnlyAsync(
                 repositoryPath,
-                "config",
-                "core.autocrlf",
-                "true");
+                ["diff", "--binary", "--no-ext-diff", "--no-textconv"],
+                GitCommandTimeout
+            );
 
-            var autoCrlfEnabledDiff =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "diff",
-                        "--binary",
-                        "--no-ext-diff",
-                        "--no-textconv"
-                    ],
-                    GitCommandTimeout);
-
-            Assert.True(
-                autoCrlfEnabledDiff.Succeeded,
-                autoCrlfEnabledDiff.StandardError);
+            Assert.True(autoCrlfEnabledDiff.Succeeded, autoCrlfEnabledDiff.StandardError);
 
             Assert.NotEqual(
                 autoCrlfDisabledDiff.StandardOutput,
-                autoCrlfEnabledDiff.StandardOutput);
+                autoCrlfEnabledDiff.StandardOutput
+            );
 
-            var secondResult =
-                await builder.BuildAsync(repositoryPath);
+            var secondResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                secondResult.Succeeded,
-                secondResult.Diagnostic);
+            Assert.True(secondResult.Succeeded, secondResult.Diagnostic);
 
-            var secondSnapshot =
-                Assert.IsType<Snapshot>(
-                    secondResult.Snapshot);
+            var secondSnapshot = Assert.IsType<Snapshot>(secondResult.Snapshot);
 
-            Assert.Equal(
-                firstSnapshot.HeadFingerprint,
-                secondSnapshot.HeadFingerprint);
+            Assert.Equal(firstSnapshot.HeadFingerprint, secondSnapshot.HeadFingerprint);
 
-            Assert.Equal(
-                firstSnapshot.IndexFingerprint,
-                secondSnapshot.IndexFingerprint);
+            Assert.Equal(firstSnapshot.IndexFingerprint, secondSnapshot.IndexFingerprint);
 
-            Assert.Equal(
-                firstSnapshot.StagedFingerprint,
-                secondSnapshot.StagedFingerprint);
+            Assert.Equal(firstSnapshot.StagedFingerprint, secondSnapshot.StagedFingerprint);
 
             Assert.Equal(
                 firstSnapshot.WorkingTreeFingerprint,
-                secondSnapshot.WorkingTreeFingerprint);
+                secondSnapshot.WorkingTreeFingerprint
+            );
         }
         finally
         {
@@ -1171,25 +758,13 @@ public class GitSnapshotBuilderTests
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
-            var trackedPath =
-                Path.Combine(repositoryPath, "tracked.txt");
+            var trackedPath = Path.Combine(repositoryPath, "tracked.txt");
 
-            await File.WriteAllTextAsync(
-                trackedPath,
-                "committed\n");
+            await File.WriteAllTextAsync(trackedPath, "committed\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "tracked.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
 
             await RunGitAsync(
                 runner,
@@ -1200,54 +775,37 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
             File.Delete(trackedPath);
 
-            var deletedResult =
-                await builder.BuildAsync(repositoryPath);
+            var deletedResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                deletedResult.Succeeded,
-                deletedResult.Diagnostic);
+            Assert.True(deletedResult.Succeeded, deletedResult.Diagnostic);
 
-            var deletedSnapshot =
-                Assert.IsType<Snapshot>(
-                    deletedResult.Snapshot);
+            var deletedSnapshot = Assert.IsType<Snapshot>(deletedResult.Snapshot);
 
-            await File.WriteAllTextAsync(
-                trackedPath,
-                string.Empty);
+            await File.WriteAllTextAsync(trackedPath, string.Empty);
 
-            var emptyResult =
-                await builder.BuildAsync(repositoryPath);
+            var emptyResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                emptyResult.Succeeded,
-                emptyResult.Diagnostic);
+            Assert.True(emptyResult.Succeeded, emptyResult.Diagnostic);
 
-            var emptySnapshot =
-                Assert.IsType<Snapshot>(
-                    emptyResult.Snapshot);
+            var emptySnapshot = Assert.IsType<Snapshot>(emptyResult.Snapshot);
 
-            Assert.Equal(
-                deletedSnapshot.HeadFingerprint,
-                emptySnapshot.HeadFingerprint);
+            Assert.Equal(deletedSnapshot.HeadFingerprint, emptySnapshot.HeadFingerprint);
 
-            Assert.Equal(
-                deletedSnapshot.IndexFingerprint,
-                emptySnapshot.IndexFingerprint);
+            Assert.Equal(deletedSnapshot.IndexFingerprint, emptySnapshot.IndexFingerprint);
 
-            Assert.Equal(
-                deletedSnapshot.StagedFingerprint,
-                emptySnapshot.StagedFingerprint);
+            Assert.Equal(deletedSnapshot.StagedFingerprint, emptySnapshot.StagedFingerprint);
 
             Assert.NotEqual(
                 deletedSnapshot.WorkingTreeFingerprint,
-                emptySnapshot.WorkingTreeFingerprint);
+                emptySnapshot.WorkingTreeFingerprint
+            );
         }
         finally
         {
@@ -1261,29 +819,21 @@ public class GitSnapshotBuilderTests
         var runner = new GitProcessRunner();
         var repositoryPath = CreateTemporaryDirectory();
 
-        var ignoreFilePath =
-            Path.Combine(
-                Path.GetTempPath(),
-                $"Codelaxy Ignore {Guid.NewGuid():N}.txt");
+        var ignoreFilePath = Path.Combine(
+            Path.GetTempPath(),
+            $"Codelaxy Ignore {Guid.NewGuid():N}.txt"
+        );
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
             await File.WriteAllTextAsync(
                 Path.Combine(repositoryPath, "tracked.txt"),
-                "committed\n");
+                "committed\n"
+            );
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "tracked.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
 
             await RunGitAsync(
                 runner,
@@ -1294,103 +844,76 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
             await File.WriteAllTextAsync(
                 Path.Combine(repositoryPath, "untracked.tmp"),
-                "untracked\n");
+                "untracked\n"
+            );
 
-            await File.WriteAllTextAsync(
-     ignoreFilePath,
-     "*.tmp\n");
+            await File.WriteAllTextAsync(ignoreFilePath, "*.tmp\n");
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
-            var visibleResult =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "ls-files",
-                        "--others",
-                        "--exclude-standard",
-                        "-z"
-                    ],
-                    GitCommandTimeout);
+            var visibleResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["ls-files", "--others", "--exclude-standard", "-z"],
+                GitCommandTimeout
+            );
 
-            Assert.True(
-                visibleResult.Succeeded,
-                visibleResult.StandardError);
+            Assert.True(visibleResult.Succeeded, visibleResult.StandardError);
 
             Assert.Contains(
                 "untracked.tmp",
                 visibleResult.StandardOutput,
-                StringComparison.Ordinal);
+                StringComparison.Ordinal
+            );
 
-            var firstResult =
-                await builder.BuildAsync(repositoryPath);
+            var firstResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                firstResult.Succeeded,
-                firstResult.Diagnostic);
+            Assert.True(firstResult.Succeeded, firstResult.Diagnostic);
 
-            var firstSnapshot =
-                Assert.IsType<Snapshot>(
-                    firstResult.Snapshot);
+            var firstSnapshot = Assert.IsType<Snapshot>(firstResult.Snapshot);
 
             await RunGitAsync(
                 runner,
                 repositoryPath,
                 "config",
                 "core.excludesFile",
-                ignoreFilePath);
+                ignoreFilePath
+            );
 
-            var ignoredResult =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "ls-files",
-                        "--others",
-                        "--exclude-standard",
-                        "-z"
-                    ],
-                    GitCommandTimeout);
+            var ignoredResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["ls-files", "--others", "--exclude-standard", "-z"],
+                GitCommandTimeout
+            );
 
-            Assert.True(
-                ignoredResult.Succeeded,
-                ignoredResult.StandardError);
+            Assert.True(ignoredResult.Succeeded, ignoredResult.StandardError);
 
             Assert.DoesNotContain(
                 "untracked.tmp",
                 ignoredResult.StandardOutput,
-                StringComparison.Ordinal);
+                StringComparison.Ordinal
+            );
 
-            var secondResult =
-                await builder.BuildAsync(repositoryPath);
+            var secondResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                secondResult.Succeeded,
-                secondResult.Diagnostic);
+            Assert.True(secondResult.Succeeded, secondResult.Diagnostic);
 
-            var secondSnapshot =
-                Assert.IsType<Snapshot>(
-                    secondResult.Snapshot);
+            var secondSnapshot = Assert.IsType<Snapshot>(secondResult.Snapshot);
 
-            Assert.Equal(
-                firstSnapshot.HeadFingerprint,
-                secondSnapshot.HeadFingerprint);
+            Assert.Equal(firstSnapshot.HeadFingerprint, secondSnapshot.HeadFingerprint);
 
-            Assert.Equal(
-                firstSnapshot.IndexFingerprint,
-                secondSnapshot.IndexFingerprint);
+            Assert.Equal(firstSnapshot.IndexFingerprint, secondSnapshot.IndexFingerprint);
 
-            Assert.Equal(
-                firstSnapshot.StagedFingerprint,
-                secondSnapshot.StagedFingerprint);
+            Assert.Equal(firstSnapshot.StagedFingerprint, secondSnapshot.StagedFingerprint);
 
             Assert.Equal(
                 firstSnapshot.WorkingTreeFingerprint,
-                secondSnapshot.WorkingTreeFingerprint);
+                secondSnapshot.WorkingTreeFingerprint
+            );
         }
         finally
         {
@@ -1417,17 +940,15 @@ public class GitSnapshotBuilderTests
                 "init",
                 "--object-format=sha256",
                 "-b",
-                "main");
+                "main"
+            );
 
             await File.WriteAllTextAsync(
                 Path.Combine(repositoryPath, "tracked.txt"),
-                "committed\n");
+                "committed\n"
+            );
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "tracked.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
 
             await RunGitAsync(
                 runner,
@@ -1438,55 +959,36 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
-            var objectFormat =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "rev-parse",
-                    "--show-object-format"
-                    ],
-                    GitCommandTimeout);
+            var objectFormat = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["rev-parse", "--show-object-format"],
+                GitCommandTimeout
+            );
 
-            Assert.True(
-                objectFormat.Succeeded,
-                objectFormat.StandardError);
+            Assert.True(objectFormat.Succeeded, objectFormat.StandardError);
 
-            Assert.Equal(
-                "sha256",
-                objectFormat.StandardOutput.Trim());
+            Assert.Equal("sha256", objectFormat.StandardOutput.Trim());
 
-            var head =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                    "rev-parse",
-                    "--verify",
-                    "HEAD"
-                    ],
-                    GitCommandTimeout);
+            var head = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["rev-parse", "--verify", "HEAD"],
+                GitCommandTimeout
+            );
 
-            Assert.True(
-                head.Succeeded,
-                head.StandardError);
+            Assert.True(head.Succeeded, head.StandardError);
 
-            Assert.Equal(
-                64,
-                head.StandardOutput.Trim().Length);
+            Assert.Equal(64, head.StandardOutput.Trim().Length);
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
-            var result =
-                await builder.BuildAsync(repositoryPath);
+            var result = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                result.Succeeded,
-                result.Diagnostic);
+            Assert.True(result.Succeeded, result.Diagnostic);
 
-            Assert.IsType<Snapshot>(
-                result.Snapshot);
+            Assert.IsType<Snapshot>(result.Snapshot);
         }
         finally
         {
@@ -1502,27 +1004,13 @@ public class GitSnapshotBuilderTests
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
-            var conflictPath =
-                Path.Combine(
-                    repositoryPath,
-                    "conflict.txt");
+            var conflictPath = Path.Combine(repositoryPath, "conflict.txt");
 
-            await File.WriteAllTextAsync(
-                conflictPath,
-                "base\n");
+            await File.WriteAllTextAsync(conflictPath, "base\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "conflict.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "conflict.txt");
 
             await RunGitAsync(
                 runner,
@@ -1533,24 +1021,14 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "base");
+                "base"
+            );
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "switch",
-                "-c",
-                "theirs");
+            await RunGitAsync(runner, repositoryPath, "switch", "-c", "theirs");
 
-            await File.WriteAllTextAsync(
-                conflictPath,
-                "theirs\n");
+            await File.WriteAllTextAsync(conflictPath, "theirs\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "conflict.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "conflict.txt");
 
             await RunGitAsync(
                 runner,
@@ -1561,23 +1039,14 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "theirs");
+                "theirs"
+            );
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "switch",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "switch", "main");
 
-            await File.WriteAllTextAsync(
-                conflictPath,
-                "ours\n");
+            await File.WriteAllTextAsync(conflictPath, "ours\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "conflict.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "conflict.txt");
 
             await RunGitAsync(
                 runner,
@@ -1588,96 +1057,64 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "ours");
+                "ours"
+            );
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
-            var beforeResult =
-                await builder.BuildAsync(repositoryPath);
+            var beforeResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                beforeResult.Succeeded,
-                beforeResult.Diagnostic);
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
 
-            var beforeSnapshot =
-                Assert.IsType<Snapshot>(
-                    beforeResult.Snapshot);
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
 
-            var mergeResult =
-                await runner.RunAsync(
-                    repositoryPath,
-                    [
-                        "-c",
-                        "user.name=Codelaxy Tests",
-                        "-c",
-                        "user.email=codelaxy@example.invalid",
-                        "merge",
-                        "theirs"
-                    ]);
+            var mergeResult = await runner.RunAsync(
+                repositoryPath,
+                [
+                    "-c",
+                    "user.name=Codelaxy Tests",
+                    "-c",
+                    "user.email=codelaxy@example.invalid",
+                    "merge",
+                    "theirs",
+                ]
+            );
 
-            Assert.False(
-                mergeResult.Succeeded);
+            Assert.False(mergeResult.Succeeded);
 
-            var indexResult =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "ls-files",
-                        "--stage",
-                        "-z"
-                    ],
-                    GitCommandTimeout);
+            var indexResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["ls-files", "--stage", "-z"],
+                GitCommandTimeout
+            );
 
-            Assert.True(
-                indexResult.Succeeded,
-                indexResult.StandardError);
+            Assert.True(indexResult.Succeeded, indexResult.StandardError);
 
-            var entries =
-                GitIndexEntryParser.Parse(
-                    indexResult.StandardOutput);
+            var entries = GitIndexEntryParser.Parse(indexResult.StandardOutput);
 
-            var conflictEntries =
-                entries
-                    .Where(
-                        entry =>
-                            entry.Path == "conflict.txt")
-                    .OrderBy(
-                        entry =>
-                            entry.Stage)
-                    .ToArray();
+            var conflictEntries = entries
+                .Where(entry => entry.Path == "conflict.txt")
+                .OrderBy(entry => entry.Stage)
+                .ToArray();
 
-            Assert.Equal(
-                [1, 2, 3],
-                conflictEntries.Select(
-                    entry => entry.Stage));
+            Assert.Equal([1, 2, 3], conflictEntries.Select(entry => entry.Stage));
 
-            var afterResult =
-                await builder.BuildAsync(repositoryPath);
+            var afterResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                afterResult.Succeeded,
-                afterResult.Diagnostic);
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
 
-            var afterSnapshot =
-                Assert.IsType<Snapshot>(
-                    afterResult.Snapshot);
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
 
-            Assert.Equal(
-                beforeSnapshot.HeadFingerprint,
-                afterSnapshot.HeadFingerprint);
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
 
-            Assert.NotEqual(
-                beforeSnapshot.IndexFingerprint,
-                afterSnapshot.IndexFingerprint);
+            Assert.NotEqual(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
 
-            Assert.NotEqual(
-                beforeSnapshot.StagedFingerprint,
-                afterSnapshot.StagedFingerprint);
+            Assert.NotEqual(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
 
             Assert.NotEqual(
                 beforeSnapshot.WorkingTreeFingerprint,
-                afterSnapshot.WorkingTreeFingerprint);
+                afterSnapshot.WorkingTreeFingerprint
+            );
         }
         finally
         {
@@ -1693,32 +1130,15 @@ public class GitSnapshotBuilderTests
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
-            var sourcePath =
-                Path.Combine(
-                    repositoryPath,
-                    "source.txt");
+            var sourcePath = Path.Combine(repositoryPath, "source.txt");
 
-            var copyPath =
-                Path.Combine(
-                    repositoryPath,
-                    "copy.txt");
+            var copyPath = Path.Combine(repositoryPath, "copy.txt");
 
-            await File.WriteAllTextAsync(
-                sourcePath,
-                "same-content\n");
+            await File.WriteAllTextAsync(sourcePath, "same-content\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "source.txt");
+            await RunGitAsync(runner, repositoryPath, "add", "source.txt");
 
             await RunGitAsync(
                 runner,
@@ -1729,104 +1149,59 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
-            var beforeResult =
-                await builder.BuildAsync(repositoryPath);
+            var beforeResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                beforeResult.Succeeded,
-                beforeResult.Diagnostic);
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
 
-            var beforeSnapshot =
-                Assert.IsType<Snapshot>(
-                    beforeResult.Snapshot);
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
 
-            File.Copy(
-                sourcePath,
-                copyPath);
+            File.Copy(sourcePath, copyPath);
 
-            await RunGitAsync(
-                runner,
+            await RunGitAsync(runner, repositoryPath, "add", "copy.txt");
+
+            var indexResult = await runner.RunReadOnlyAsync(
                 repositoryPath,
-                "add",
-                "copy.txt");
+                ["ls-files", "--stage", "-z"],
+                GitCommandTimeout
+            );
 
-            var indexResult =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "ls-files",
-                        "--stage",
-                        "-z"
-                    ],
-                    GitCommandTimeout);
+            Assert.True(indexResult.Succeeded, indexResult.StandardError);
 
-            Assert.True(
-                indexResult.Succeeded,
-                indexResult.StandardError);
+            var entries = GitIndexEntryParser.Parse(indexResult.StandardOutput);
 
-            var entries =
-                GitIndexEntryParser.Parse(
-                    indexResult.StandardOutput);
+            var sourceEntry = Assert.Single(entries, entry => entry.Path == "source.txt");
 
-            var sourceEntry =
-                Assert.Single(
-                 entries,
-                 entry =>
-                     entry.Path == "source.txt");
+            var copyEntry = Assert.Single(entries, entry => entry.Path == "copy.txt");
 
-            var copyEntry =
-                Assert.Single(
-                    entries,
-                    entry =>
-                        entry.Path == "copy.txt");
+            Assert.Equal(0, sourceEntry.Stage);
 
-            Assert.Equal(
-                0,
-                sourceEntry.Stage);
+            Assert.Equal(0, copyEntry.Stage);
 
-            Assert.Equal(
-                0,
-                copyEntry.Stage);
+            Assert.Equal(sourceEntry.ObjectId, copyEntry.ObjectId);
 
-            Assert.Equal(
-                sourceEntry.ObjectId,
-                copyEntry.ObjectId);
+            Assert.NotEqual(sourceEntry.Path, copyEntry.Path);
 
-            Assert.NotEqual(
-                sourceEntry.Path,
-                copyEntry.Path);
+            var afterResult = await builder.BuildAsync(repositoryPath);
 
-            var afterResult =
-                await builder.BuildAsync(repositoryPath);
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
 
-            Assert.True(
-                afterResult.Succeeded,
-                afterResult.Diagnostic);
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
 
-            var afterSnapshot =
-                Assert.IsType<Snapshot>(
-                    afterResult.Snapshot);
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
 
-            Assert.Equal(
-                beforeSnapshot.HeadFingerprint,
-                afterSnapshot.HeadFingerprint);
+            Assert.NotEqual(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
 
-            Assert.NotEqual(
-                beforeSnapshot.IndexFingerprint,
-                afterSnapshot.IndexFingerprint);
-
-            Assert.NotEqual(
-                beforeSnapshot.StagedFingerprint,
-                afterSnapshot.StagedFingerprint);
+            Assert.NotEqual(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
 
             Assert.NotEqual(
                 beforeSnapshot.WorkingTreeFingerprint,
-                afterSnapshot.WorkingTreeFingerprint);
+                afterSnapshot.WorkingTreeFingerprint
+            );
         }
         finally
         {
@@ -1842,27 +1217,13 @@ public class GitSnapshotBuilderTests
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
-            var scriptPath =
-                Path.Combine(
-                    repositoryPath,
-                    "script.sh");
+            var scriptPath = Path.Combine(repositoryPath, "script.sh");
 
-            await File.WriteAllTextAsync(
-                scriptPath,
-                "#!/bin/sh\necho hello\n");
+            await File.WriteAllTextAsync(scriptPath, "#!/bin/sh\necho hello\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "script.sh");
+            await RunGitAsync(runner, repositoryPath, "add", "script.sh");
 
             await RunGitAsync(
                 runner,
@@ -1873,109 +1234,67 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
-            var beforeIndexResult =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "ls-files",
-                        "--stage",
-                        "-z"
-                    ],
-                    GitCommandTimeout);
-
-            Assert.True(
-                beforeIndexResult.Succeeded,
-                beforeIndexResult.StandardError);
-
-            var beforeEntry =
-                Assert.Single(
-                    GitIndexEntryParser.Parse(
-                        beforeIndexResult.StandardOutput),
-                    entry =>
-                        entry.Path == "script.sh");
-
-            Assert.Equal(
-                "100644",
-                beforeEntry.Mode);
-
-            var beforeResult =
-                await builder.BuildAsync(repositoryPath);
-
-            Assert.True(
-                beforeResult.Succeeded,
-                beforeResult.Diagnostic);
-
-            var beforeSnapshot =
-                Assert.IsType<Snapshot>(
-                    beforeResult.Snapshot);
-
-            await RunGitAsync(
-                runner,
+            var beforeIndexResult = await runner.RunReadOnlyAsync(
                 repositoryPath,
-                "update-index",
-                "--chmod=+x",
-                "script.sh");
+                ["ls-files", "--stage", "-z"],
+                GitCommandTimeout
+            );
 
-            var afterIndexResult =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "ls-files",
-                        "--stage",
-                        "-z"
-                    ],
-                    GitCommandTimeout);
+            Assert.True(beforeIndexResult.Succeeded, beforeIndexResult.StandardError);
 
-            Assert.True(
-                afterIndexResult.Succeeded,
-                afterIndexResult.StandardError);
+            var beforeEntry = Assert.Single(
+                GitIndexEntryParser.Parse(beforeIndexResult.StandardOutput),
+                entry => entry.Path == "script.sh"
+            );
 
-            var afterEntry =
-                Assert.Single(
-                    GitIndexEntryParser.Parse(
-                        afterIndexResult.StandardOutput),
-                    entry =>
-                        entry.Path == "script.sh");
+            Assert.Equal("100644", beforeEntry.Mode);
 
-            Assert.Equal(
-                "100755",
-                afterEntry.Mode);
+            var beforeResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.Equal(
-                beforeEntry.ObjectId,
-                afterEntry.ObjectId);
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
 
-            var afterResult =
-                await builder.BuildAsync(repositoryPath);
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
 
-            Assert.True(
-                afterResult.Succeeded,
-                afterResult.Diagnostic);
+            await RunGitAsync(runner, repositoryPath, "update-index", "--chmod=+x", "script.sh");
 
-            var afterSnapshot =
-                Assert.IsType<Snapshot>(
-                    afterResult.Snapshot);
+            var afterIndexResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["ls-files", "--stage", "-z"],
+                GitCommandTimeout
+            );
 
-            Assert.Equal(
-                beforeSnapshot.HeadFingerprint,
-                afterSnapshot.HeadFingerprint);
+            Assert.True(afterIndexResult.Succeeded, afterIndexResult.StandardError);
 
-            Assert.NotEqual(
-                beforeSnapshot.IndexFingerprint,
-                afterSnapshot.IndexFingerprint);
+            var afterEntry = Assert.Single(
+                GitIndexEntryParser.Parse(afterIndexResult.StandardOutput),
+                entry => entry.Path == "script.sh"
+            );
 
-            Assert.NotEqual(
-                beforeSnapshot.StagedFingerprint,
-                afterSnapshot.StagedFingerprint);
+            Assert.Equal("100755", afterEntry.Mode);
+
+            Assert.Equal(beforeEntry.ObjectId, afterEntry.ObjectId);
+
+            var afterResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
+
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
+
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
+
+            Assert.NotEqual(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
+
+            Assert.NotEqual(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
 
             Assert.Equal(
                 beforeSnapshot.WorkingTreeFingerprint,
-                afterSnapshot.WorkingTreeFingerprint);
+                afterSnapshot.WorkingTreeFingerprint
+            );
         }
         finally
         {
@@ -1996,27 +1315,13 @@ public class GitSnapshotBuilderTests
 
         try
         {
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "init",
-                "-b",
-                "main");
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
 
-            var scriptPath =
-                Path.Combine(
-                    repositoryPath,
-                    "script.sh");
+            var scriptPath = Path.Combine(repositoryPath, "script.sh");
 
-            await File.WriteAllTextAsync(
-                scriptPath,
-                "#!/bin/sh\necho hello\n");
+            await File.WriteAllTextAsync(scriptPath, "#!/bin/sh\necho hello\n");
 
-            await RunGitAsync(
-                runner,
-                repositoryPath,
-                "add",
-                "script.sh");
+            await RunGitAsync(runner, repositoryPath, "add", "script.sh");
 
             await RunGitAsync(
                 runner,
@@ -2027,158 +1332,104 @@ public class GitSnapshotBuilderTests
                 "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
-                "initial");
+                "initial"
+            );
 
-            var builder =
-                new GitSnapshotBuilder(runner);
+            var builder = new GitSnapshotBuilder(runner);
 
-            var beforeIndexResult =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "ls-files",
-                        "--stage",
-                        "-z"
-                    ],
-                    GitCommandTimeout);
+            var beforeIndexResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["ls-files", "--stage", "-z"],
+                GitCommandTimeout
+            );
 
-            Assert.True(
-                beforeIndexResult.Succeeded,
-                beforeIndexResult.StandardError);
+            Assert.True(beforeIndexResult.Succeeded, beforeIndexResult.StandardError);
 
-            var beforeEntry =
-                Assert.Single(
-                    GitIndexEntryParser.Parse(
-                        beforeIndexResult.StandardOutput),
-                    entry =>
-                        entry.Path == "script.sh");
+            var beforeEntry = Assert.Single(
+                GitIndexEntryParser.Parse(beforeIndexResult.StandardOutput),
+                entry => entry.Path == "script.sh"
+            );
 
-            Assert.Equal(
-                "100644",
-                beforeEntry.Mode);
+            Assert.Equal("100644", beforeEntry.Mode);
 
-            var beforeHashResult =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "hash-object",
-                        "--no-filters",
-                        "script.sh"
-                    ],
-                    GitCommandTimeout);
+            var beforeHashResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["hash-object", "--no-filters", "script.sh"],
+                GitCommandTimeout
+            );
 
-            Assert.True(
-                beforeHashResult.Succeeded,
-                beforeHashResult.StandardError);
+            Assert.True(beforeHashResult.Succeeded, beforeHashResult.StandardError);
 
-            var beforeResult =
-                await builder.BuildAsync(repositoryPath);
+            var beforeResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                beforeResult.Succeeded,
-                beforeResult.Diagnostic);
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
 
-            var beforeSnapshot =
-                Assert.IsType<Snapshot>(
-                    beforeResult.Snapshot);
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
 
-            var mode =
-                File.GetUnixFileMode(scriptPath);
+            var mode = File.GetUnixFileMode(scriptPath);
 
             File.SetUnixFileMode(
                 scriptPath,
-                mode |
-                UnixFileMode.UserExecute |
-                UnixFileMode.GroupExecute |
-                UnixFileMode.OtherExecute);
+                mode
+                    | UnixFileMode.UserExecute
+                    | UnixFileMode.GroupExecute
+                    | UnixFileMode.OtherExecute
+            );
 
-            var afterIndexResult =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "ls-files",
-                        "--stage",
-                        "-z"
-                    ],
-                    GitCommandTimeout);
+            var afterIndexResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["ls-files", "--stage", "-z"],
+                GitCommandTimeout
+            );
 
-            Assert.True(
-                afterIndexResult.Succeeded,
-                afterIndexResult.StandardError);
+            Assert.True(afterIndexResult.Succeeded, afterIndexResult.StandardError);
 
-            var afterEntry =
-                Assert.Single(
-                    GitIndexEntryParser.Parse(
-                        afterIndexResult.StandardOutput),
-                    entry =>
-                        entry.Path == "script.sh");
+            var afterEntry = Assert.Single(
+                GitIndexEntryParser.Parse(afterIndexResult.StandardOutput),
+                entry => entry.Path == "script.sh"
+            );
 
-            Assert.Equal(
-                "100644",
-                afterEntry.Mode);
+            Assert.Equal("100644", afterEntry.Mode);
 
-            var statusResult =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "status",
-                        "--short"
-                    ],
-                    GitCommandTimeout);
+            var statusResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["status", "--short"],
+                GitCommandTimeout
+            );
 
-            Assert.True(
-                statusResult.Succeeded,
-                statusResult.StandardError);
+            Assert.True(statusResult.Succeeded, statusResult.StandardError);
 
-            Assert.Contains(
-                " M script.sh",
-                statusResult.StandardOutput,
-                StringComparison.Ordinal);
+            Assert.Contains(" M script.sh", statusResult.StandardOutput, StringComparison.Ordinal);
 
-            var afterHashResult =
-                await runner.RunReadOnlyAsync(
-                    repositoryPath,
-                    [
-                        "hash-object",
-                        "--no-filters",
-                        "script.sh"
-                    ],
-                    GitCommandTimeout);
+            var afterHashResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["hash-object", "--no-filters", "script.sh"],
+                GitCommandTimeout
+            );
 
-            Assert.True(
-                afterHashResult.Succeeded,
-                afterHashResult.StandardError);
+            Assert.True(afterHashResult.Succeeded, afterHashResult.StandardError);
 
             Assert.Equal(
                 beforeHashResult.StandardOutput.Trim(),
-                afterHashResult.StandardOutput.Trim());
+                afterHashResult.StandardOutput.Trim()
+            );
 
-            var afterResult =
-                await builder.BuildAsync(repositoryPath);
+            var afterResult = await builder.BuildAsync(repositoryPath);
 
-            Assert.True(
-                afterResult.Succeeded,
-                afterResult.Diagnostic);
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
 
-            var afterSnapshot =
-                Assert.IsType<Snapshot>(
-                    afterResult.Snapshot);
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
 
-            Assert.Equal(
-                beforeSnapshot.HeadFingerprint,
-                afterSnapshot.HeadFingerprint);
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
 
-            Assert.Equal(
-                beforeSnapshot.IndexFingerprint,
-                afterSnapshot.IndexFingerprint);
+            Assert.Equal(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
 
-            Assert.Equal(
-                beforeSnapshot.StagedFingerprint,
-                afterSnapshot.StagedFingerprint);
+            Assert.Equal(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
 
             Assert.NotEqual(
                 beforeSnapshot.WorkingTreeFingerprint,
-                afterSnapshot.WorkingTreeFingerprint);
+                afterSnapshot.WorkingTreeFingerprint
+            );
         }
         finally
         {
@@ -2189,22 +1440,17 @@ public class GitSnapshotBuilderTests
     private static async Task RunGitAsync(
         GitProcessRunner runner,
         string repositoryPath,
-        params string[] arguments)
+        params string[] arguments
+    )
     {
-        var result = await runner.RunAsync(
-            repositoryPath,
-            arguments);
+        var result = await runner.RunAsync(repositoryPath, arguments);
 
-        Assert.True(
-            result.Succeeded,
-            result.StandardError);
+        Assert.True(result.Succeeded, result.StandardError);
     }
 
     private static string CreateTemporaryDirectory()
     {
-        var path = Path.Combine(
-            Path.GetTempPath(),
-            $"Codelaxy Snapshot Tests {Guid.NewGuid():N}");
+        var path = Path.Combine(Path.GetTempPath(), $"Codelaxy Snapshot Tests {Guid.NewGuid():N}");
 
         Directory.CreateDirectory(path);
 
@@ -2218,32 +1464,20 @@ public class GitSnapshotBuilderTests
             return;
         }
 
-        foreach (var file in Directory.EnumerateFiles(
-                     path,
-                     "*",
-                     SearchOption.AllDirectories))
+        foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
         {
-            File.SetAttributes(
-                file,
-                FileAttributes.Normal);
+            File.SetAttributes(file, FileAttributes.Normal);
         }
 
-        foreach (var directory in Directory.EnumerateDirectories(
-                     path,
-                     "*",
-                     SearchOption.AllDirectories))
+        foreach (
+            var directory in Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories)
+        )
         {
-            File.SetAttributes(
-                directory,
-                FileAttributes.Normal);
+            File.SetAttributes(directory, FileAttributes.Normal);
         }
 
-        File.SetAttributes(
-            path,
-            FileAttributes.Normal);
+        File.SetAttributes(path, FileAttributes.Normal);
 
-        Directory.Delete(
-            path,
-            recursive: true);
+        Directory.Delete(path, recursive: true);
     }
 }

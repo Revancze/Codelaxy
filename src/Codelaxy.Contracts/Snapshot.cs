@@ -11,12 +11,9 @@ public sealed record Snapshot
     public required int SchemaVersion
     {
         get => _schemaVersion;
-
         init
         {
-            ArgumentOutOfRangeException.ThrowIfLessThan(
-                value,
-                1);
+            ArgumentOutOfRangeException.ThrowIfLessThan(value, 1);
 
             _schemaVersion = value;
         }
@@ -25,7 +22,6 @@ public sealed record Snapshot
     public required string HeadFingerprint
     {
         get => _headFingerprint;
-
         init
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(value);
@@ -37,7 +33,6 @@ public sealed record Snapshot
     public required string IndexFingerprint
     {
         get => _indexFingerprint;
-
         init
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(value);
@@ -49,7 +44,6 @@ public sealed record Snapshot
     public required string WorkingTreeFingerprint
     {
         get => _workingTreeFingerprint;
-
         init
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(value);
@@ -61,7 +55,6 @@ public sealed record Snapshot
     public required string StagedFingerprint
     {
         get => _stagedFingerprint;
-
         init
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(value);

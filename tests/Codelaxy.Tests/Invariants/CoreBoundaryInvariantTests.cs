@@ -9,14 +9,8 @@ public class CoreBoundaryInvariantTests
 
         var sourceDirectories = new[]
         {
-            Path.Combine(
-                repositoryRoot,
-                "src",
-                "Codelaxy.Core"),
-            Path.Combine(
-                repositoryRoot,
-                "src",
-                "Codelaxy.Contracts"),
+            Path.Combine(repositoryRoot, "src", "Codelaxy.Core"),
+            Path.Combine(repositoryRoot, "src", "Codelaxy.Contracts"),
         };
 
         var forbiddenTokens = new[]
@@ -24,13 +18,11 @@ public class CoreBoundaryInvariantTests
             "ProcessStartInfo",
             "Process.Start(",
             "System.Diagnostics.Process",
-
             "_test.cpp",
             ".cpp",
             "CMakeLists.txt",
             "tests/",
             "tests\\",
-
             "cmake",
             "ctest",
             "clang",
@@ -53,51 +45,36 @@ public class CoreBoundaryInvariantTests
 
                 foreach (var token in forbiddenTokens)
                 {
-                    Assert.DoesNotContain(
-                        token,
-                        source,
-                        StringComparison.OrdinalIgnoreCase);
+                    Assert.DoesNotContain(token, source, StringComparison.OrdinalIgnoreCase);
                 }
             }
         }
     }
 
-    private static IEnumerable<string> EnumerateSourceFiles(
-        string directory)
+    private static IEnumerable<string> EnumerateSourceFiles(string directory)
     {
         return Directory
-            .EnumerateFiles(
-                directory,
-                "*.cs",
-                SearchOption.AllDirectories)
-            .Where(
-                path =>
-                    !ContainsDirectory(path, "bin") &&
-                    !ContainsDirectory(path, "obj"));
+            .EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !ContainsDirectory(path, "bin") && !ContainsDirectory(path, "obj"));
     }
 
-    private static bool ContainsDirectory(
-        string path,
-        string directoryName)
+    private static bool ContainsDirectory(string path, string directoryName)
     {
         var separator = Path.DirectorySeparatorChar;
 
         return path.Contains(
             $"{separator}{directoryName}{separator}",
-            StringComparison.OrdinalIgnoreCase);
+            StringComparison.OrdinalIgnoreCase
+        );
     }
 
     private static string FindRepositoryRoot()
     {
-        DirectoryInfo? directory =
-            new(AppContext.BaseDirectory);
+        DirectoryInfo? directory = new(AppContext.BaseDirectory);
 
         while (directory is not null)
         {
-            if (File.Exists(
-                    Path.Combine(
-                        directory.FullName,
-                        "Codelaxy.sln")))
+            if (File.Exists(Path.Combine(directory.FullName, "Codelaxy.sln")))
             {
                 return directory.FullName;
             }
@@ -105,7 +82,6 @@ public class CoreBoundaryInvariantTests
             directory = directory.Parent;
         }
 
-        throw new InvalidOperationException(
-            "Could not locate the Codelaxy repository root.");
+        throw new InvalidOperationException("Could not locate the Codelaxy repository root.");
     }
 }

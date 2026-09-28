@@ -6,25 +6,24 @@ namespace Codelaxy.Git;
 
 public sealed class GitProcessRunner
 {
-    private static readonly string[]
-        RepositoryLocalEnvironmentVariables =
-        [
-            "GIT_ALTERNATE_OBJECT_DIRECTORIES",
-            "GIT_CONFIG",
-            "GIT_CONFIG_PARAMETERS",
-            "GIT_CONFIG_COUNT",
-            "GIT_OBJECT_DIRECTORY",
-            "GIT_DIR",
-            "GIT_WORK_TREE",
-            "GIT_IMPLICIT_WORK_TREE",
-            "GIT_GRAFT_FILE",
-            "GIT_INDEX_FILE",
-            "GIT_NO_REPLACE_OBJECTS",
-            "GIT_REPLACE_REF_BASE",
-            "GIT_PREFIX",
-            "GIT_SHALLOW_FILE",
-            "GIT_COMMON_DIR",
-        ];
+    private static readonly string[] RepositoryLocalEnvironmentVariables =
+    [
+        "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+        "GIT_CONFIG",
+        "GIT_CONFIG_PARAMETERS",
+        "GIT_CONFIG_COUNT",
+        "GIT_OBJECT_DIRECTORY",
+        "GIT_DIR",
+        "GIT_WORK_TREE",
+        "GIT_IMPLICIT_WORK_TREE",
+        "GIT_GRAFT_FILE",
+        "GIT_INDEX_FILE",
+        "GIT_NO_REPLACE_OBJECTS",
+        "GIT_REPLACE_REF_BASE",
+        "GIT_PREFIX",
+        "GIT_SHALLOW_FILE",
+        "GIT_COMMON_DIR",
+    ];
 
     private readonly string _gitExecutable;
 
@@ -38,27 +37,31 @@ public sealed class GitProcessRunner
     public Task<GitCommandResult> RunAsync(
         string workingDirectory,
         IEnumerable<string> arguments,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         return RunCoreAsync(
             workingDirectory,
             arguments,
             readOnly: false,
             timeout: null,
-            cancellationToken);
+            cancellationToken
+        );
     }
 
     public Task<GitCommandResult> RunReadOnlyAsync(
-     string workingDirectory,
-     IEnumerable<string> arguments,
-     TimeSpan timeout,
-     CancellationToken cancellationToken = default)
+        string workingDirectory,
+        IEnumerable<string> arguments,
+        TimeSpan timeout,
+        CancellationToken cancellationToken = default
+    )
     {
         if (timeout <= TimeSpan.Zero)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(timeout),
-                "Timeout must be greater than zero.");
+                "Timeout must be greater than zero."
+            );
         }
 
         return RunCoreAsync(
@@ -66,20 +69,23 @@ public sealed class GitProcessRunner
             arguments,
             readOnly: true,
             timeout,
-            cancellationToken);
+            cancellationToken
+        );
     }
 
     public Task<GitCommandResult> RunAsync(
         string workingDirectory,
         IEnumerable<string> arguments,
         TimeSpan timeout,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (timeout <= TimeSpan.Zero)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(timeout),
-                "Timeout must be greater than zero.");
+                "Timeout must be greater than zero."
+            );
         }
 
         return RunCoreAsync(
@@ -87,7 +93,8 @@ public sealed class GitProcessRunner
             arguments,
             readOnly: false,
             timeout,
-            cancellationToken);
+            cancellationToken
+        );
     }
 
     private async Task<GitCommandResult> RunCoreAsync(
@@ -95,22 +102,17 @@ public sealed class GitProcessRunner
         IEnumerable<string> arguments,
         bool readOnly,
         TimeSpan? timeout,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory);
         ArgumentNullException.ThrowIfNull(arguments);
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        var startInfo = CreateProcessStartInfo(
-            workingDirectory,
-            arguments,
-            readOnly);
+        var startInfo = CreateProcessStartInfo(workingDirectory, arguments, readOnly);
 
-        using var process = new Process
-        {
-            StartInfo = startInfo,
-        };
+        using var process = new Process { StartInfo = startInfo };
 
         try
         {
@@ -123,43 +125,36 @@ public sealed class GitProcessRunner
                 null,
                 string.Empty,
                 exception.Message,
-                GitCommandFailureKind.LaunchFailure);
+                GitCommandFailureKind.LaunchFailure
+            );
         }
 
-        var standardOutputTask =
-            process.StandardOutput.ReadToEndAsync();
+        var standardOutputTask = process.StandardOutput.ReadToEndAsync();
 
-        var standardErrorTask =
-            process.StandardError.ReadToEndAsync();
+        var standardErrorTask = process.StandardError.ReadToEndAsync();
 
-        using var timeoutCancellation =
-            timeout.HasValue
-                ? new CancellationTokenSource(timeout.Value)
-                : null;
+        using var timeoutCancellation = timeout.HasValue
+            ? new CancellationTokenSource(timeout.Value)
+            : null;
 
-        using var waitCancellation =
-            timeoutCancellation is not null
-                ? CancellationTokenSource.CreateLinkedTokenSource(
-                    cancellationToken,
-                    timeoutCancellation.Token)
-                : null;
+        using var waitCancellation = timeoutCancellation is not null
+            ? CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken,
+                timeoutCancellation.Token
+            )
+            : null;
 
-        var waitToken =
-            waitCancellation?.Token ??
-            cancellationToken;
+        var waitToken = waitCancellation?.Token ?? cancellationToken;
 
         try
         {
             await process.WaitForExitAsync(waitToken);
         }
-        catch (OperationCanceledException)
-            when (waitToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (waitToken.IsCancellationRequested)
         {
             await TerminateProcessTreeAsync(process);
 
-            await Task.WhenAll(
-                standardOutputTask,
-                standardErrorTask);
+            await Task.WhenAll(standardOutputTask, standardErrorTask);
 
             if (cancellationToken.IsCancellationRequested)
             {
@@ -172,28 +167,25 @@ public sealed class GitProcessRunner
                     process.ExitCode,
                     await standardOutputTask,
                     await standardErrorTask,
-                    GitCommandFailureKind.Timeout);
+                    GitCommandFailureKind.Timeout
+                );
             }
 
             throw;
         }
 
-        var standardOutput =
-            await standardOutputTask;
+        var standardOutput = await standardOutputTask;
 
-        var standardError =
-            await standardErrorTask;
+        var standardError = await standardErrorTask;
 
-        return new GitCommandResult(
-            process.ExitCode,
-            standardOutput,
-            standardError);
+        return new GitCommandResult(process.ExitCode, standardOutput, standardError);
     }
 
     internal ProcessStartInfo CreateProcessStartInfo(
         string workingDirectory,
         IEnumerable<string> arguments,
-        bool readOnly)
+        bool readOnly
+    )
     {
         var startInfo = new ProcessStartInfo
         {
@@ -224,11 +216,9 @@ public sealed class GitProcessRunner
         return startInfo;
     }
 
-    private static void RemoveInheritedGitEnvironment(
-        ProcessStartInfo startInfo)
+    private static void RemoveInheritedGitEnvironment(ProcessStartInfo startInfo)
     {
-        foreach (var variableName in
-                 RepositoryLocalEnvironmentVariables)
+        foreach (var variableName in RepositoryLocalEnvironmentVariables)
         {
             startInfo.Environment.Remove(variableName);
         }
@@ -237,32 +227,27 @@ public sealed class GitProcessRunner
         startInfo.Environment.Remove("GIT_CONFIG_SYSTEM");
         startInfo.Environment.Remove("GIT_CONFIG_NOSYSTEM");
 
-        var inheritedVariables =
-            startInfo.Environment.Keys.ToArray();
+        var inheritedVariables = startInfo.Environment.Keys.ToArray();
 
         foreach (var variableName in inheritedVariables)
         {
-            if (variableName.StartsWith(
-                    "GIT_CONFIG_KEY_",
-                    StringComparison.OrdinalIgnoreCase) ||
-                variableName.StartsWith(
-                    "GIT_CONFIG_VALUE_",
-                    StringComparison.OrdinalIgnoreCase))
+            if (
+                variableName.StartsWith("GIT_CONFIG_KEY_", StringComparison.OrdinalIgnoreCase)
+                || variableName.StartsWith("GIT_CONFIG_VALUE_", StringComparison.OrdinalIgnoreCase)
+            )
             {
                 startInfo.Environment.Remove(variableName);
             }
         }
     }
 
-    private static async Task TerminateProcessTreeAsync(
-        Process process)
+    private static async Task TerminateProcessTreeAsync(Process process)
     {
         try
         {
             if (!process.HasExited)
             {
-                process.Kill(
-                    entireProcessTree: true);
+                process.Kill(entireProcessTree: true);
             }
         }
         catch (InvalidOperationException)

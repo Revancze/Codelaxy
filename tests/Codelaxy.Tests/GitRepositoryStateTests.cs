@@ -12,37 +12,32 @@ public class GitRepositoryStateTests
 
         try
         {
-            var initResult = await runner.RunAsync(
-                repositoryPath,
-                ["init", "-b", "main"]);
+            var initResult = await runner.RunAsync(repositoryPath, ["init", "-b", "main"]);
 
             Assert.True(initResult.Succeeded, initResult.StandardError);
 
-            await File.WriteAllTextAsync(
-                Path.Combine(repositoryPath, "README.md"),
-                "# test");
+            await File.WriteAllTextAsync(Path.Combine(repositoryPath, "README.md"), "# test");
 
-            var addResult = await runner.RunAsync(
-                repositoryPath,
-                ["add", "README.md"]);
+            var addResult = await runner.RunAsync(repositoryPath, ["add", "README.md"]);
 
             Assert.True(addResult.Succeeded, addResult.StandardError);
 
             var commitResult = await runner.RunAsync(
                 repositoryPath,
                 [
-                    "-c", "user.name=Codelaxy Tests",
-                    "-c", "user.email=codelaxy@example.invalid",
+                    "-c",
+                    "user.name=Codelaxy Tests",
+                    "-c",
+                    "user.email=codelaxy@example.invalid",
                     "commit",
                     "-m",
-                    "initial"
-                ]);
+                    "initial",
+                ]
+            );
 
             Assert.True(commitResult.Succeeded, commitResult.StandardError);
 
-            var expectedHead = await runner.RunAsync(
-                repositoryPath,
-                ["rev-parse", "HEAD"]);
+            var expectedHead = await runner.RunAsync(repositoryPath, ["rev-parse", "HEAD"]);
 
             Assert.True(expectedHead.Succeeded, expectedHead.StandardError);
 
@@ -50,9 +45,7 @@ public class GitRepositoryStateTests
 
             var state = await reader.ReadAsync(repositoryPath);
 
-            Assert.Equal(
-                expectedHead.StandardOutput.Trim(),
-                state.Head);
+            Assert.Equal(expectedHead.StandardOutput.Trim(), state.Head);
 
             Assert.Equal("main", state.Branch);
             Assert.True(state.IsInsideWorkTree);
@@ -72,43 +65,39 @@ public class GitRepositoryStateTests
 
         try
         {
-            var initResult = await runner.RunAsync(
-                repositoryPath,
-                ["init", "-b", "main"]);
+            var initResult = await runner.RunAsync(repositoryPath, ["init", "-b", "main"]);
 
             Assert.True(initResult.Succeeded, initResult.StandardError);
 
-            await File.WriteAllTextAsync(
-                Path.Combine(repositoryPath, "README.md"),
-                "# test");
+            await File.WriteAllTextAsync(Path.Combine(repositoryPath, "README.md"), "# test");
 
-            var addResult = await runner.RunAsync(
-                repositoryPath,
-                ["add", "README.md"]);
+            var addResult = await runner.RunAsync(repositoryPath, ["add", "README.md"]);
 
             Assert.True(addResult.Succeeded, addResult.StandardError);
 
             var commitResult = await runner.RunAsync(
                 repositoryPath,
                 [
-                    "-c", "user.name=Codelaxy Tests",
-                "-c", "user.email=codelaxy@example.invalid",
-                "commit",
-                "-m",
-                "initial"
-                ]);
+                    "-c",
+                    "user.name=Codelaxy Tests",
+                    "-c",
+                    "user.email=codelaxy@example.invalid",
+                    "commit",
+                    "-m",
+                    "initial",
+                ]
+            );
 
             Assert.True(commitResult.Succeeded, commitResult.StandardError);
 
-            var expectedHead = await runner.RunAsync(
-                repositoryPath,
-                ["rev-parse", "HEAD"]);
+            var expectedHead = await runner.RunAsync(repositoryPath, ["rev-parse", "HEAD"]);
 
             Assert.True(expectedHead.Succeeded, expectedHead.StandardError);
 
             var detachResult = await runner.RunAsync(
                 repositoryPath,
-                ["checkout", "--detach", "HEAD"]);
+                ["checkout", "--detach", "HEAD"]
+            );
 
             Assert.True(detachResult.Succeeded, detachResult.StandardError);
 
@@ -116,9 +105,7 @@ public class GitRepositoryStateTests
 
             var state = await reader.ReadAsync(repositoryPath);
 
-            Assert.Equal(
-                expectedHead.StandardOutput.Trim(),
-                state.Head);
+            Assert.Equal(expectedHead.StandardOutput.Trim(), state.Head);
 
             Assert.Null(state.Branch);
             Assert.True(state.IsInsideWorkTree);
@@ -132,9 +119,7 @@ public class GitRepositoryStateTests
 
     private static string CreateTemporaryDirectory()
     {
-        var path = Path.Combine(
-            Path.GetTempPath(),
-            $"Codelaxy State Tests {Guid.NewGuid():N}");
+        var path = Path.Combine(Path.GetTempPath(), $"Codelaxy State Tests {Guid.NewGuid():N}");
 
         Directory.CreateDirectory(path);
 
@@ -148,18 +133,14 @@ public class GitRepositoryStateTests
             return;
         }
 
-        foreach (var file in Directory.EnumerateFiles(
-                     path,
-                     "*",
-                     SearchOption.AllDirectories))
+        foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
         {
             File.SetAttributes(file, FileAttributes.Normal);
         }
 
-        foreach (var directory in Directory.EnumerateDirectories(
-                     path,
-                     "*",
-                     SearchOption.AllDirectories))
+        foreach (
+            var directory in Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories)
+        )
         {
             File.SetAttributes(directory, FileAttributes.Normal);
         }

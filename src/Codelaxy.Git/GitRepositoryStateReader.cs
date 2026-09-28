@@ -2,8 +2,7 @@ namespace Codelaxy.Git;
 
 public sealed class GitRepositoryStateReader
 {
-    private static readonly TimeSpan GitCommandTimeout =
-        TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan GitCommandTimeout = TimeSpan.FromSeconds(30);
 
     private readonly GitProcessRunner _runner;
 
@@ -16,7 +15,8 @@ public sealed class GitRepositoryStateReader
 
     public async Task<GitRepositoryState> ReadAsync(
         string repositoryPath,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryPath);
 
@@ -24,48 +24,56 @@ public sealed class GitRepositoryStateReader
             repositoryPath,
             ["rev-parse", "HEAD"],
             GitCommandTimeout,
-            cancellationToken);
+            cancellationToken
+        );
 
         if (!headResult.Succeeded)
         {
             throw new InvalidOperationException(
-                $"Unable to read Git HEAD: {headResult.StandardError.Trim()}");
+                $"Unable to read Git HEAD: {headResult.StandardError.Trim()}"
+            );
         }
 
         var branchResult = await _runner.RunReadOnlyAsync(
             repositoryPath,
             ["branch", "--show-current"],
             GitCommandTimeout,
-            cancellationToken);
+            cancellationToken
+        );
 
         if (!branchResult.Succeeded)
         {
             throw new InvalidOperationException(
-                $"Unable to read Git branch: {branchResult.StandardError.Trim()}");
+                $"Unable to read Git branch: {branchResult.StandardError.Trim()}"
+            );
         }
 
         var workTreeResult = await _runner.RunReadOnlyAsync(
             repositoryPath,
             ["rev-parse", "--is-inside-work-tree"],
             GitCommandTimeout,
-            cancellationToken);
+            cancellationToken
+        );
 
         if (!workTreeResult.Succeeded)
         {
             throw new InvalidOperationException(
-                $"Unable to read Git worktree state: {workTreeResult.StandardError.Trim()}");
+                $"Unable to read Git worktree state: {workTreeResult.StandardError.Trim()}"
+            );
         }
 
         var bareResult = await _runner.RunReadOnlyAsync(
             repositoryPath,
             ["rev-parse", "--is-bare-repository"],
             GitCommandTimeout,
-            cancellationToken);
+            cancellationToken
+        );
 
         if (!bareResult.Succeeded)
         {
             throw new InvalidOperationException(
-                $"Unable to read Git bare state: {bareResult.StandardError.Trim()}");
+                $"Unable to read Git bare state: {bareResult.StandardError.Trim()}"
+            );
         }
 
         var branch = branchResult.StandardOutput.Trim();
@@ -74,6 +82,7 @@ public sealed class GitRepositoryStateReader
             headResult.StandardOutput.Trim(),
             string.IsNullOrEmpty(branch) ? null : branch,
             bool.Parse(workTreeResult.StandardOutput.Trim()),
-            bool.Parse(bareResult.StandardOutput.Trim()));
+            bool.Parse(bareResult.StandardOutput.Trim())
+        );
     }
 }

@@ -4,12 +4,10 @@ public sealed record GitCommandResult(
     int? ExitCode,
     string StandardOutput,
     string StandardError,
-    GitCommandFailureKind FailureKind = GitCommandFailureKind.None)
+    GitCommandFailureKind FailureKind = GitCommandFailureKind.None
+)
 {
     public bool Started => ExitCode.HasValue;
 
-    public bool Succeeded =>
-        Started &&
-        FailureKind == GitCommandFailureKind.None &&
-        ExitCode == 0;
+    public bool Succeeded => Started && FailureKind == GitCommandFailureKind.None && ExitCode == 0;
 }

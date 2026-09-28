@@ -9,14 +9,8 @@ public class TimestampIdentityInvariantTests
 
         var sourceDirectories = new[]
         {
-            Path.Combine(
-                repositoryRoot,
-                "src",
-                "Codelaxy.Core"),
-            Path.Combine(
-                repositoryRoot,
-                "src",
-                "Codelaxy.Contracts"),
+            Path.Combine(repositoryRoot, "src", "Codelaxy.Core"),
+            Path.Combine(repositoryRoot, "src", "Codelaxy.Contracts"),
         };
 
         var forbiddenTokens = new[]
@@ -39,51 +33,36 @@ public class TimestampIdentityInvariantTests
 
                 foreach (var token in forbiddenTokens)
                 {
-                    Assert.DoesNotContain(
-                        token,
-                        source,
-                        StringComparison.Ordinal);
+                    Assert.DoesNotContain(token, source, StringComparison.Ordinal);
                 }
             }
         }
     }
 
-    private static IEnumerable<string> EnumerateSourceFiles(
-        string directory)
+    private static IEnumerable<string> EnumerateSourceFiles(string directory)
     {
         return Directory
-            .EnumerateFiles(
-                directory,
-                "*.cs",
-                SearchOption.AllDirectories)
-            .Where(
-                path =>
-                    !ContainsDirectory(path, "bin") &&
-                    !ContainsDirectory(path, "obj"));
+            .EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !ContainsDirectory(path, "bin") && !ContainsDirectory(path, "obj"));
     }
 
-    private static bool ContainsDirectory(
-        string path,
-        string directoryName)
+    private static bool ContainsDirectory(string path, string directoryName)
     {
         var separator = Path.DirectorySeparatorChar;
 
         return path.Contains(
             $"{separator}{directoryName}{separator}",
-            StringComparison.OrdinalIgnoreCase);
+            StringComparison.OrdinalIgnoreCase
+        );
     }
 
     private static string FindRepositoryRoot()
     {
-        DirectoryInfo? directory =
-            new(AppContext.BaseDirectory);
+        DirectoryInfo? directory = new(AppContext.BaseDirectory);
 
         while (directory is not null)
         {
-            if (File.Exists(
-                    Path.Combine(
-                        directory.FullName,
-                        "Codelaxy.sln")))
+            if (File.Exists(Path.Combine(directory.FullName, "Codelaxy.sln")))
             {
                 return directory.FullName;
             }
@@ -91,7 +70,6 @@ public class TimestampIdentityInvariantTests
             directory = directory.Parent;
         }
 
-        throw new InvalidOperationException(
-            "Could not locate the Codelaxy repository root.");
+        throw new InvalidOperationException("Could not locate the Codelaxy repository root.");
     }
 }

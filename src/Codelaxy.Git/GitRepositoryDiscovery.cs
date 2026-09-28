@@ -2,8 +2,7 @@ namespace Codelaxy.Git;
 
 public sealed class GitRepositoryDiscovery
 {
-    private static readonly TimeSpan GitCommandTimeout =
-        TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan GitCommandTimeout = TimeSpan.FromSeconds(30);
 
     private readonly GitProcessRunner _runner;
 
@@ -16,7 +15,8 @@ public sealed class GitRepositoryDiscovery
 
     public async Task<GitRepositoryDiscoveryResult> DiscoverAsync(
         string startDirectory,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(startDirectory);
 
@@ -24,12 +24,12 @@ public sealed class GitRepositoryDiscovery
             startDirectory,
             ["rev-parse", "--is-inside-work-tree"],
             GitCommandTimeout,
-            cancellationToken);
+            cancellationToken
+        );
 
         if (!workTreeResult.Succeeded)
         {
-            if (workTreeResult.FailureKind ==
-                GitCommandFailureKind.LaunchFailure)
+            if (workTreeResult.FailureKind == GitCommandFailureKind.LaunchFailure)
             {
                 return CreateFailure(workTreeResult);
             }
@@ -37,47 +37,58 @@ public sealed class GitRepositoryDiscovery
             return new GitRepositoryDiscoveryResult(
                 null,
                 GitRepositoryDiscoveryFailureKind.NotRepository,
-                "The requested directory is not inside a Git repository.");
+                "The requested directory is not inside a Git repository."
+            );
         }
 
         var bareResult = await _runner.RunReadOnlyAsync(
             startDirectory,
             ["rev-parse", "--is-bare-repository"],
             GitCommandTimeout,
-            cancellationToken);
+            cancellationToken
+        );
 
         if (!bareResult.Succeeded)
         {
             return CreateFailure(bareResult);
         }
 
-        if (string.Equals(
+        if (
+            string.Equals(
                 bareResult.StandardOutput.Trim(),
                 "true",
-                StringComparison.OrdinalIgnoreCase))
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
         {
             return new GitRepositoryDiscoveryResult(
                 null,
                 GitRepositoryDiscoveryFailureKind.BareRepository,
-                "The requested Git repository is bare and has no worktree.");
+                "The requested Git repository is bare and has no worktree."
+            );
         }
 
-        if (!string.Equals(
+        if (
+            !string.Equals(
                 workTreeResult.StandardOutput.Trim(),
                 "true",
-                StringComparison.OrdinalIgnoreCase))
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
         {
             return new GitRepositoryDiscoveryResult(
                 null,
                 GitRepositoryDiscoveryFailureKind.NotRepository,
-                "The requested directory is not inside a Git worktree.");
+                "The requested directory is not inside a Git worktree."
+            );
         }
 
         var topLevelResult = await _runner.RunReadOnlyAsync(
             startDirectory,
             ["rev-parse", "--show-toplevel"],
             GitCommandTimeout,
-            cancellationToken);
+            cancellationToken
+        );
 
         if (!topLevelResult.Succeeded)
         {
@@ -88,7 +99,8 @@ public sealed class GitRepositoryDiscovery
             startDirectory,
             ["rev-parse", "--absolute-git-dir"],
             GitCommandTimeout,
-            cancellationToken);
+            cancellationToken
+        );
 
         if (!gitDirectoryResult.Succeeded)
         {
@@ -97,13 +109,10 @@ public sealed class GitRepositoryDiscovery
 
         var gitCommonDirectoryResult = await _runner.RunReadOnlyAsync(
             startDirectory,
-            [
-                "rev-parse",
-                "--path-format=absolute",
-                "--git-common-dir"
-            ],
+            ["rev-parse", "--path-format=absolute", "--git-common-dir"],
             GitCommandTimeout,
-            cancellationToken);
+            cancellationToken
+        );
 
         if (!gitCommonDirectoryResult.Succeeded)
         {
@@ -113,39 +122,41 @@ public sealed class GitRepositoryDiscovery
         var repository = new GitRepository(
             topLevelResult.StandardOutput.Trim(),
             gitDirectoryResult.StandardOutput.Trim(),
-            gitCommonDirectoryResult.StandardOutput.Trim());
+            gitCommonDirectoryResult.StandardOutput.Trim()
+        );
 
         return new GitRepositoryDiscoveryResult(
             repository,
             GitRepositoryDiscoveryFailureKind.None,
-            string.Empty);
+            string.Empty
+        );
     }
 
     public async Task<GitRepository?> TryDiscoverAsync(
         string startDirectory,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
-        var result = await DiscoverAsync(
-            startDirectory,
-            cancellationToken);
+        var result = await DiscoverAsync(startDirectory, cancellationToken);
 
         return result.Repository;
     }
 
-    private static GitRepositoryDiscoveryResult CreateFailure(
-        GitCommandResult result)
+    private static GitRepositoryDiscoveryResult CreateFailure(GitCommandResult result)
     {
         if (result.FailureKind == GitCommandFailureKind.LaunchFailure)
         {
             return new GitRepositoryDiscoveryResult(
                 null,
                 GitRepositoryDiscoveryFailureKind.LaunchFailure,
-                result.StandardError);
+                result.StandardError
+            );
         }
 
         return new GitRepositoryDiscoveryResult(
             null,
             GitRepositoryDiscoveryFailureKind.CommandFailure,
-            result.StandardError);
+            result.StandardError
+        );
     }
 }
