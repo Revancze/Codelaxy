@@ -150,6 +150,10 @@ public class GitIndexEntryParserTests
                 await runner.RunAsync(
                     repositoryPath,
                     [
+                        "-c",
+                        "user.name=Codelaxy Tests",
+                        "-c",
+                        "user.email=codelaxy@example.invalid",
                         "merge",
                         "theirs"
                     ]);

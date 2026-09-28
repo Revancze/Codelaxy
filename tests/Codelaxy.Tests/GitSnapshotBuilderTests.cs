@@ -1594,6 +1594,10 @@ public class GitSnapshotBuilderTests
                 await runner.RunAsync(
                     repositoryPath,
                     [
+                        "-c",
+                        "user.name=Codelaxy Tests",
+                        "-c",
+                        "user.email=codelaxy@example.invalid",
                         "merge",
                         "theirs"
                     ]);
@@ -1952,6 +1956,204 @@ public class GitSnapshotBuilderTests
                 afterSnapshot.StagedFingerprint);
 
             Assert.Equal(
+                beforeSnapshot.WorkingTreeFingerprint,
+                afterSnapshot.WorkingTreeFingerprint);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_ChangesWorkingTreeIdentityWhenExecutableBitChangesOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "init",
+                "-b",
+                "main");
+
+            var scriptPath =
+                Path.Combine(
+                    repositoryPath,
+                    "script.sh");
+
+            await File.WriteAllTextAsync(
+                scriptPath,
+                "#!/bin/sh\necho hello\n");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "add",
+                "script.sh");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial");
+
+            var builder =
+                new GitSnapshotBuilder(runner);
+
+            var beforeIndexResult =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "ls-files",
+                        "--stage",
+                        "-z"
+                    ]);
+
+            Assert.True(
+                beforeIndexResult.Succeeded,
+                beforeIndexResult.StandardError);
+
+            var beforeEntry =
+                Assert.Single(
+                    GitIndexEntryParser.Parse(
+                        beforeIndexResult.StandardOutput),
+                    entry =>
+                        entry.Path == "script.sh");
+
+            Assert.Equal(
+                "100644",
+                beforeEntry.Mode);
+
+            var beforeHashResult =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "hash-object",
+                        "--no-filters",
+                        "script.sh"
+                    ]);
+
+            Assert.True(
+                beforeHashResult.Succeeded,
+                beforeHashResult.StandardError);
+
+            var beforeResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                beforeResult.Succeeded,
+                beforeResult.Diagnostic);
+
+            var beforeSnapshot =
+                Assert.IsType<Snapshot>(
+                    beforeResult.Snapshot);
+
+            var mode =
+                File.GetUnixFileMode(scriptPath);
+
+            File.SetUnixFileMode(
+                scriptPath,
+                mode |
+                UnixFileMode.UserExecute |
+                UnixFileMode.GroupExecute |
+                UnixFileMode.OtherExecute);
+
+            var afterIndexResult =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "ls-files",
+                        "--stage",
+                        "-z"
+                    ]);
+
+            Assert.True(
+                afterIndexResult.Succeeded,
+                afterIndexResult.StandardError);
+
+            var afterEntry =
+                Assert.Single(
+                    GitIndexEntryParser.Parse(
+                        afterIndexResult.StandardOutput),
+                    entry =>
+                        entry.Path == "script.sh");
+
+            Assert.Equal(
+                "100644",
+                afterEntry.Mode);
+
+            var statusResult =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "status",
+                        "--short"
+                    ]);
+
+            Assert.True(
+                statusResult.Succeeded,
+                statusResult.StandardError);
+
+            Assert.Contains(
+                " M script.sh",
+                statusResult.StandardOutput,
+                StringComparison.Ordinal);
+
+            var afterHashResult =
+                await runner.RunReadOnlyAsync(
+                    repositoryPath,
+                    [
+                        "hash-object",
+                        "--no-filters",
+                        "script.sh"
+                    ]);
+
+            Assert.True(
+                afterHashResult.Succeeded,
+                afterHashResult.StandardError);
+
+            Assert.Equal(
+                beforeHashResult.StandardOutput.Trim(),
+                afterHashResult.StandardOutput.Trim());
+
+            var afterResult =
+                await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                afterResult.Succeeded,
+                afterResult.Diagnostic);
+
+            var afterSnapshot =
+                Assert.IsType<Snapshot>(
+                    afterResult.Snapshot);
+
+            Assert.Equal(
+                beforeSnapshot.HeadFingerprint,
+                afterSnapshot.HeadFingerprint);
+
+            Assert.Equal(
+                beforeSnapshot.IndexFingerprint,
+                afterSnapshot.IndexFingerprint);
+
+            Assert.Equal(
+                beforeSnapshot.StagedFingerprint,
+                afterSnapshot.StagedFingerprint);
+
+            Assert.NotEqual(
                 beforeSnapshot.WorkingTreeFingerprint,
                 afterSnapshot.WorkingTreeFingerprint);
         }

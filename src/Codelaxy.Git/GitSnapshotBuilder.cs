@@ -136,6 +136,73 @@ public sealed class GitSnapshotBuilder
                     deletedResult));
         }
 
+        var fileModeResult =
+            await RunRepositoryReadOnlyAsync(
+                startDirectory,
+                repository.TopLevel,
+                [
+                    "config",
+                    "--bool",
+                    "--default=true",
+                    "--get",
+                    "core.fileMode"
+                ],
+                cancellationToken);
+
+        if (!fileModeResult.Succeeded)
+        {
+            return Failure(
+                CreateGitDiagnostic(
+                    "Unable to read core.fileMode",
+                    fileModeResult));
+        }
+
+        if (!bool.TryParse(
+                fileModeResult.StandardOutput.Trim(),
+                out var fileModeEnabled))
+        {
+            return Failure(
+                "Git returned an invalid core.fileMode value.");
+        }
+
+        var worktreeDiffResult =
+            await RunRepositoryReadOnlyAsync(
+                startDirectory,
+                repository.TopLevel,
+                [
+                    "diff-files",
+                    "--raw",
+                    "-z",
+                    "--no-abbrev",
+                    "--no-renames"
+                ],
+                cancellationToken);
+
+        if (!worktreeDiffResult.Succeeded)
+        {
+            return Failure(
+                CreateGitDiagnostic(
+                    "Unable to read tracked working-tree metadata",
+                    worktreeDiffResult));
+        }
+
+        IReadOnlyDictionary<string, string> workingTreeModes;
+
+        try
+        {
+            workingTreeModes =
+                ParseWorkingTreeModes(
+                    indexEntries,
+                    worktreeDiffResult.StandardOutput,
+                    fileModeEnabled);
+        }
+        catch (FormatException exception)
+        {
+            return Failure(
+                $"Unable to parse tracked working-tree metadata: " +
+                $"{exception.Message}");
+        }
+
         var trackedPaths =
             trackedResult.StandardOutput.Split(
                 '\0',
@@ -228,6 +295,18 @@ public sealed class GitSnapshotBuilder
             trackedParts.Add("state");
             trackedParts.Add("present");
 
+            if (!workingTreeModes.TryGetValue(
+                    trackedPath,
+                    out var workingTreeMode))
+            {
+                return Failure(
+                    $"Git did not provide a working-tree mode " +
+                    $"for tracked path '{trackedPath}'.");
+            }
+
+            trackedParts.Add("mode");
+            trackedParts.Add(workingTreeMode);
+
             trackedParts.Add("oid");
             trackedParts.Add(
                 trackedObjectIds[objectIndex]);
@@ -237,7 +316,7 @@ public sealed class GitSnapshotBuilder
 
         var trackedFingerprint =
             CreateFingerprint(
-                "codelaxy.snapshot.tracked-worktree.v1",
+                "codelaxy.snapshot.tracked-worktree.v2",
                 trackedParts.ToArray());
 
         var untrackedResult =
@@ -338,9 +417,9 @@ public sealed class GitSnapshotBuilder
                 headResult.StandardOutput.Trim());
 
         var indexFingerprint =
-           CreateFingerprint(
-               "codelaxy.snapshot.index.v2",
-               canonicalIndexParts.ToArray());
+            CreateFingerprint(
+                "codelaxy.snapshot.index.v2",
+                canonicalIndexParts.ToArray());
 
         var stagedFingerprint =
             CreateFingerprint(
@@ -388,6 +467,100 @@ public sealed class GitSnapshotBuilder
             workingDirectory,
             arguments,
             cancellationToken);
+    }
+
+    private static IReadOnlyDictionary<string, string>
+        ParseWorkingTreeModes(
+            IReadOnlyList<GitIndexEntry> indexEntries,
+            string rawDiff,
+            bool fileModeEnabled)
+    {
+        var modes =
+            new Dictionary<string, string>(
+                StringComparer.Ordinal);
+
+        foreach (var entry in indexEntries)
+        {
+            if (entry.Stage != 0)
+            {
+                continue;
+            }
+
+            modes[entry.Path] =
+                CanonicalizeWorkingTreeMode(
+                    entry.Mode,
+                    fileModeEnabled);
+        }
+
+        var records =
+            rawDiff.Split(
+                '\0',
+                StringSplitOptions.RemoveEmptyEntries);
+
+        if (records.Length % 2 != 0)
+        {
+            throw new FormatException(
+                "Git raw diff output contains an incomplete record.");
+        }
+
+        for (var index = 0;
+             index < records.Length;
+             index += 2)
+        {
+            var metadata =
+                records[index];
+
+            var path =
+                records[index + 1];
+
+            if (!metadata.StartsWith(
+                    ':'))
+            {
+                throw new FormatException(
+                    "Git raw diff record has an unexpected format.");
+            }
+
+            var fields =
+                metadata[1..].Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries);
+
+            if (fields.Length != 5)
+            {
+                throw new FormatException(
+                    "Git raw diff metadata has an unexpected format.");
+            }
+
+            var newMode =
+                fields[1];
+
+            if (newMode == "000000")
+            {
+                modes.Remove(path);
+                continue;
+            }
+
+            modes[path] =
+                CanonicalizeWorkingTreeMode(
+                    newMode,
+                    fileModeEnabled);
+        }
+
+        return modes;
+    }
+
+    private static string CanonicalizeWorkingTreeMode(
+        string mode,
+        bool fileModeEnabled)
+    {
+        if (!fileModeEnabled &&
+            (mode == "100644" ||
+             mode == "100755"))
+        {
+            return "100644";
+        }
+
+        return mode;
     }
 
     private static GitSnapshotBuildResult Failure(

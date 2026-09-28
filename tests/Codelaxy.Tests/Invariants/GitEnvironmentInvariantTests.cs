@@ -227,6 +227,9 @@ public class GitEnvironmentIsolationTests
         var poisonMarker =
             $"CODELAXY_POISON_{Guid.NewGuid():N}";
 
+        var safeMarker =
+            $"CODELAXY_SAFE_{Guid.NewGuid():N}";
+
         var poisonConfigPath =
             Path.Combine(
                 repositoryPath,
@@ -234,6 +237,28 @@ public class GitEnvironmentIsolationTests
 
         try
         {
+            var initResult =
+                await runner.RunAsync(
+                    repositoryPath,
+                    ["init"]);
+
+            Assert.True(
+                initResult.Succeeded,
+                initResult.StandardError);
+
+            var configureResult =
+                await runner.RunAsync(
+                    repositoryPath,
+                    [
+                        "config",
+                        "codelaxy.safe",
+                        safeMarker
+                    ]);
+
+            Assert.True(
+                configureResult.Succeeded,
+                configureResult.StandardError);
+
             await File.WriteAllTextAsync(
                 poisonConfigPath,
                 $"[codelaxy]\n\tpoison = {poisonMarker}\n");
@@ -247,13 +272,17 @@ public class GitEnvironmentIsolationTests
                     repositoryPath,
                     [
                         "config",
-                        "--global",
                         "--list"
                     ]);
 
             Assert.True(
                 result.Succeeded,
                 result.StandardError);
+
+            Assert.Contains(
+                safeMarker,
+                result.StandardOutput,
+                StringComparison.Ordinal);
 
             Assert.DoesNotContain(
                 poisonMarker,
@@ -354,20 +383,25 @@ public class GitEnvironmentIsolationTests
     {
         var runner = new GitProcessRunner();
         var repositoryPath = CreateTemporaryDirectory();
+
         var originalValue =
-            Environment.GetEnvironmentVariable(variableName);
+            Environment.GetEnvironmentVariable(
+                variableName);
 
         var poisonMarker =
             $"CODELAXY_POISON_{Guid.NewGuid():N}";
 
         var poisonPath =
-            Path.Combine(repositoryPath, poisonMarker);
+            Path.Combine(
+                repositoryPath,
+                poisonMarker);
 
         try
         {
-            var initResult = await runner.RunAsync(
-                repositoryPath,
-                ["init"]);
+            var initResult =
+                await runner.RunAsync(
+                    repositoryPath,
+                    ["init"]);
 
             Assert.True(
                 initResult.Succeeded,
@@ -377,9 +411,10 @@ public class GitEnvironmentIsolationTests
                 variableName,
                 poisonPath);
 
-            var result = await runner.RunAsync(
-                repositoryPath,
-                arguments);
+            var result =
+                await runner.RunAsync(
+                    repositoryPath,
+                    arguments);
 
             Assert.True(
                 result.Succeeded,
@@ -404,9 +439,10 @@ public class GitEnvironmentIsolationTests
 
     private static string CreateTemporaryDirectory()
     {
-        var path = Path.Combine(
-            Path.GetTempPath(),
-            $"Codelaxy Git Env Tests {Guid.NewGuid():N}");
+        var path =
+            Path.Combine(
+                Path.GetTempPath(),
+                $"Codelaxy Git Env Tests {Guid.NewGuid():N}");
 
         Directory.CreateDirectory(path);
 
