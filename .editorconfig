@@ -99,6 +99,5 @@ dotnet_separate_import_directive_groups = false
 # Code style already used across the repository
 csharp_style_namespace_declarations = file_scoped:warning
 
-# Formatting violations must be visible to tooling
-# (build-time enforcement needs EnforceCodeStyleInBuild=true in Directory.Build.props)
-dotnet_diagnostic.IDE0055.severity = warning
+# CSharpier owns C# layout.
+dotnet_diagnostic.IDE0055.severity = none
