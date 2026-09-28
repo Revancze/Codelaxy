@@ -2,6 +2,9 @@ namespace Codelaxy.Git;
 
 public sealed class GitRepositoryDiscovery
 {
+    private static readonly TimeSpan GitCommandTimeout =
+        TimeSpan.FromSeconds(30);
+
     private readonly GitProcessRunner _runner;
 
     public GitRepositoryDiscovery(GitProcessRunner runner)
@@ -20,6 +23,7 @@ public sealed class GitRepositoryDiscovery
         var workTreeResult = await _runner.RunReadOnlyAsync(
             startDirectory,
             ["rev-parse", "--is-inside-work-tree"],
+            GitCommandTimeout,
             cancellationToken);
 
         if (!workTreeResult.Succeeded)
@@ -39,6 +43,7 @@ public sealed class GitRepositoryDiscovery
         var bareResult = await _runner.RunReadOnlyAsync(
             startDirectory,
             ["rev-parse", "--is-bare-repository"],
+            GitCommandTimeout,
             cancellationToken);
 
         if (!bareResult.Succeeded)
@@ -71,6 +76,7 @@ public sealed class GitRepositoryDiscovery
         var topLevelResult = await _runner.RunReadOnlyAsync(
             startDirectory,
             ["rev-parse", "--show-toplevel"],
+            GitCommandTimeout,
             cancellationToken);
 
         if (!topLevelResult.Succeeded)
@@ -81,6 +87,7 @@ public sealed class GitRepositoryDiscovery
         var gitDirectoryResult = await _runner.RunReadOnlyAsync(
             startDirectory,
             ["rev-parse", "--absolute-git-dir"],
+            GitCommandTimeout,
             cancellationToken);
 
         if (!gitDirectoryResult.Succeeded)
@@ -95,6 +102,7 @@ public sealed class GitRepositoryDiscovery
                 "--path-format=absolute",
                 "--git-common-dir"
             ],
+            GitCommandTimeout,
             cancellationToken);
 
         if (!gitCommonDirectoryResult.Succeeded)

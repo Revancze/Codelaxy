@@ -5,6 +5,8 @@ namespace Codelaxy.Tests;
 
 public class GitSnapshotBuilderTests
 {
+    private static readonly TimeSpan GitCommandTimeout =
+    TimeSpan.FromSeconds(30);
     [Fact]
     public async Task BuildAsync_ChangesWorkingTreeFingerprintWhenContentChanges()
     {
@@ -59,7 +61,8 @@ public class GitSnapshotBuilderTests
                     "--porcelain=v2",
                     "-z",
                     "--untracked-files=all"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 firstStatus.Succeeded,
@@ -88,7 +91,8 @@ public class GitSnapshotBuilderTests
                     "--porcelain=v2",
                     "-z",
                     "--untracked-files=all"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 secondStatus.Succeeded,
@@ -187,7 +191,8 @@ public class GitSnapshotBuilderTests
                         "--porcelain=v2",
                         "-z",
                         "--untracked-files=all"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 firstStatus.Succeeded,
@@ -216,7 +221,8 @@ public class GitSnapshotBuilderTests
                         "--porcelain=v2",
                         "-z",
                         "--untracked-files=all"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 secondStatus.Succeeded,
@@ -935,7 +941,8 @@ public class GitSnapshotBuilderTests
                         "--porcelain=v2",
                         "-z",
                         "--untracked-files=all"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 renameEnabledStatus.Succeeded,
@@ -967,7 +974,8 @@ public class GitSnapshotBuilderTests
                         "--porcelain=v2",
                         "-z",
                         "--untracked-files=all"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 renameDisabledStatus.Succeeded,
@@ -1078,7 +1086,8 @@ public class GitSnapshotBuilderTests
                         "--binary",
                         "--no-ext-diff",
                         "--no-textconv"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 autoCrlfDisabledDiff.Succeeded,
@@ -1110,7 +1119,8 @@ public class GitSnapshotBuilderTests
                         "--binary",
                         "--no-ext-diff",
                         "--no-textconv"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 autoCrlfEnabledDiff.Succeeded,
@@ -1305,7 +1315,8 @@ public class GitSnapshotBuilderTests
                         "--others",
                         "--exclude-standard",
                         "-z"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 visibleResult.Succeeded,
@@ -1342,7 +1353,8 @@ public class GitSnapshotBuilderTests
                         "--others",
                         "--exclude-standard",
                         "-z"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 ignoredResult.Succeeded,
@@ -1434,7 +1446,8 @@ public class GitSnapshotBuilderTests
                     [
                         "rev-parse",
                     "--show-object-format"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 objectFormat.Succeeded,
@@ -1451,7 +1464,8 @@ public class GitSnapshotBuilderTests
                     "rev-parse",
                     "--verify",
                     "HEAD"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 head.Succeeded,
@@ -1612,7 +1626,8 @@ public class GitSnapshotBuilderTests
                         "ls-files",
                         "--stage",
                         "-z"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 indexResult.Succeeded,
@@ -1747,7 +1762,8 @@ public class GitSnapshotBuilderTests
                         "ls-files",
                         "--stage",
                         "-z"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 indexResult.Succeeded,
@@ -1869,7 +1885,8 @@ public class GitSnapshotBuilderTests
                         "ls-files",
                         "--stage",
                         "-z"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 beforeIndexResult.Succeeded,
@@ -1911,7 +1928,8 @@ public class GitSnapshotBuilderTests
                         "ls-files",
                         "--stage",
                         "-z"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 afterIndexResult.Succeeded,
@@ -2021,7 +2039,8 @@ public class GitSnapshotBuilderTests
                         "ls-files",
                         "--stage",
                         "-z"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 beforeIndexResult.Succeeded,
@@ -2045,7 +2064,8 @@ public class GitSnapshotBuilderTests
                         "hash-object",
                         "--no-filters",
                         "script.sh"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 beforeHashResult.Succeeded,
@@ -2079,7 +2099,8 @@ public class GitSnapshotBuilderTests
                         "ls-files",
                         "--stage",
                         "-z"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 afterIndexResult.Succeeded,
@@ -2102,7 +2123,8 @@ public class GitSnapshotBuilderTests
                     [
                         "status",
                         "--short"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 statusResult.Succeeded,
@@ -2120,7 +2142,8 @@ public class GitSnapshotBuilderTests
                         "hash-object",
                         "--no-filters",
                         "script.sh"
-                    ]);
+                    ],
+                    GitCommandTimeout);
 
             Assert.True(
                 afterHashResult.Succeeded,

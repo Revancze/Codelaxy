@@ -4,6 +4,8 @@ namespace Codelaxy.Tests.Invariants;
 
 public class InfrastructureFailureInvariantTests
 {
+    private static readonly TimeSpan GitCommandTimeout =
+    TimeSpan.FromSeconds(30);
     [Fact]
     public async Task SnapshotBuild_ReturnsNoSnapshotWhenGitCannotStart()
     {
@@ -166,7 +168,7 @@ public class InfrastructureFailureInvariantTests
                         "rev-parse",
                     "--verify",
                     "HEAD"
-                    ]);
+                    ], GitCommandTimeout);
 
             Assert.True(
                 headResult.Succeeded,
@@ -179,7 +181,7 @@ public class InfrastructureFailureInvariantTests
                         "ls-files",
                     "--stage",
                     "-z"
-                    ]);
+                    ], GitCommandTimeout);
 
             Assert.False(
                 indexResult.Succeeded);

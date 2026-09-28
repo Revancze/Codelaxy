@@ -9,6 +9,9 @@ public sealed class GitSnapshotBuilder
 {
     private const int SnapshotSchemaVersion = 1;
 
+    private static readonly TimeSpan GitCommandTimeout =
+        TimeSpan.FromMinutes(2);
+
     private readonly GitProcessRunner _runner;
     private readonly GitRepositoryDiscovery _discovery;
 
@@ -464,9 +467,10 @@ public sealed class GitSnapshotBuilder
         arguments.AddRange(commandArguments);
 
         return await _runner.RunReadOnlyAsync(
-            workingDirectory,
-            arguments,
-            cancellationToken);
+     workingDirectory,
+     arguments,
+     GitCommandTimeout,
+     cancellationToken);
     }
 
     private static IReadOnlyDictionary<string, string>

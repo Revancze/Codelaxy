@@ -4,6 +4,8 @@ namespace Codelaxy.Tests;
 
 public class GitIndexEntryParserTests
 {
+    private static readonly TimeSpan GitCommandTimeout =
+    TimeSpan.FromSeconds(30);
     [Fact]
     public void Parse_PreservesModeObjectIdStageAndPath()
     {
@@ -168,7 +170,7 @@ public class GitIndexEntryParserTests
                         "ls-files",
                         "--stage",
                         "-z"
-                    ]);
+                    ], GitCommandTimeout);
 
             Assert.True(
                 indexResult.Succeeded,

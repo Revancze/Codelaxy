@@ -5,6 +5,8 @@ namespace Codelaxy.Tests;
 
 public class GitProcessRunnerTests
 {
+    private static readonly TimeSpan GitCommandTimeout =
+    TimeSpan.FromSeconds(30);
     [Fact]
     public async Task RunAsync_CanExecuteGit()
     {
@@ -358,13 +360,129 @@ public class GitProcessRunnerTests
     }
 
     [Fact]
+    public async Task RunReadOnlyAsync_ReportsTimeoutAndKillsProcess()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var helperPath =
+            GetProcessTestHelperPath();
+
+        Assert.True(
+            File.Exists(helperPath),
+            $"Process test helper not found: {helperPath}");
+
+        var pidFile = Path.Combine(
+            Path.GetTempPath(),
+            $"Codelaxy ReadOnly Timeout {Guid.NewGuid():N}.pid");
+
+        Process? helperProcess = null;
+
+        try
+        {
+            var runTask = runner.RunReadOnlyAsync(
+                Directory.GetCurrentDirectory(),
+                [helperPath, pidFile],
+                TimeSpan.FromSeconds(2));
+
+            using var startTimeout =
+                new CancellationTokenSource(
+                    TimeSpan.FromSeconds(10));
+
+            var processId =
+                await WaitForProcessIdAsync(
+                    pidFile,
+                    startTimeout.Token);
+
+            try
+            {
+                helperProcess =
+                    Process.GetProcessById(processId);
+            }
+            catch (ArgumentException)
+            {
+                // The timed-out process already exited.
+            }
+
+            var result = await runTask;
+
+            Assert.Equal(
+                GitCommandFailureKind.Timeout,
+                result.FailureKind);
+
+            if (helperProcess is not null)
+            {
+                await helperProcess.WaitForExitAsync(
+                    startTimeout.Token);
+
+                Assert.True(helperProcess.HasExited);
+            }
+        }
+        finally
+        {
+            if (helperProcess is not null)
+            {
+                try
+                {
+                    if (!helperProcess.HasExited)
+                    {
+                        helperProcess.Kill(
+                            entireProcessTree: true);
+
+                        await helperProcess.WaitForExitAsync();
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    // Process exited between HasExited and Kill.
+                }
+
+                helperProcess.Dispose();
+            }
+
+            if (File.Exists(pidFile))
+            {
+                File.Delete(pidFile);
+            }
+        }
+    }
+
+    [Fact]
+    public void RunReadOnlyAsync_RequiresTimeout()
+    {
+        var methods = typeof(GitProcessRunner)
+            .GetMethods()
+            .Where(
+                method =>
+                    method.Name ==
+                    nameof(GitProcessRunner.RunReadOnlyAsync))
+            .ToArray();
+
+        var method = Assert.Single(methods);
+
+        var parameterTypes = method
+            .GetParameters()
+            .Select(parameter => parameter.ParameterType)
+            .ToArray();
+
+        Assert.Equal(
+            [
+                typeof(string),
+            typeof(IEnumerable<string>),
+            typeof(TimeSpan),
+            typeof(CancellationToken),
+        ],
+            parameterTypes);
+    }
+
+    [Fact]
     public async Task RunReadOnlyAsync_CanExecuteGit()
     {
         var runner = new GitProcessRunner();
 
         var result = await runner.RunReadOnlyAsync(
             Directory.GetCurrentDirectory(),
-            ["--version"]);
+            ["--version"],
+            GitCommandTimeout);
 
         Assert.True(result.Succeeded);
         Assert.Equal(0, result.ExitCode);
@@ -388,7 +506,8 @@ public class GitProcessRunnerTests
                 helperPath,
                 "print-env",
                 "GIT_OPTIONAL_LOCKS"
-            ]);
+            ],
+            GitCommandTimeout);
 
         Assert.True(
             result.Succeeded,

@@ -2,29 +2,64 @@ root = true
 
 # ==============================================================================
 # Codelaxy formatting contract
+# Line endings must agree with .gitattributes.
 # ==============================================================================
 
 [*]
 charset = utf-8
+end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+tab_width = 4
+
+# ------------------------------------------------------------------------------
+# Solution files: Visual Studio expects CRLF and tabs (.gitattributes: eol=crlf)
+# ------------------------------------------------------------------------------
+
+[*.sln]
+end_of_line = crlf
+indent_style = tab
+
+# ------------------------------------------------------------------------------
+# MSBuild, XML, JSON, YAML
+# ------------------------------------------------------------------------------
+
+[*.{csproj,props,targets,xml,config,nuspec,resx}]
+indent_size = 2
+
+[*.{json,jsonc}]
+indent_size = 2
+
+[*.{yml,yaml}]
+indent_size = 2
+
+# ------------------------------------------------------------------------------
+# Markdown: two trailing spaces are a meaningful line break
+# ------------------------------------------------------------------------------
+
+[*.md]
+trim_trailing_whitespace = false
+
+# ------------------------------------------------------------------------------
+# Shell
+# ------------------------------------------------------------------------------
+
+[*.sh]
+indent_size = 4
 
 # ------------------------------------------------------------------------------
 # C#
 # ------------------------------------------------------------------------------
 
 [*.{cs,csx}]
-end_of_line = lf
-indent_style = space
-indent_size = 4
-tab_width = 4
 
-# Braces / new lines — Allman style
+# Braces / new lines: Allman style
 csharp_new_line_before_open_brace = all
 csharp_new_line_before_else = true
 csharp_new_line_before_catch = true
 csharp_new_line_before_finally = true
-
 csharp_new_line_before_members_in_object_initializers = true
 csharp_new_line_before_members_in_anonymous_types = true
 csharp_new_line_between_query_expression_clauses = true
@@ -53,9 +88,17 @@ csharp_space_between_method_call_parameter_list_parentheses = false
 csharp_space_between_method_declaration_parameter_list_parentheses = false
 csharp_space_between_parentheses = false
 
+# Wrapping: keep intentional single-line blocks, never join statements
+csharp_preserve_single_line_blocks = true
+csharp_preserve_single_line_statements = false
+
 # Using directives
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = false
 
-# Formatting violations should be visible to tooling
+# Code style already used across the repository
+csharp_style_namespace_declarations = file_scoped:warning
+
+# Formatting violations must be visible to tooling
+# (build-time enforcement needs EnforceCodeStyleInBuild=true in Directory.Build.props)
 dotnet_diagnostic.IDE0055.severity = warning
