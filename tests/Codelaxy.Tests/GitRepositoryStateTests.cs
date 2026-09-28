@@ -65,70 +65,70 @@ public class GitRepositoryStateTests
     }
 
     [Fact]
-public async Task ReadAsync_ReturnsNullBranchWhenHeadIsDetached()
-{
-    var runner = new GitProcessRunner();
-    var repositoryPath = CreateTemporaryDirectory();
-
-    try
+    public async Task ReadAsync_ReturnsNullBranchWhenHeadIsDetached()
     {
-        var initResult = await runner.RunAsync(
-            repositoryPath,
-            ["init", "-b", "main"]);
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
 
-        Assert.True(initResult.Succeeded, initResult.StandardError);
+        try
+        {
+            var initResult = await runner.RunAsync(
+                repositoryPath,
+                ["init", "-b", "main"]);
 
-        await File.WriteAllTextAsync(
-            Path.Combine(repositoryPath, "README.md"),
-            "# test");
+            Assert.True(initResult.Succeeded, initResult.StandardError);
 
-        var addResult = await runner.RunAsync(
-            repositoryPath,
-            ["add", "README.md"]);
+            await File.WriteAllTextAsync(
+                Path.Combine(repositoryPath, "README.md"),
+                "# test");
 
-        Assert.True(addResult.Succeeded, addResult.StandardError);
+            var addResult = await runner.RunAsync(
+                repositoryPath,
+                ["add", "README.md"]);
 
-        var commitResult = await runner.RunAsync(
-            repositoryPath,
-            [
-                "-c", "user.name=Codelaxy Tests",
+            Assert.True(addResult.Succeeded, addResult.StandardError);
+
+            var commitResult = await runner.RunAsync(
+                repositoryPath,
+                [
+                    "-c", "user.name=Codelaxy Tests",
                 "-c", "user.email=codelaxy@example.invalid",
                 "commit",
                 "-m",
                 "initial"
-            ]);
+                ]);
 
-        Assert.True(commitResult.Succeeded, commitResult.StandardError);
+            Assert.True(commitResult.Succeeded, commitResult.StandardError);
 
-        var expectedHead = await runner.RunAsync(
-            repositoryPath,
-            ["rev-parse", "HEAD"]);
+            var expectedHead = await runner.RunAsync(
+                repositoryPath,
+                ["rev-parse", "HEAD"]);
 
-        Assert.True(expectedHead.Succeeded, expectedHead.StandardError);
+            Assert.True(expectedHead.Succeeded, expectedHead.StandardError);
 
-        var detachResult = await runner.RunAsync(
-            repositoryPath,
-            ["checkout", "--detach", "HEAD"]);
+            var detachResult = await runner.RunAsync(
+                repositoryPath,
+                ["checkout", "--detach", "HEAD"]);
 
-        Assert.True(detachResult.Succeeded, detachResult.StandardError);
+            Assert.True(detachResult.Succeeded, detachResult.StandardError);
 
-        var reader = new GitRepositoryStateReader(runner);
+            var reader = new GitRepositoryStateReader(runner);
 
-        var state = await reader.ReadAsync(repositoryPath);
+            var state = await reader.ReadAsync(repositoryPath);
 
-        Assert.Equal(
-            expectedHead.StandardOutput.Trim(),
-            state.Head);
+            Assert.Equal(
+                expectedHead.StandardOutput.Trim(),
+                state.Head);
 
-        Assert.Null(state.Branch);
-        Assert.True(state.IsInsideWorkTree);
-        Assert.False(state.IsBare);
+            Assert.Null(state.Branch);
+            Assert.True(state.IsInsideWorkTree);
+            Assert.False(state.IsBare);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
     }
-    finally
-    {
-        DeleteDirectory(repositoryPath);
-    }
-}
 
     private static string CreateTemporaryDirectory()
     {

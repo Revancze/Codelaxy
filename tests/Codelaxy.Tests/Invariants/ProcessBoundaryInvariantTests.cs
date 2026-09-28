@@ -127,26 +127,26 @@ public class ProcessBoundaryInvariantTests
     }
 
     [Fact]
-public void ProductionCode_DoesNotUseProcessStartInfoStringArgumentsConstructor()
-{
-    var repositoryRoot = FindRepositoryRoot();
-    var sourceRoot = Path.Combine(repositoryRoot, "src");
-
-    var pattern = new Regex(
-        @"new\s+ProcessStartInfo\s*\(\s*[^,)]*,",
-        RegexOptions.IgnoreCase |
-        RegexOptions.CultureInvariant |
-        RegexOptions.Singleline);
-
-    foreach (var file in EnumerateSourceFiles(sourceRoot))
+    public void ProductionCode_DoesNotUseProcessStartInfoStringArgumentsConstructor()
     {
-        var source = File.ReadAllText(file);
+        var repositoryRoot = FindRepositoryRoot();
+        var sourceRoot = Path.Combine(repositoryRoot, "src");
 
-        Assert.False(
-            pattern.IsMatch(source),
-            $"I6 violation in {file}: " +
-            "ProcessStartInfo must not receive a string argument list. " +
-            "Use ArgumentList.");
+        var pattern = new Regex(
+            @"new\s+ProcessStartInfo\s*\(\s*[^,)]*,",
+            RegexOptions.IgnoreCase |
+            RegexOptions.CultureInvariant |
+            RegexOptions.Singleline);
+
+        foreach (var file in EnumerateSourceFiles(sourceRoot))
+        {
+            var source = File.ReadAllText(file);
+
+            Assert.False(
+                pattern.IsMatch(source),
+                $"I6 violation in {file}: " +
+                "ProcessStartInfo must not receive a string argument list. " +
+                "Use ArgumentList.");
+        }
     }
-}
 }

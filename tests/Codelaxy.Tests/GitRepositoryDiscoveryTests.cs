@@ -275,36 +275,36 @@ public class GitRepositoryDiscoveryTests
     }
 
     [Fact]
-public async Task DiscoverAsync_ReportsLaunchFailureWhenGitCannotBeStarted()
-{
-    var runner = new GitProcessRunner(
-        "codelaxy-git-executable-that-does-not-exist");
-
-    var directoryPath = CreateTemporaryDirectory();
-
-    try
+    public async Task DiscoverAsync_ReportsLaunchFailureWhenGitCannotBeStarted()
     {
-        var discovery =
-            new GitRepositoryDiscovery(runner);
+        var runner = new GitProcessRunner(
+            "codelaxy-git-executable-that-does-not-exist");
 
-        var result =
-            await discovery.DiscoverAsync(directoryPath);
+        var directoryPath = CreateTemporaryDirectory();
 
-        Assert.False(result.Succeeded);
-        Assert.Null(result.Repository);
+        try
+        {
+            var discovery =
+                new GitRepositoryDiscovery(runner);
 
-        Assert.Equal(
-            GitRepositoryDiscoveryFailureKind.LaunchFailure,
-            result.FailureKind);
+            var result =
+                await discovery.DiscoverAsync(directoryPath);
 
-        Assert.False(
-            string.IsNullOrWhiteSpace(result.Diagnostic));
+            Assert.False(result.Succeeded);
+            Assert.Null(result.Repository);
+
+            Assert.Equal(
+                GitRepositoryDiscoveryFailureKind.LaunchFailure,
+                result.FailureKind);
+
+            Assert.False(
+                string.IsNullOrWhiteSpace(result.Diagnostic));
+        }
+        finally
+        {
+            DeleteDirectory(directoryPath);
+        }
     }
-    finally
-    {
-        DeleteDirectory(directoryPath);
-    }
-}
 
     private static void DeleteDirectory(string path)
     {
