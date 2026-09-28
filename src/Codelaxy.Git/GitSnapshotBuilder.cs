@@ -101,27 +101,64 @@ public sealed class GitSnapshotBuilder
             );
         }
 
-        var fileModeResult = await RunRepositoryReadOnlyAsync(
-            startDirectory,
-            repository.TopLevel,
-            ["config", "--bool", "--default=true", "--get", "core.fileMode"],
-            cancellationToken
+        IReadOnlyDictionary<string, string> stagedBaseModes = new Dictionary<string, string>(
+            StringComparer.Ordinal
         );
 
-        if (!fileModeResult.Succeeded)
+        if (OperatingSystem.IsWindows())
         {
-            return Failure(CreateGitDiagnostic("Unable to read core.fileMode", fileModeResult));
+            var stagedDiffResult = await RunRepositoryReadOnlyAsync(
+                startDirectory,
+                repository.TopLevel,
+                [
+                    "diff-index",
+                    "--cached",
+                    "--raw",
+                    "-z",
+                    "--no-abbrev",
+                    "--no-renames",
+                    "HEAD",
+                    "--",
+                ],
+                cancellationToken
+            );
+
+            if (!stagedDiffResult.Succeeded)
+            {
+                return Failure(
+                    CreateGitDiagnostic(
+                        "Unable to read staged working-tree metadata",
+                        stagedDiffResult
+                    )
+                );
+            }
+
+            try
+            {
+                stagedBaseModes = ParseStagedBaseModes(stagedDiffResult.StandardOutput);
+            }
+            catch (FormatException exception)
+            {
+                return Failure(
+                    $"Unable to parse staged working-tree metadata: {exception.Message}"
+                );
+            }
         }
 
-        if (!bool.TryParse(fileModeResult.StandardOutput.Trim(), out var fileModeEnabled))
-        {
-            return Failure("Git returned an invalid core.fileMode value.");
-        }
+        var observedFileMode = OperatingSystem.IsWindows() ? "false" : "true";
 
         var worktreeDiffResult = await RunRepositoryReadOnlyAsync(
             startDirectory,
             repository.TopLevel,
-            ["diff-files", "--raw", "-z", "--no-abbrev", "--no-renames"],
+            [
+                "-c",
+                $"core.fileMode={observedFileMode}",
+                "diff-files",
+                "--raw",
+                "-z",
+                "--no-abbrev",
+                "--no-renames",
+            ],
             cancellationToken
         );
 
@@ -142,7 +179,7 @@ public sealed class GitSnapshotBuilder
             workingTreeModes = ParseWorkingTreeModes(
                 indexEntries,
                 worktreeDiffResult.StandardOutput,
-                fileModeEnabled
+                stagedBaseModes
             );
         }
         catch (FormatException exception)
@@ -373,7 +410,7 @@ public sealed class GitSnapshotBuilder
     private static IReadOnlyDictionary<string, string> ParseWorkingTreeModes(
         IReadOnlyList<GitIndexEntry> indexEntries,
         string rawDiff,
-        bool fileModeEnabled
+        IReadOnlyDictionary<string, string> stagedBaseModes
     )
     {
         var modes = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -385,7 +422,9 @@ public sealed class GitSnapshotBuilder
                 continue;
             }
 
-            modes[entry.Path] = CanonicalizeWorkingTreeMode(entry.Mode, fileModeEnabled);
+            modes[entry.Path] = stagedBaseModes.TryGetValue(entry.Path, out var baseMode)
+                ? baseMode
+                : entry.Mode;
         }
 
         var records = rawDiff.Split('\0', StringSplitOptions.RemoveEmptyEntries);
@@ -398,7 +437,6 @@ public sealed class GitSnapshotBuilder
         for (var index = 0; index < records.Length; index += 2)
         {
             var metadata = records[index];
-
             var path = records[index + 1];
 
             if (!metadata.StartsWith(':'))
@@ -413,6 +451,7 @@ public sealed class GitSnapshotBuilder
                 throw new FormatException("Git raw diff metadata has an unexpected format.");
             }
 
+            var oldMode = fields[0];
             var newMode = fields[1];
 
             if (newMode == "000000")
@@ -421,20 +460,58 @@ public sealed class GitSnapshotBuilder
                 continue;
             }
 
-            modes[path] = CanonicalizeWorkingTreeMode(newMode, fileModeEnabled);
+            if (oldMode != newMode)
+            {
+                modes[path] = newMode;
+            }
         }
 
         return modes;
     }
 
-    private static string CanonicalizeWorkingTreeMode(string mode, bool fileModeEnabled)
+    private static IReadOnlyDictionary<string, string> ParseStagedBaseModes(string rawDiff)
     {
-        if (!fileModeEnabled && (mode == "100644" || mode == "100755"))
+        var modes = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        var records = rawDiff.Split('\0', StringSplitOptions.RemoveEmptyEntries);
+
+        if (records.Length % 2 != 0)
         {
-            return "100644";
+            throw new FormatException("Git raw diff output contains an incomplete record.");
         }
 
-        return mode;
+        for (var index = 0; index < records.Length; index += 2)
+        {
+            var metadata = records[index];
+            var path = records[index + 1];
+
+            if (!metadata.StartsWith(':'))
+            {
+                throw new FormatException("Git raw diff record has an unexpected format.");
+            }
+
+            var fields = metadata[1..].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            if (fields.Length != 5)
+            {
+                throw new FormatException("Git raw diff metadata has an unexpected format.");
+            }
+
+            var oldMode = fields[0];
+            var newMode = fields[1];
+
+            if (oldMode != newMode && IsRegularFileMode(oldMode) && IsRegularFileMode(newMode))
+            {
+                modes[path] = oldMode;
+            }
+        }
+
+        return modes;
+    }
+
+    private static bool IsRegularFileMode(string mode)
+    {
+        return mode is "100644" or "100755";
     }
 
     private static GitSnapshotBuildResult Failure(string diagnostic)

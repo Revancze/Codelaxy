@@ -1437,6 +1437,295 @@ public class GitSnapshotBuilderTests
         }
     }
 
+    [Fact]
+    public async Task BuildAsync_ChangesWorkingTreeIdentityWhenStagedExecutableBitMatchesWorkingTreeOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            var scriptPath = Path.Combine(repositoryPath, "script.sh");
+
+            await File.WriteAllTextAsync(scriptPath, "#!/bin/sh\necho hello\n");
+
+            await RunGitAsync(runner, repositoryPath, "add", "script.sh");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var beforeResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
+
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
+
+            await RunGitAsync(runner, repositoryPath, "update-index", "--chmod=+x", "script.sh");
+
+            var mode = File.GetUnixFileMode(scriptPath);
+
+            File.SetUnixFileMode(
+                scriptPath,
+                mode
+                    | UnixFileMode.UserExecute
+                    | UnixFileMode.GroupExecute
+                    | UnixFileMode.OtherExecute
+            );
+
+            var worktreeDiffResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                [
+                    "-c",
+                    "core.fileMode=true",
+                    "diff-files",
+                    "--raw",
+                    "-z",
+                    "--no-abbrev",
+                    "--no-renames",
+                ],
+                GitCommandTimeout
+            );
+
+            Assert.True(worktreeDiffResult.Succeeded, worktreeDiffResult.StandardError);
+
+            Assert.Equal(string.Empty, worktreeDiffResult.StandardOutput);
+
+            var afterResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
+
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
+
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
+
+            Assert.NotEqual(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
+
+            Assert.NotEqual(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
+
+            Assert.NotEqual(
+                beforeSnapshot.WorkingTreeFingerprint,
+                afterSnapshot.WorkingTreeFingerprint
+            );
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_FileModeConfigurationDoesNotChangeExecutableWorkingTreeIdentityOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            var scriptPath = Path.Combine(repositoryPath, "script.sh");
+
+            await File.WriteAllTextAsync(scriptPath, "#!/bin/sh\necho hello\n");
+
+            await RunGitAsync(runner, repositoryPath, "add", "script.sh");
+            await RunGitAsync(runner, repositoryPath, "update-index", "--chmod=+x", "script.sh");
+
+            var mode = File.GetUnixFileMode(scriptPath);
+
+            File.SetUnixFileMode(
+                scriptPath,
+                mode
+                    | UnixFileMode.UserExecute
+                    | UnixFileMode.GroupExecute
+                    | UnixFileMode.OtherExecute
+            );
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            var indexResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["ls-files", "--stage", "-z"],
+                GitCommandTimeout
+            );
+
+            Assert.True(indexResult.Succeeded, indexResult.StandardError);
+
+            var entry = Assert.Single(
+                GitIndexEntryParser.Parse(indexResult.StandardOutput),
+                candidate => candidate.Path == "script.sh"
+            );
+
+            Assert.Equal("100755", entry.Mode);
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            await RunGitAsync(runner, repositoryPath, "config", "core.fileMode", "true");
+
+            var enabledResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(enabledResult.Succeeded, enabledResult.Diagnostic);
+
+            var enabledSnapshot = Assert.IsType<Snapshot>(enabledResult.Snapshot);
+
+            await RunGitAsync(runner, repositoryPath, "config", "core.fileMode", "false");
+
+            var disabledResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(disabledResult.Succeeded, disabledResult.Diagnostic);
+
+            var disabledSnapshot = Assert.IsType<Snapshot>(disabledResult.Snapshot);
+
+            Assert.Equal(enabledSnapshot.HeadFingerprint, disabledSnapshot.HeadFingerprint);
+            Assert.Equal(enabledSnapshot.IndexFingerprint, disabledSnapshot.IndexFingerprint);
+            Assert.Equal(enabledSnapshot.StagedFingerprint, disabledSnapshot.StagedFingerprint);
+            Assert.Equal(
+                enabledSnapshot.WorkingTreeFingerprint,
+                disabledSnapshot.WorkingTreeFingerprint
+            );
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_ChangesWorkingTreeIdentityWhenExecutableBitChangesWithFileModeDisabledOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            var scriptPath = Path.Combine(repositoryPath, "script.sh");
+
+            await File.WriteAllTextAsync(scriptPath, "#!/bin/sh\necho hello\n");
+
+            await RunGitAsync(runner, repositoryPath, "add", "script.sh");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            await RunGitAsync(runner, repositoryPath, "config", "core.fileMode", "false");
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var beforeResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
+
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
+
+            var beforeHashResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["hash-object", "--no-filters", "script.sh"],
+                GitCommandTimeout
+            );
+
+            Assert.True(beforeHashResult.Succeeded, beforeHashResult.StandardError);
+
+            var mode = File.GetUnixFileMode(scriptPath);
+
+            File.SetUnixFileMode(
+                scriptPath,
+                mode
+                    | UnixFileMode.UserExecute
+                    | UnixFileMode.GroupExecute
+                    | UnixFileMode.OtherExecute
+            );
+
+            var statusResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["status", "--short"],
+                GitCommandTimeout
+            );
+
+            Assert.True(statusResult.Succeeded, statusResult.StandardError);
+            Assert.Equal(string.Empty, statusResult.StandardOutput);
+
+            var afterHashResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["hash-object", "--no-filters", "script.sh"],
+                GitCommandTimeout
+            );
+
+            Assert.True(afterHashResult.Succeeded, afterHashResult.StandardError);
+
+            Assert.Equal(
+                beforeHashResult.StandardOutput.Trim(),
+                afterHashResult.StandardOutput.Trim()
+            );
+
+            var afterResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
+
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
+
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
+            Assert.Equal(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
+            Assert.Equal(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
+
+            Assert.NotEqual(
+                beforeSnapshot.WorkingTreeFingerprint,
+                afterSnapshot.WorkingTreeFingerprint
+            );
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
     private static async Task RunGitAsync(
         GitProcessRunner runner,
         string repositoryPath,
