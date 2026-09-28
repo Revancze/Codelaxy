@@ -33,7 +33,7 @@ P0.4  Architecture and docs sync,
 
 P1.0  Standalone repository + .NET solution            DONE
 P1.1  Git process boundary                             DONE
-P1.2  Snapshot engine                                  PLANNED
+P1.2  Snapshot engine                                  IN PROGRESS
 P1.3  Requirement / Evidence / Verdict engine          PLANNED
 P1.4  Provider interface                               PLANNED
 P1.5  CMake/CTest provider, wired explicitly           PLANNED
@@ -146,7 +146,7 @@ detached HEAD
 
 ## P1.2 — Snapshot engine
 
-Status: PLANNED
+Status: IN PROGRESS
 
 ### Goal
 
