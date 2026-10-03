@@ -1,0 +1,13 @@
+<Project>
+    <PropertyGroup>
+        <CodelaxyHost Condition="'$(OS)' == 'Windows_NT'">windows</CodelaxyHost>
+        <CodelaxyHost Condition="'$(OS)' != 'Windows_NT'">linux</CodelaxyHost>
+
+        <BaseIntermediateOutputPath>obj/$(CodelaxyHost)/</BaseIntermediateOutputPath>
+        <BaseOutputPath>bin/$(CodelaxyHost)/</BaseOutputPath>
+
+        <DefaultItemExcludesInProjectFolder>
+            $(DefaultItemExcludesInProjectFolder);obj/**;bin/**
+        </DefaultItemExcludesInProjectFolder>
+    </PropertyGroup>
+</Project>
