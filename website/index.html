@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+        name="description"
+        content="Codelaxy — Git-native verification evidence for exact repository states."
+    >
+    <title>Codelaxy — Git-native verification evidence</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="stars" aria-hidden="true"></div>
+
+    <header class="site-header">
+        <a class="brand" href="./" aria-label="Codelaxy home">
+            <span class="brand-mark" aria-hidden="true">C</span>
+            <span>Codelaxy</span>
+        </a>
+
+        <nav class="nav" aria-label="Main navigation">
+            <a href="#model">Model</a>
+            <a href="#architecture">Architecture</a>
+            <a href="#roadmap">Roadmap</a>
+            <a
+                href="https://github.com/Revancze/Codelaxy"
+                rel="noreferrer"
+            >
+                GitHub
+            </a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Git-native verification evidence</p>
+
+                <h1>
+                    Proof belongs to an
+                    <span>exact repository state.</span>
+                </h1>
+
+                <p class="hero-text">
+                    Codelaxy determines what must be proven, whether valid
+                    proof already exists, and whether that proof still applies
+                    to the repository state being judged now.
+                </p>
+
+                <div class="hero-actions">
+                    <a
+                        class="button primary"
+                        href="https://github.com/Revancze/Codelaxy"
+                        rel="noreferrer"
+                    >
+                        View on GitHub
+                    </a>
+
+                    <a class="button secondary" href="#model">
+                        Explore the model
+                    </a>
+                </div>
+
+                <div class="status">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <strong>pre-1.0</strong>
+                    <span>Active development</span>
+                </div>
+            </div>
+
+            <div class="hero-panel" aria-label="Codelaxy verification flow">
+                <div class="flow-node active">Snapshot</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Requirements</div>
+                <div class="flow-arrow">↓</div>
+
+                <div class="flow-split">
+                    <div>
+                        <span class="flow-label">valid evidence</span>
+                        <div class="flow-node success">Reuse</div>
+                    </div>
+
+                    <div>
+                        <span class="flow-label">proof missing</span>
+                        <div class="flow-node">Provider</div>
+                    </div>
+                </div>
+
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node">Evidence</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-node verdict">Verdict</div>
+            </div>
+        </section>
+
+        <section class="principle">
+            <p>
+                “If Codelaxy cannot prove that existing evidence still applies,
+                it verifies again.”
+            </p>
+        </section>
+
+        <section id="model" class="section">
+            <div class="section-heading">
+                <p class="eyebrow">Core model</p>
+                <h2>Five concepts. No semantic soup.</h2>
+                <p>
+                    The vocabulary is deliberately small and forms part of the
+                    architecture contract.
+                </p>
+            </div>
+
+            <div class="card-grid">
+                <article class="card">
+                    <span class="card-number">01</span>
+                    <h3>Snapshot</h3>
+                    <p>The exact repository state being judged.</p>
+                </article>
+
+                <article class="card">
+                    <span class="card-number">02</span>
+                    <h3>Requirement</h3>
+                    <p>What must be proven, never how.</p>
+                </article>
+
+                <article class="card">
+                    <span class="card-number">03</span>
+                    <h3>Evidence</h3>
+                    <p>
+                        An immutable verification record bound to identity.
+                    </p>
+                </article>
+
+                <article class="card">
+                    <span class="card-number">04</span>
+                    <h3>Verdict</h3>
+                    <p>The decision for one exact Snapshot.</p>
+                </article>
+
+                <article class="card">
+                    <span class="card-number">05</span>
+                    <h3>Provider</h3>
+                    <p>The component that produces fresh Evidence.</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="architecture" class="section architecture">
+            <div class="section-heading">
+                <p class="eyebrow">Architecture</p>
+                <h2>Git is infrastructure, not a provider.</h2>
+            </div>
+
+            <div class="architecture-grid">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+
+                    <pre><code>Git is authoritative for Git state
+
+Git is invoked directly
+without a shell
+
+timestamps are never identity
+
+uncertainty never becomes PASS
+
+infrastructure failure
+is not verification evidence</code></pre>
+                </div>
+
+                <div class="architecture-copy">
+                    <h3>Conservative by design</h3>
+
+                    <p>
+                        Codelaxy does not guess whether stale or incomplete
+                        evidence is good enough.
+                    </p>
+
+                    <div class="rule">
+                        <span>VALID PROOF</span>
+                        <strong>REUSE</strong>
+                    </div>
+
+                    <div class="rule">
+                        <span>VALIDITY UNKNOWN</span>
+                        <strong>VERIFY AGAIN</strong>
+                    </div>
+
+                    <div class="rule">
+                        <span>VERIFICATION FAILED</span>
+                        <strong>NO SUCCESSFUL VERDICT</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-heading">
+                <p class="eyebrow">Boundaries</p>
+                <h2>What Codelaxy is not.</h2>
+            </div>
+
+            <div class="not-grid">
+                <span>Not a build system</span>
+                <span>Not a task runner</span>
+                <span>Not a test framework</span>
+                <span>Not a formatter</span>
+                <span>Not a linter</span>
+                <span>Not a dependency resolver</span>
+                <span>Not a Git replacement</span>
+                <span>Not a CI platform</span>
+            </div>
+        </section>
+
+        <section id="roadmap" class="section">
+            <div class="section-heading">
+                <p class="eyebrow">Development roadmap</p>
+                <h2>Architecture first. Public CLI later.</h2>
+                <p>
+                    A milestone is complete only when its exit criteria are
+                    demonstrably satisfied.
+                </p>
+            </div>
+
+            <div class="roadmap">
+                <article class="roadmap-item done">
+                    <div class="roadmap-state">DONE</div>
+                    <div>
+                        <h3>P1.0 — Standalone repository</h3>
+                        <p>Independent .NET solution and repository.</p>
+                    </div>
+                </article>
+
+                <article class="roadmap-item done">
+                    <div class="roadmap-state">DONE</div>
+                    <div>
+                        <h3>P1.1 — Git process boundary</h3>
+                        <p>
+                            Direct process execution, isolation and repository
+                            discovery.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="roadmap-item current">
+                    <div class="roadmap-state">NOW</div>
+                    <div>
+                        <h3>P1.2 — Snapshot engine</h3>
+                        <p>
+                            Deterministic identity for HEAD, index, staged and
+                            working-tree state.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="roadmap-item">
+                    <div class="roadmap-state">NEXT</div>
+                    <div>
+                        <h3>P1.3 — Requirement / Evidence / Verdict</h3>
+                        <p>
+                            The verification decision engine without
+                            tool-specific knowledge.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="roadmap-item">
+                    <div class="roadmap-state">PLANNED</div>
+                    <div>
+                        <h3>Providers and trust</h3>
+                        <p>
+                            CMake/CTest, .NET, configuration and explicit
+                            worktree trust.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="roadmap-item">
+                    <div class="roadmap-state">TARGET</div>
+                    <div>
+                        <h3>1.0</h3>
+                        <p>
+                            Reusable evidence, conformance testing,
+                            distribution and documented provider contracts.
+                        </p>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="cta">
+            <p class="eyebrow">Codelaxy</p>
+            <h2>Verify what changed. Reuse what is still proven.</h2>
+
+            <p>
+                The project is under active development and is not yet ready
+                for production installation.
+            </p>
+
+            <a
+                class="button primary"
+                href="https://github.com/Revancze/Codelaxy"
+                rel="noreferrer"
+            >
+                Follow development on GitHub
+            </a>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <span>Codelaxy</span>
+        <span>MIT License</span>
+        <span>© 2026 Revancze</span>
+    </footer>
+</body>
+</html>
