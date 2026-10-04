@@ -58,4 +58,23 @@ public class SnapshotSerializerTests
 
         Assert.Throws<FormatException>(() => SnapshotSerializer.Deserialize(input));
     }
+
+    [Fact]
+    public void Serialize_RejectsUnsupportedSchemaVersion()
+    {
+        var snapshot = new Snapshot
+        {
+            SchemaVersion = 2,
+            HeadFingerprint = "sha256:head",
+            IndexFingerprint = "sha256:index",
+            WorkingTreeFingerprint = "sha256:worktree",
+            StagedFingerprint = "sha256:staged",
+        };
+
+        var exception = Assert.Throws<ArgumentException>(() =>
+            SnapshotSerializer.Serialize(snapshot)
+        );
+
+        Assert.Contains("Unsupported snapshot schema version: 2.", exception.Message);
+    }
 }

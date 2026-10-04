@@ -12,6 +12,14 @@ public static class SnapshotSerializer
     {
         ArgumentNullException.ThrowIfNull(snapshot);
 
+        if (snapshot.SchemaVersion != SupportedSchemaVersion)
+        {
+            throw new ArgumentException(
+                $"Unsupported snapshot schema version: {snapshot.SchemaVersion}.",
+                nameof(snapshot)
+            );
+        }
+
         var buffer = new ArrayBufferWriter<byte>();
 
         using (var writer = new Utf8JsonWriter(buffer))
