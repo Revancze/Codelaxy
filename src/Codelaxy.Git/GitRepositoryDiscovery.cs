@@ -120,11 +120,10 @@ public sealed class GitRepositoryDiscovery
         }
 
         var repository = new GitRepository(
-            topLevelResult.StandardOutput.Trim(),
-            gitDirectoryResult.StandardOutput.Trim(),
-            gitCommonDirectoryResult.StandardOutput.Trim()
+            RemoveGitLineTerminator(topLevelResult.StandardOutput),
+            RemoveGitLineTerminator(gitDirectoryResult.StandardOutput),
+            RemoveGitLineTerminator(gitCommonDirectoryResult.StandardOutput)
         );
-
         return new GitRepositoryDiscoveryResult(
             repository,
             GitRepositoryDiscoveryFailureKind.None,
@@ -158,5 +157,15 @@ public sealed class GitRepositoryDiscovery
             GitRepositoryDiscoveryFailureKind.CommandFailure,
             result.StandardError
         );
+    }
+
+    internal static string RemoveGitLineTerminator(string output)
+    {
+        if (OperatingSystem.IsWindows() && output.EndsWith("\r\n", StringComparison.Ordinal))
+        {
+            return output[..^2];
+        }
+
+        return output.EndsWith('\n') ? output[..^1] : output;
     }
 }

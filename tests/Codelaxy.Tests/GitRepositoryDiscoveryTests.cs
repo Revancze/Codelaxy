@@ -241,6 +241,78 @@ public class GitRepositoryDiscoveryTests
         }
     }
 
+    [Fact]
+    public void RemoveGitLineTerminator_RemovesCrLfOnWindows()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        Assert.Equal(
+            "C:/repository",
+            GitRepositoryDiscovery.RemoveGitLineTerminator("C:/repository\r\n")
+        );
+    }
+
+    [Fact]
+    public void RemoveGitLineTerminator_PreservesCarriageReturnInUnixPath()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        Assert.Equal(
+            "/tmp/repository\r",
+            GitRepositoryDiscovery.RemoveGitLineTerminator("/tmp/repository\r\n")
+        );
+    }
+
+    [Fact]
+    public async Task TryDiscoverAsync_PreservesTrailingSpaceInRepositoryRootOnUnix()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var parentPath = CreateTemporaryDirectory();
+        var repositoryPath = Path.Combine(parentPath, "repository ");
+
+        Directory.CreateDirectory(repositoryPath);
+
+        try
+        {
+            var initResult = await runner.RunAsync(repositoryPath, ["init"]);
+
+            Assert.True(initResult.Succeeded, initResult.StandardError);
+
+            var discovery = new GitRepositoryDiscovery(runner);
+
+            var repository = await discovery.TryDiscoverAsync(repositoryPath);
+
+            Assert.NotNull(repository);
+            Assert.Equal(repositoryPath, repository.TopLevel);
+        }
+        finally
+        {
+            DeleteDirectory(parentPath);
+        }
+    }
+
+    [Theory]
+    [InlineData("/tmp/repository\n", "/tmp/repository")]
+    [InlineData("/tmp/repository \n", "/tmp/repository ")]
+    [InlineData("/tmp/repository\t\n", "/tmp/repository\t")]
+    [InlineData("/tmp/repository\n\n", "/tmp/repository\n")]
+    [InlineData("/tmp/repository", "/tmp/repository")]
+    public void RemoveGitLineTerminator_PreservesPathWhitespace(string output, string expected)
+    {
+        Assert.Equal(expected, GitRepositoryDiscovery.RemoveGitLineTerminator(output));
+    }
+
     private static void DeleteDirectory(string path)
     {
         if (!Directory.Exists(path))
