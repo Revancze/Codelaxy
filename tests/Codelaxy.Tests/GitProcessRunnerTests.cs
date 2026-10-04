@@ -424,17 +424,32 @@ public class GitProcessRunnerTests
     public async Task RunReadOnlyAsync_WritesStandardInputPayloadAndClosesInput()
     {
         var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
 
-        var result = await runner.RunReadOnlyAsync(
-            Directory.GetCurrentDirectory(),
-            ["hash-object", "--stdin"],
-            TimeSpan.FromSeconds(30),
-            Encoding.UTF8.GetBytes("codelaxy stdin payload\n")
-        );
+        try
+        {
+            var initResult = await runner.RunAsync(
+                repositoryPath,
+                ["init", "--object-format=sha1"]
+            );
 
-        Assert.True(result.Succeeded, result.StandardError);
+            Assert.True(initResult.Succeeded, initResult.StandardError);
 
-        Assert.Equal("a2e78ef8f87fd57cbb1064b20dbad30499be7d00", result.StandardOutput.Trim());
+            var result = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["hash-object", "--stdin"],
+                TimeSpan.FromSeconds(30),
+                Encoding.UTF8.GetBytes("codelaxy stdin payload\n")
+            );
+
+            Assert.True(result.Succeeded, result.StandardError);
+
+            Assert.Equal("a2e78ef8f87fd57cbb1064b20dbad30499be7d00", result.StandardOutput.Trim());
+        }
+        finally
+        {
+            Directory.Delete(repositoryPath, recursive: true);
+        }
     }
 
     [Fact]
