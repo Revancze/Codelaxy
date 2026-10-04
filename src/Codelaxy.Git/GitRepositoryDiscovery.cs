@@ -29,7 +29,7 @@ public sealed class GitRepositoryDiscovery
 
         if (!workTreeResult.Succeeded)
         {
-            if (workTreeResult.FailureKind == GitCommandFailureKind.LaunchFailure)
+            if (workTreeResult.FailureKind != GitCommandFailureKind.None)
             {
                 return CreateFailure(workTreeResult);
             }
