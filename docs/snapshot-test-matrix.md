@@ -27,11 +27,11 @@ Every mode Git can store, and every kind of object that can appear untracked.
 | regular file `100644` | ✅ ChangesWorkingTreeFingerprintWhenContentChanges | ✅ ChangesWorkingTreeFingerprintWhenUntrackedContentChanges | |
 | executable file `100755` | ✅ covered by 5 executable/fileMode tests | ❓ | untracked has no index mode; decide whether the bit counts |
 | empty file | ✅ DistinguishesDeletedAndEmptyTrackedFile | ❓ | |
-| symlink to file `120000` | ❌ hashes target content, not link text | ❌ same | verified in WSL |
-| symlink retargeted, same content | ❌ W does not change | ❌ | worst case: silent miss |
-| dangling symlink | ❌ snapshot fails (`fatal`) | ❌ | legal Git state |
-| symlink to directory | ❌ snapshot fails | ❌ | |
-| symlink pointing outside repo | ❌ W depends on external file | ❌ | |
+| symlink to file `120000` | ✅ tracked symlink tests | ✅ untracked symlink tests | hashes link target text |
+| symlink retargeted, same content | ✅ W changes | ✅ W changes | |
+| dangling symlink | ✅ supported | ✅ supported | legal Git state |
+| symlink to directory | ✅ supported | ✅ supported | |
+| symlink pointing outside repo | ✅ independent of external target content | ✅ same | |
 | gitlink / submodule `160000` | ❌ snapshot fails (`hash-object` on directory) | ➖ | verified on Windows |
 | nested repository | ➖ | ❌ listed as `dir/`, snapshot fails | hits main checkout via `.claude/worktrees/` |
 | linked worktree inside worktree | ➖ | ❌ same as nested repository | |
@@ -59,8 +59,8 @@ What each change must and must not do to the four fingerprints.
 | touch file (mtime only) | = | = | = | = | ❓ runtime test missing; only static timestamp invariant exists |
 | index stat refresh (`git status` without optional-locks guard) | = | = | = | = | ❓ |
 | edit ignored file | = | = | = | = | ❓ |
-| file ignored only by `.git/info/exclude` | = | = | = | 📝 | currently counted in W |
-| symlink retargeted, same content | = | = | = | ≠ | ❌ |
+| file ignored only by `.git/info/exclude` | = | = | = | ≠ | 📝 policy: intentionally counted in W; observer-local excludes must not change snapshot identity |
+| symlink retargeted, same content | = | = | = | ≠ | ✅ tracked + untracked retarget tests on Linux |
 | CRLF ↔ LF on disk, same blob | = | = | = | 📝 | byte-exact or Git-semantic? |
 | Windows chmod | ➖ | ➖ | ➖ | ➖ | NTFS has no executable bit |
 
@@ -74,7 +74,7 @@ Snapshot identity must not depend on how the observer is configured.
 | `core.autocrlf` | ✅ FingerprintsDoNotDependOnCoreAutoCrlfConfiguration |
 | `core.excludesFile` | ✅ FingerprintsDoNotDependOnCoreExcludesFile |
 | `core.fileMode` | ✅ FileModeConfigurationDoesNotChangeExecutableWorkingTreeIdentityOnLinux |
-| `core.symlinks` | ❓ |
+| `core.symlinks` | ✅ SupportsTrackedSymlinkMaterializedAsRegularFileWhenCoreSymlinksFalse + UsesSameWorkingTreeFingerprintForMaterializedAndNativeTrackedSymlinkOnLinux |
 | `core.ignoreCase` | ❓ |
 | inherited `GIT_*` repository-local variables | ✅ Invariants/GitEnvironmentInvariantTests + drift test |
 | console code page (e.g. 852) | ✅ CreateProcessStartInfo_PinsRedirectedGitOutputToUtf8 |
@@ -103,6 +103,7 @@ Snapshot identity must not depend on how the observer is configured.
 | thousands of files | ❌ Windows 32 767-char command line | fix: `--stdin-paths` (needs stdin API, runner closes stdin) or batching |
 | file changes during snapshot | ❓ | ~8 separate Git calls; no before/after consistency check |
 | filename differing only in case | ❓ | Windows, `core.ignoreCase` |
+| symlink target with invalid UTF-8 bytes (Unix) | ❓ | arbitrary target-byte fidelity not yet proven; current implementation round-trips through .NET `string` + UTF-8 |
 
 ## 6. Platforms
 

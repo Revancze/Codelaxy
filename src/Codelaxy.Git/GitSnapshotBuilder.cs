@@ -207,13 +207,28 @@ public sealed class GitSnapshotBuilder
             .Where(path => !deletedPathSet.Contains(path))
             .ToArray();
 
-        var trackedObjectIds = Array.Empty<string>();
+        var trackedObjectIds = new Dictionary<string, string>(StringComparer.Ordinal);
 
-        if (existingTrackedPaths.Length > 0)
+        foreach (var trackedPath in existingTrackedPaths)
+        {
+            if (!workingTreeModes.ContainsKey(trackedPath))
+            {
+                return Failure(
+                    $"Git did not provide a working-tree mode "
+                        + $"for tracked path '{trackedPath}'."
+                );
+            }
+        }
+
+        var regularTrackedPaths = existingTrackedPaths
+            .Where(path => workingTreeModes[path] != "120000")
+            .ToArray();
+
+        if (regularTrackedPaths.Length > 0)
         {
             var hashArguments = new List<string> { "hash-object", "--no-filters", "--" };
 
-            hashArguments.AddRange(existingTrackedPaths);
+            hashArguments.AddRange(regularTrackedPaths);
 
             var trackedHashResult = await RunRepositoryReadOnlyAsync(
                 startDirectory,
@@ -232,22 +247,80 @@ public sealed class GitSnapshotBuilder
                 );
             }
 
-            trackedObjectIds = trackedHashResult.StandardOutput.Split(
+            var regularObjectIds = trackedHashResult.StandardOutput.Split(
                 '\n',
                 StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
             );
 
-            if (trackedObjectIds.Length != existingTrackedPaths.Length)
+            if (regularObjectIds.Length != regularTrackedPaths.Length)
             {
                 return Failure(
                     "Git returned an unexpected number " + "of tracked working-tree object hashes."
                 );
             }
+
+            for (var index = 0; index < regularTrackedPaths.Length; ++index)
+            {
+                trackedObjectIds[regularTrackedPaths[index]] = regularObjectIds[index];
+            }
+        }
+
+        var symlinkPaths = existingTrackedPaths
+            .Where(path => workingTreeModes[path] == "120000")
+            .ToArray();
+
+        foreach (var symlinkPath in symlinkPaths)
+        {
+            var fullPath = Path.Combine(repository.TopLevel, symlinkPath);
+
+            var linkTarget = new FileInfo(fullPath).LinkTarget;
+
+            if (linkTarget is null)
+            {
+                var materializedHashResult = await RunRepositoryReadOnlyAsync(
+                    startDirectory,
+                    repository.TopLevel,
+                    ["hash-object", "--no-filters", "--", symlinkPath],
+                    cancellationToken
+                );
+
+                if (!materializedHashResult.Succeeded)
+                {
+                    return Failure(
+                        CreateGitDiagnostic(
+                            $"Unable to hash materialized symbolic link '{symlinkPath}'",
+                            materializedHashResult
+                        )
+                    );
+                }
+
+                trackedObjectIds[symlinkPath] = materializedHashResult.StandardOutput.Trim();
+
+                continue;
+            }
+
+            var symlinkHashResult = await RunRepositoryReadOnlyAsync(
+                startDirectory,
+                repository.TopLevel,
+                ["hash-object", "--stdin"],
+                Encoding.UTF8.GetBytes(linkTarget),
+                cancellationToken
+            );
+
+            if (!symlinkHashResult.Succeeded)
+            {
+                return Failure(
+                    CreateGitDiagnostic(
+                        $"Unable to hash tracked symbolic link '{symlinkPath}'",
+                        symlinkHashResult
+                    )
+                );
+            }
+
+            trackedObjectIds[symlinkPath] = symlinkHashResult.StandardOutput.Trim();
         }
 
         var trackedParts = new List<string>();
-
-        var objectIndex = 0;
 
         foreach (var trackedPath in trackedPaths)
         {
@@ -275,10 +348,16 @@ public sealed class GitSnapshotBuilder
             trackedParts.Add("mode");
             trackedParts.Add(workingTreeMode);
 
-            trackedParts.Add("oid");
-            trackedParts.Add(trackedObjectIds[objectIndex]);
+            if (!trackedObjectIds.TryGetValue(trackedPath, out var trackedObjectId))
+            {
+                return Failure(
+                    $"Git did not provide a working-tree object hash "
+                        + $"for tracked path '{trackedPath}'."
+                );
+            }
 
-            ++objectIndex;
+            trackedParts.Add("oid");
+            trackedParts.Add(trackedObjectId);
         }
 
         var trackedFingerprint = CreateFingerprint(
@@ -307,50 +386,116 @@ public sealed class GitSnapshotBuilder
 
         Array.Sort(untrackedPaths, StringComparer.Ordinal);
 
-        var untrackedParts = new List<string>(untrackedPaths.Length * 2);
+        var untrackedParts = new List<string>(untrackedPaths.Length * 6);
 
         if (untrackedPaths.Length > 0)
         {
-            var hashArguments = new List<string> { "hash-object", "--no-filters", "--" };
+            var regularUntrackedPaths = new List<string>();
+            var untrackedObjectIds = new Dictionary<string, string>(StringComparer.Ordinal);
+            var untrackedKinds = new Dictionary<string, string>(StringComparer.Ordinal);
 
-            hashArguments.AddRange(untrackedPaths);
-
-            var untrackedHashResult = await RunRepositoryReadOnlyAsync(
-                startDirectory,
-                repository.TopLevel,
-                hashArguments,
-                cancellationToken
-            );
-
-            if (!untrackedHashResult.Succeeded)
+            foreach (var untrackedPath in untrackedPaths)
             {
-                return Failure(
-                    CreateGitDiagnostic("Unable to hash untracked files", untrackedHashResult)
+                var fullPath = Path.Combine(repository.TopLevel, untrackedPath);
+                var linkTarget = new FileInfo(fullPath).LinkTarget;
+
+                if (linkTarget is null)
+                {
+                    regularUntrackedPaths.Add(untrackedPath);
+                    untrackedKinds[untrackedPath] = "regular";
+
+                    continue;
+                }
+
+                untrackedKinds[untrackedPath] = "symlink";
+
+                var symlinkHashResult = await RunRepositoryReadOnlyAsync(
+                    startDirectory,
+                    repository.TopLevel,
+                    ["hash-object", "--stdin"],
+                    Encoding.UTF8.GetBytes(linkTarget),
+                    cancellationToken
                 );
+
+                if (!symlinkHashResult.Succeeded)
+                {
+                    return Failure(
+                        CreateGitDiagnostic(
+                            $"Unable to hash untracked symbolic link '{untrackedPath}'",
+                            symlinkHashResult
+                        )
+                    );
+                }
+
+                untrackedObjectIds[untrackedPath] = symlinkHashResult.StandardOutput.Trim();
             }
 
-            var untrackedObjectIds = untrackedHashResult.StandardOutput.Split(
-                '\n',
-                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
-            );
-
-            if (untrackedObjectIds.Length != untrackedPaths.Length)
+            if (regularUntrackedPaths.Count > 0)
             {
-                return Failure(
-                    "Git returned an unexpected number " + "of untracked object hashes."
+                var hashArguments = new List<string> { "hash-object", "--no-filters", "--" };
+
+                hashArguments.AddRange(regularUntrackedPaths);
+
+                var untrackedHashResult = await RunRepositoryReadOnlyAsync(
+                    startDirectory,
+                    repository.TopLevel,
+                    hashArguments,
+                    cancellationToken
                 );
+
+                if (!untrackedHashResult.Succeeded)
+                {
+                    return Failure(
+                        CreateGitDiagnostic("Unable to hash untracked files", untrackedHashResult)
+                    );
+                }
+
+                var regularObjectIds = untrackedHashResult.StandardOutput.Split(
+                    '\n',
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+                );
+
+                if (regularObjectIds.Length != regularUntrackedPaths.Count)
+                {
+                    return Failure("Git returned an unexpected number of untracked object hashes.");
+                }
+
+                for (var index = 0; index < regularUntrackedPaths.Count; ++index)
+                {
+                    untrackedObjectIds[regularUntrackedPaths[index]] = regularObjectIds[index];
+                }
             }
 
-            for (var index = 0; index < untrackedPaths.Length; ++index)
+            foreach (var untrackedPath in untrackedPaths)
             {
-                untrackedParts.Add(untrackedPaths[index]);
+                if (!untrackedKinds.TryGetValue(untrackedPath, out var untrackedKind))
+                {
+                    return Failure(
+                        $"Unable to determine untracked entry kind for path '{untrackedPath}'."
+                    );
+                }
 
-                untrackedParts.Add(untrackedObjectIds[index]);
+                if (!untrackedObjectIds.TryGetValue(untrackedPath, out var objectId))
+                {
+                    return Failure(
+                        $"Git did not provide a working-tree object hash "
+                            + $"for untracked path '{untrackedPath}'."
+                    );
+                }
+
+                untrackedParts.Add("path");
+                untrackedParts.Add(untrackedPath);
+
+                untrackedParts.Add("kind");
+                untrackedParts.Add(untrackedKind);
+
+                untrackedParts.Add("oid");
+                untrackedParts.Add(objectId);
             }
         }
 
         var untrackedFingerprint = CreateFingerprint(
-            "codelaxy.snapshot.untracked.v1",
+            "codelaxy.snapshot.untracked.v2",
             untrackedParts.ToArray()
         );
 
@@ -403,6 +548,27 @@ public sealed class GitSnapshotBuilder
             workingDirectory,
             arguments,
             GitCommandTimeout,
+            cancellationToken
+        );
+    }
+
+    private async Task<GitCommandResult> RunRepositoryReadOnlyAsync(
+        string workingDirectory,
+        string repositoryTopLevel,
+        IEnumerable<string> commandArguments,
+        byte[] standardInput,
+        CancellationToken cancellationToken
+    )
+    {
+        var arguments = new List<string> { "-C", repositoryTopLevel };
+
+        arguments.AddRange(commandArguments);
+
+        return await _runner.RunReadOnlyAsync(
+            workingDirectory,
+            arguments,
+            GitCommandTimeout,
+            standardInput,
             cancellationToken
         );
     }

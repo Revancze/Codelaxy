@@ -45,6 +45,7 @@ public sealed class GitProcessRunner
             arguments,
             readOnly: false,
             timeout: null,
+            standardInput: null,
             cancellationToken
         );
     }
@@ -69,6 +70,35 @@ public sealed class GitProcessRunner
             arguments,
             readOnly: true,
             timeout,
+            standardInput: null,
+            cancellationToken
+        );
+    }
+
+    public Task<GitCommandResult> RunReadOnlyAsync(
+        string workingDirectory,
+        IEnumerable<string> arguments,
+        TimeSpan timeout,
+        byte[] standardInput,
+        CancellationToken cancellationToken = default
+    )
+    {
+        ArgumentNullException.ThrowIfNull(standardInput);
+
+        if (timeout <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(timeout),
+                "Timeout must be greater than zero."
+            );
+        }
+
+        return RunCoreAsync(
+            workingDirectory,
+            arguments,
+            readOnly: true,
+            timeout,
+            standardInput,
             cancellationToken
         );
     }
@@ -93,6 +123,7 @@ public sealed class GitProcessRunner
             arguments,
             readOnly: false,
             timeout,
+            standardInput: null,
             cancellationToken
         );
     }
@@ -102,6 +133,7 @@ public sealed class GitProcessRunner
         IEnumerable<string> arguments,
         bool readOnly,
         TimeSpan? timeout,
+        byte[]? standardInput,
         CancellationToken cancellationToken
     )
     {
@@ -117,7 +149,6 @@ public sealed class GitProcessRunner
         try
         {
             process.Start();
-            process.StandardInput.Close();
         }
         catch (Win32Exception exception)
         {
@@ -130,7 +161,6 @@ public sealed class GitProcessRunner
         }
 
         var standardOutputTask = process.StandardOutput.ReadToEndAsync();
-
         var standardErrorTask = process.StandardError.ReadToEndAsync();
 
         using var timeoutCancellation = timeout.HasValue
@@ -148,6 +178,22 @@ public sealed class GitProcessRunner
 
         try
         {
+            if (standardInput is null)
+            {
+                process.StandardInput.Close();
+            }
+            else
+            {
+                await process.StandardInput.BaseStream.WriteAsync(
+                    standardInput.AsMemory(),
+                    waitToken
+                );
+
+                await process.StandardInput.BaseStream.FlushAsync(waitToken);
+
+                process.StandardInput.Close();
+            }
+
             await process.WaitForExitAsync(waitToken);
         }
         catch (OperationCanceledException) when (waitToken.IsCancellationRequested)
@@ -175,7 +221,6 @@ public sealed class GitProcessRunner
         }
 
         var standardOutput = await standardOutputTask;
-
         var standardError = await standardErrorTask;
 
         return new GitCommandResult(process.ExitCode, standardOutput, standardError);
@@ -201,6 +246,7 @@ public sealed class GitProcessRunner
         };
 
         RemoveInheritedGitEnvironment(startInfo);
+
         startInfo.Environment["GIT_TERMINAL_PROMPT"] = "0";
 
         if (readOnly)

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using Codelaxy.Git;
 
 namespace Codelaxy.Tests;
@@ -420,6 +421,23 @@ public class GitProcessRunnerTests
     }
 
     [Fact]
+    public async Task RunReadOnlyAsync_WritesStandardInputPayloadAndClosesInput()
+    {
+        var runner = new GitProcessRunner();
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            ["hash-object", "--stdin"],
+            TimeSpan.FromSeconds(30),
+            Encoding.UTF8.GetBytes("codelaxy stdin payload\n")
+        );
+
+        Assert.True(result.Succeeded, result.StandardError);
+
+        Assert.Equal("a2e78ef8f87fd57cbb1064b20dbad30499be7d00", result.StandardOutput.Trim());
+    }
+
+    [Fact]
     public void RunReadOnlyAsync_RequiresTimeout()
     {
         var methods = typeof(GitProcessRunner)
@@ -427,22 +445,19 @@ public class GitProcessRunnerTests
             .Where(method => method.Name == nameof(GitProcessRunner.RunReadOnlyAsync))
             .ToArray();
 
-        var method = Assert.Single(methods);
+        Assert.NotEmpty(methods);
 
-        var parameterTypes = method
-            .GetParameters()
-            .Select(parameter => parameter.ParameterType)
-            .ToArray();
+        foreach (var method in methods)
+        {
+            var parameters = method.GetParameters();
 
-        Assert.Equal(
-            [
-                typeof(string),
-                typeof(IEnumerable<string>),
-                typeof(TimeSpan),
-                typeof(CancellationToken),
-            ],
-            parameterTypes
-        );
+            var timeoutParameter = Assert.Single(
+                parameters,
+                parameter => parameter.ParameterType == typeof(TimeSpan)
+            );
+
+            Assert.False(timeoutParameter.HasDefaultValue);
+        }
     }
 
     [Fact]

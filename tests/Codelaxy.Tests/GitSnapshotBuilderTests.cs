@@ -1210,6 +1210,776 @@ public class GitSnapshotBuilderTests
     }
 
     [Fact]
+    public async Task BuildAsync_ChangesWorkingTreeFingerprintWhenUntrackedRegularFileBecomesSymlinkWithSameBlobIdentityOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            var targetPath = Path.Combine(repositoryPath, "target");
+            var entryPath = Path.Combine(repositoryPath, "entry");
+
+            await File.WriteAllTextAsync(targetPath, "committed\n");
+
+            await RunGitAsync(runner, repositoryPath, "add", "target");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            await File.WriteAllTextAsync(entryPath, "target");
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var beforeResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
+
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
+
+            File.Delete(entryPath);
+
+            File.CreateSymbolicLink(entryPath, "target");
+
+            var afterResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
+
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
+
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
+            Assert.Equal(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
+            Assert.Equal(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
+
+            Assert.NotEqual(
+                beforeSnapshot.WorkingTreeFingerprint,
+                afterSnapshot.WorkingTreeFingerprint
+            );
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_ChangesWorkingTreeFingerprintWhenTrackedSymlinkTargetChangesToSameContentOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            var firstTargetPath = Path.Combine(repositoryPath, "first.txt");
+            var secondTargetPath = Path.Combine(repositoryPath, "second.txt");
+            var symlinkPath = Path.Combine(repositoryPath, "link.txt");
+
+            await File.WriteAllTextAsync(firstTargetPath, "same-content\n");
+            await File.WriteAllTextAsync(secondTargetPath, "same-content\n");
+
+            File.CreateSymbolicLink(symlinkPath, "first.txt");
+
+            await RunGitAsync(runner, repositoryPath, "add", "first.txt", "second.txt", "link.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var beforeResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
+
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
+
+            File.Delete(symlinkPath);
+            File.CreateSymbolicLink(symlinkPath, "second.txt");
+
+            var statusResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["status", "--short"],
+                GitCommandTimeout
+            );
+
+            Assert.True(statusResult.Succeeded, statusResult.StandardError);
+            Assert.Contains("link.txt", statusResult.StandardOutput, StringComparison.Ordinal);
+
+            var afterResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
+
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
+
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
+            Assert.Equal(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
+            Assert.Equal(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
+
+            Assert.NotEqual(
+                beforeSnapshot.WorkingTreeFingerprint,
+                afterSnapshot.WorkingTreeFingerprint
+            );
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_SupportsDanglingTrackedSymlinkOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            var symlinkPath = Path.Combine(repositoryPath, "link.txt");
+
+            File.CreateSymbolicLink(symlinkPath, "missing-target.txt");
+
+            await RunGitAsync(runner, repositoryPath, "add", "link.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            var indexResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["ls-files", "--stage", "-z"],
+                GitCommandTimeout
+            );
+
+            Assert.True(indexResult.Succeeded, indexResult.StandardError);
+
+            var entry = Assert.Single(
+                GitIndexEntryParser.Parse(indexResult.StandardOutput),
+                candidate => candidate.Path == "link.txt"
+            );
+
+            Assert.Equal("120000", entry.Mode);
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var result = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(result.Succeeded, result.Diagnostic);
+
+            Assert.IsType<Snapshot>(result.Snapshot);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_ChangesWorkingTreeFingerprintWhenUntrackedSymlinkTargetChangesToSameContentOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            var firstTargetPath = Path.Combine(repositoryPath, "first.txt");
+            var secondTargetPath = Path.Combine(repositoryPath, "second.txt");
+            var symlinkPath = Path.Combine(repositoryPath, "link.txt");
+
+            await File.WriteAllTextAsync(firstTargetPath, "same-content\n");
+            await File.WriteAllTextAsync(secondTargetPath, "same-content\n");
+
+            await RunGitAsync(runner, repositoryPath, "add", "first.txt", "second.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            File.CreateSymbolicLink(symlinkPath, "first.txt");
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var beforeResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
+
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
+
+            File.Delete(symlinkPath);
+            File.CreateSymbolicLink(symlinkPath, "second.txt");
+
+            var afterResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
+
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
+
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
+            Assert.Equal(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
+            Assert.Equal(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
+
+            Assert.NotEqual(
+                beforeSnapshot.WorkingTreeFingerprint,
+                afterSnapshot.WorkingTreeFingerprint
+            );
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_SupportsDanglingUntrackedSymlinkOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            await File.WriteAllTextAsync(
+                Path.Combine(repositoryPath, "tracked.txt"),
+                "committed\n"
+            );
+
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            File.CreateSymbolicLink(Path.Combine(repositoryPath, "link.txt"), "missing-target.txt");
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var result = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(result.Succeeded, result.Diagnostic);
+
+            Assert.IsType<Snapshot>(result.Snapshot);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_SupportsTrackedSymlinkToDirectoryOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            var targetDirectory = Path.Combine(repositoryPath, "target");
+            var symlinkPath = Path.Combine(repositoryPath, "link");
+
+            Directory.CreateDirectory(targetDirectory);
+
+            await File.WriteAllTextAsync(Path.Combine(targetDirectory, "file.txt"), "content\n");
+
+            Directory.CreateSymbolicLink(symlinkPath, "target");
+
+            await RunGitAsync(runner, repositoryPath, "add", "target/file.txt", "link");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            var indexResult = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["ls-files", "--stage", "-z"],
+                GitCommandTimeout
+            );
+
+            Assert.True(indexResult.Succeeded, indexResult.StandardError);
+
+            var linkEntry = Assert.Single(
+                GitIndexEntryParser.Parse(indexResult.StandardOutput),
+                candidate => candidate.Path == "link"
+            );
+
+            Assert.Equal("120000", linkEntry.Mode);
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var result = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(result.Succeeded, result.Diagnostic);
+            Assert.IsType<Snapshot>(result.Snapshot);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_SupportsUntrackedSymlinkToDirectoryOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            var targetDirectory = Path.Combine(repositoryPath, "target");
+            var symlinkPath = Path.Combine(repositoryPath, "link");
+
+            Directory.CreateDirectory(targetDirectory);
+
+            await File.WriteAllTextAsync(Path.Combine(targetDirectory, "file.txt"), "content\n");
+
+            await RunGitAsync(runner, repositoryPath, "add", "target/file.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            Directory.CreateSymbolicLink(symlinkPath, "target");
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var result = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(result.Succeeded, result.Diagnostic);
+            Assert.IsType<Snapshot>(result.Snapshot);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_DoesNotDependOnExternalTargetContentForTrackedSymlinkOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+        var externalDirectory = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            var externalTargetPath = Path.Combine(externalDirectory, "outside.txt");
+            var symlinkPath = Path.Combine(repositoryPath, "link.txt");
+
+            await File.WriteAllTextAsync(externalTargetPath, "outside-one\n");
+
+            File.CreateSymbolicLink(symlinkPath, externalTargetPath);
+
+            await RunGitAsync(runner, repositoryPath, "add", "link.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var beforeResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
+
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
+
+            await File.WriteAllTextAsync(externalTargetPath, "outside-two\n");
+
+            var afterResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
+
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
+
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
+            Assert.Equal(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
+            Assert.Equal(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
+            Assert.Equal(
+                beforeSnapshot.WorkingTreeFingerprint,
+                afterSnapshot.WorkingTreeFingerprint
+            );
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+            DeleteDirectory(externalDirectory);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_DoesNotDependOnExternalTargetContentForUntrackedSymlinkOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+        var externalDirectory = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            await File.WriteAllTextAsync(
+                Path.Combine(repositoryPath, "tracked.txt"),
+                "committed\n"
+            );
+
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            var externalTargetPath = Path.Combine(externalDirectory, "outside.txt");
+            var symlinkPath = Path.Combine(repositoryPath, "link.txt");
+
+            await File.WriteAllTextAsync(externalTargetPath, "outside-one\n");
+
+            File.CreateSymbolicLink(symlinkPath, externalTargetPath);
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var beforeResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
+
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
+
+            await File.WriteAllTextAsync(externalTargetPath, "outside-two\n");
+
+            var afterResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
+
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
+
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
+            Assert.Equal(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
+            Assert.Equal(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
+            Assert.Equal(
+                beforeSnapshot.WorkingTreeFingerprint,
+                afterSnapshot.WorkingTreeFingerprint
+            );
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+            DeleteDirectory(externalDirectory);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_SupportsTrackedSymlinkMaterializedAsRegularFileWhenCoreSymlinksFalse()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            var payloadPath = Path.Combine(repositoryPath, "symlink-payload");
+
+            await File.WriteAllTextAsync(payloadPath, "target.txt");
+
+            var hashResult = await runner.RunAsync(
+                repositoryPath,
+                ["hash-object", "-w", "--", "symlink-payload"]
+            );
+
+            Assert.True(hashResult.Succeeded, hashResult.StandardError);
+
+            var objectId = hashResult.StandardOutput.Trim();
+
+            File.Delete(payloadPath);
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "update-index",
+                "--add",
+                "--cacheinfo",
+                $"120000,{objectId},link.txt"
+            );
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "add symlink"
+            );
+
+            await RunGitAsync(runner, repositoryPath, "config", "core.symlinks", "false");
+
+            await RunGitAsync(runner, repositoryPath, "checkout", "--", "link.txt");
+
+            var linkPath = Path.Combine(repositoryPath, "link.txt");
+
+            Assert.Null(new FileInfo(linkPath).LinkTarget);
+            Assert.Equal("target.txt", await File.ReadAllTextAsync(linkPath));
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var firstResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(firstResult.Succeeded, firstResult.Diagnostic);
+
+            var firstSnapshot = Assert.IsType<Snapshot>(firstResult.Snapshot);
+
+            await File.WriteAllTextAsync(linkPath, "other.txt");
+
+            var secondResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(secondResult.Succeeded, secondResult.Diagnostic);
+
+            var secondSnapshot = Assert.IsType<Snapshot>(secondResult.Snapshot);
+
+            Assert.Equal(firstSnapshot.HeadFingerprint, secondSnapshot.HeadFingerprint);
+            Assert.Equal(firstSnapshot.IndexFingerprint, secondSnapshot.IndexFingerprint);
+            Assert.Equal(firstSnapshot.StagedFingerprint, secondSnapshot.StagedFingerprint);
+
+            Assert.NotEqual(
+                firstSnapshot.WorkingTreeFingerprint,
+                secondSnapshot.WorkingTreeFingerprint
+            );
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_UsesSameWorkingTreeFingerprintForMaterializedAndNativeTrackedSymlinkOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            var payloadPath = Path.Combine(repositoryPath, "symlink-payload");
+
+            await File.WriteAllTextAsync(payloadPath, "target.txt");
+
+            var hashResult = await runner.RunAsync(
+                repositoryPath,
+                ["hash-object", "-w", "--", "symlink-payload"]
+            );
+
+            Assert.True(hashResult.Succeeded, hashResult.StandardError);
+
+            var objectId = hashResult.StandardOutput.Trim();
+
+            File.Delete(payloadPath);
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "update-index",
+                "--add",
+                "--cacheinfo",
+                $"120000,{objectId},link.txt"
+            );
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "add symlink"
+            );
+
+            await RunGitAsync(runner, repositoryPath, "config", "core.symlinks", "false");
+
+            await RunGitAsync(runner, repositoryPath, "checkout", "--", "link.txt");
+
+            var linkPath = Path.Combine(repositoryPath, "link.txt");
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            // A: materializovaný symlink
+            Assert.Null(new FileInfo(linkPath).LinkTarget);
+
+            var materializedResult = await builder.BuildAsync(repositoryPath);
+            Assert.True(materializedResult.Succeeded, materializedResult.Diagnostic);
+
+            var materializedSnapshot = Assert.IsType<Snapshot>(materializedResult.Snapshot);
+
+            // Donutit Git vytvořit skutečný symlink.
+            File.Delete(linkPath);
+
+            await RunGitAsync(runner, repositoryPath, "config", "core.symlinks", "true");
+
+            await RunGitAsync(runner, repositoryPath, "checkout", "--", "link.txt");
+
+            // Tohle je zásadní guard proti falešnému GREEN.
+            Assert.Equal("target.txt", new FileInfo(linkPath).LinkTarget);
+
+            var nativeResult = await builder.BuildAsync(repositoryPath);
+            Assert.True(nativeResult.Succeeded, nativeResult.Diagnostic);
+
+            var nativeSnapshot = Assert.IsType<Snapshot>(nativeResult.Snapshot);
+
+            Assert.Equal(materializedSnapshot.HeadFingerprint, nativeSnapshot.HeadFingerprint);
+            Assert.Equal(materializedSnapshot.IndexFingerprint, nativeSnapshot.IndexFingerprint);
+            Assert.Equal(materializedSnapshot.StagedFingerprint, nativeSnapshot.StagedFingerprint);
+            Assert.Equal(
+                materializedSnapshot.WorkingTreeFingerprint,
+                nativeSnapshot.WorkingTreeFingerprint
+            );
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
     public async Task BuildAsync_ChangesStagedIdentityWhenExecutableBitChanges()
     {
         var runner = new GitProcessRunner();
