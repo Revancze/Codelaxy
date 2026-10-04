@@ -8,6 +8,83 @@ public class GitSnapshotBuilderTests
     private static readonly TimeSpan GitCommandTimeout = TimeSpan.FromSeconds(30);
 
     [Fact]
+    public async Task BuildAsync_ChangesWorkingTreeIdentityWhenUntrackedExecutableBitChangesOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            var trackedPath = Path.Combine(repositoryPath, "README.md");
+
+            await File.WriteAllTextAsync(trackedPath, "# test\n");
+            await RunGitAsync(runner, repositoryPath, "add", "README.md");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            var scriptPath = Path.Combine(repositoryPath, "script.sh");
+
+            await File.WriteAllTextAsync(scriptPath, "#!/bin/sh\necho hello\n");
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var beforeResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
+
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
+
+            var mode = File.GetUnixFileMode(scriptPath);
+
+            File.SetUnixFileMode(
+                scriptPath,
+                mode
+                    | UnixFileMode.UserExecute
+                    | UnixFileMode.GroupExecute
+                    | UnixFileMode.OtherExecute
+            );
+
+            var afterResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
+
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
+
+            Assert.NotEqual(
+                beforeSnapshot.WorkingTreeFingerprint,
+                afterSnapshot.WorkingTreeFingerprint
+            );
+
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
+
+            Assert.Equal(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
+
+            Assert.Equal(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
     public async Task BuildAsync_ChangesWorkingTreeFingerprintWhenContentChanges()
     {
         var runner = new GitProcessRunner();

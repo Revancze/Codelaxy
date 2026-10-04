@@ -386,11 +386,12 @@ public sealed class GitSnapshotBuilder
 
         Array.Sort(untrackedPaths, StringComparer.Ordinal);
 
-        var untrackedParts = new List<string>(untrackedPaths.Length * 6);
+        var untrackedParts = new List<string>(untrackedPaths.Length * 8);
 
         if (untrackedPaths.Length > 0)
         {
             var regularUntrackedPaths = new List<string>();
+            var untrackedModes = new Dictionary<string, string>(StringComparer.Ordinal);
             var untrackedObjectIds = new Dictionary<string, string>(StringComparer.Ordinal);
             var untrackedKinds = new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -403,11 +404,13 @@ public sealed class GitSnapshotBuilder
                 {
                     regularUntrackedPaths.Add(untrackedPath);
                     untrackedKinds[untrackedPath] = "regular";
+                    untrackedModes[untrackedPath] = GetUntrackedRegularFileMode(fullPath);
 
                     continue;
                 }
 
                 untrackedKinds[untrackedPath] = "symlink";
+                untrackedModes[untrackedPath] = "120000";
 
                 var symlinkHashResult = await RunRepositoryReadOnlyAsync(
                     startDirectory,
@@ -483,11 +486,18 @@ public sealed class GitSnapshotBuilder
                     );
                 }
 
-                untrackedParts.Add("path");
-                untrackedParts.Add(untrackedPath);
+                if (!untrackedModes.TryGetValue(untrackedPath, out var untrackedMode))
+                {
+                    return Failure(
+                        $"Unable to determine untracked entry mode for path '{untrackedPath}'."
+                    );
+                }
 
                 untrackedParts.Add("kind");
                 untrackedParts.Add(untrackedKind);
+
+                untrackedParts.Add("mode");
+                untrackedParts.Add(untrackedMode);
 
                 untrackedParts.Add("oid");
                 untrackedParts.Add(objectId);
@@ -495,7 +505,7 @@ public sealed class GitSnapshotBuilder
         }
 
         var untrackedFingerprint = CreateFingerprint(
-            "codelaxy.snapshot.untracked.v2",
+            "codelaxy.snapshot.untracked.v3",
             untrackedParts.ToArray()
         );
 
@@ -723,5 +733,17 @@ public sealed class GitSnapshotBuilder
 
         hash.AppendData(length);
         hash.AppendData(bytes);
+    }
+
+    private static string GetUntrackedRegularFileMode(string path)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return "100644";
+        }
+
+        var mode = File.GetUnixFileMode(path);
+
+        return (mode & UnixFileMode.UserExecute) != 0 ? "100755" : "100644";
     }
 }
