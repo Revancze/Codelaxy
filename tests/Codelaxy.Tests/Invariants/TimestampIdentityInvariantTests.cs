@@ -3,7 +3,7 @@ namespace Codelaxy.Tests.Invariants;
 public class TimestampIdentityInvariantTests
 {
     [Fact]
-    public void CoreAndContracts_DoNotUseTimestampsAsIdentityInputs()
+    public void SnapshotIdentityCode_DoesNotUseTimestampsAsIdentityInputs()
     {
         var repositoryRoot = FindRepositoryRoot();
 
@@ -11,6 +11,7 @@ public class TimestampIdentityInvariantTests
         {
             Path.Combine(repositoryRoot, "src", "Codelaxy.Core"),
             Path.Combine(repositoryRoot, "src", "Codelaxy.Contracts"),
+            Path.Combine(repositoryRoot, "src", "Codelaxy.Git"),
         };
 
         var forbiddenTokens = new[]
