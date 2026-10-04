@@ -493,6 +493,9 @@ public sealed class GitSnapshotBuilder
                     );
                 }
 
+                untrackedParts.Add("path");
+                untrackedParts.Add(untrackedPath);
+
                 untrackedParts.Add("kind");
                 untrackedParts.Add(untrackedKind);
 
