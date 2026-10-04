@@ -13,7 +13,7 @@ public sealed class GitRepositoryStateReader
         _runner = runner;
     }
 
-    public async Task<GitRepositoryState> ReadAsync(
+    public async Task<GitRepositoryStateReadResult> ReadAsync(
         string repositoryPath,
         CancellationToken cancellationToken = default
     )
@@ -29,9 +29,7 @@ public sealed class GitRepositoryStateReader
 
         if (!headResult.Succeeded)
         {
-            throw new InvalidOperationException(
-                $"Unable to read Git HEAD: {headResult.StandardError.Trim()}"
-            );
+            return Failure("Unable to read Git HEAD", headResult);
         }
 
         var branchResult = await _runner.RunReadOnlyAsync(
@@ -43,9 +41,7 @@ public sealed class GitRepositoryStateReader
 
         if (!branchResult.Succeeded)
         {
-            throw new InvalidOperationException(
-                $"Unable to read Git branch: {branchResult.StandardError.Trim()}"
-            );
+            return Failure("Unable to read Git branch", branchResult);
         }
 
         var workTreeResult = await _runner.RunReadOnlyAsync(
@@ -57,9 +53,7 @@ public sealed class GitRepositoryStateReader
 
         if (!workTreeResult.Succeeded)
         {
-            throw new InvalidOperationException(
-                $"Unable to read Git worktree state: {workTreeResult.StandardError.Trim()}"
-            );
+            return Failure("Unable to read Git worktree state", workTreeResult);
         }
 
         var bareResult = await _runner.RunReadOnlyAsync(
@@ -71,18 +65,27 @@ public sealed class GitRepositoryStateReader
 
         if (!bareResult.Succeeded)
         {
-            throw new InvalidOperationException(
-                $"Unable to read Git bare state: {bareResult.StandardError.Trim()}"
-            );
+            return Failure("Unable to read Git bare state", bareResult);
         }
 
         var branch = branchResult.StandardOutput.Trim();
 
-        return new GitRepositoryState(
+        var state = new GitRepositoryState(
             headResult.StandardOutput.Trim(),
             string.IsNullOrEmpty(branch) ? null : branch,
             bool.Parse(workTreeResult.StandardOutput.Trim()),
             bool.Parse(bareResult.StandardOutput.Trim())
         );
+
+        return new GitRepositoryStateReadResult(state, string.Empty);
+    }
+
+    private static GitRepositoryStateReadResult Failure(string prefix, GitCommandResult result)
+    {
+        var detail = result.StandardError.Trim();
+
+        var diagnostic = string.IsNullOrWhiteSpace(detail) ? prefix : $"{prefix}: {detail}";
+
+        return new GitRepositoryStateReadResult(null, diagnostic);
     }
 }

@@ -43,7 +43,11 @@ public class GitRepositoryStateTests
 
             var reader = new GitRepositoryStateReader(runner);
 
-            var state = await reader.ReadAsync(repositoryPath);
+            var result = await reader.ReadAsync(repositoryPath);
+
+            Assert.True(result.Succeeded, result.Diagnostic);
+
+            var state = Assert.IsType<GitRepositoryState>(result.State);
 
             Assert.Equal(expectedHead.StandardOutput.Trim(), state.Head);
 
@@ -55,6 +59,20 @@ public class GitRepositoryStateTests
         {
             DeleteDirectory(repositoryPath);
         }
+    }
+
+    [Fact]
+    public async Task ReadAsync_ReturnsDiagnosticWhenGitCannotBeStarted()
+    {
+        var runner = new GitProcessRunner("codelaxy-git-executable-that-does-not-exist");
+        var reader = new GitRepositoryStateReader(runner);
+
+        var result = await reader.ReadAsync(Directory.GetCurrentDirectory());
+
+        Assert.False(result.Succeeded);
+        Assert.Null(result.State);
+        Assert.False(string.IsNullOrWhiteSpace(result.Diagnostic));
+        Assert.Contains("Unable to read Git HEAD", result.Diagnostic);
     }
 
     [Fact]
@@ -103,7 +121,11 @@ public class GitRepositoryStateTests
 
             var reader = new GitRepositoryStateReader(runner);
 
-            var state = await reader.ReadAsync(repositoryPath);
+            var result = await reader.ReadAsync(repositoryPath);
+
+            Assert.True(result.Succeeded, result.Diagnostic);
+
+            var state = Assert.IsType<GitRepositoryState>(result.State);
 
             Assert.Equal(expectedHead.StandardOutput.Trim(), state.Head);
 
