@@ -1490,23 +1490,24 @@ public class GitSnapshotBuilderTests
                     | UnixFileMode.OtherExecute
             );
 
-            var worktreeDiffResult = await runner.RunReadOnlyAsync(
+            var stagedIndexResult = await runner.RunReadOnlyAsync(
                 repositoryPath,
-                [
-                    "-c",
-                    "core.fileMode=true",
-                    "diff-files",
-                    "--raw",
-                    "-z",
-                    "--no-abbrev",
-                    "--no-renames",
-                ],
+                ["ls-files", "--stage", "-z"],
                 GitCommandTimeout
             );
 
-            Assert.True(worktreeDiffResult.Succeeded, worktreeDiffResult.StandardError);
+            Assert.True(stagedIndexResult.Succeeded, stagedIndexResult.StandardError);
 
-            Assert.Equal(string.Empty, worktreeDiffResult.StandardOutput);
+            var stagedEntry = Assert.Single(
+                GitIndexEntryParser.Parse(stagedIndexResult.StandardOutput),
+                candidate => candidate.Path == "script.sh"
+            );
+
+            Assert.Equal("100755", stagedEntry.Mode);
+
+            var workingTreeMode = File.GetUnixFileMode(scriptPath);
+
+            Assert.True((workingTreeMode & UnixFileMode.UserExecute) != 0);
 
             var afterResult = await builder.BuildAsync(repositoryPath);
 
