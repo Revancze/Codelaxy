@@ -38,6 +38,28 @@ public sealed class GitSnapshotBuilder
 
         var repository = discoveryResult.Repository!;
 
+        var fileSystemTopLevelResult = await _runner.RunReadOnlyAsync(
+            startDirectory,
+            ["rev-parse", "--show-cdup"],
+            GitCommandTimeout,
+            cancellationToken
+        );
+
+        if (!fileSystemTopLevelResult.Succeeded)
+        {
+            return Failure(
+                CreateGitDiagnostic(
+                    "Unable to resolve host-native repository root",
+                    fileSystemTopLevelResult
+                )
+            );
+        }
+
+        var fileSystemTopLevel = ResolveFileSystemTopLevel(
+            startDirectory,
+            fileSystemTopLevelResult.StandardOutput
+        );
+
         var headResult = await RunRepositoryReadOnlyAsync(
             startDirectory,
             repository.TopLevel,
@@ -53,7 +75,7 @@ public sealed class GitSnapshotBuilder
         var indexResult = await RunRepositoryReadOnlyAsync(
             startDirectory,
             repository.TopLevel,
-            ["ls-files", "--stage", "-z"],
+            ["ls-files", "--stage", "-t", "-z"],
             cancellationToken
         );
 
@@ -74,32 +96,6 @@ public sealed class GitSnapshotBuilder
         }
 
         var canonicalIndexParts = GitIndexEntryCanonicalizer.Canonicalize(indexEntries);
-
-        var trackedResult = await RunRepositoryReadOnlyAsync(
-            startDirectory,
-            repository.TopLevel,
-            ["ls-files", "--cached", "--deduplicate", "-z"],
-            cancellationToken
-        );
-
-        if (!trackedResult.Succeeded)
-        {
-            return Failure(CreateGitDiagnostic("Unable to enumerate tracked files", trackedResult));
-        }
-
-        var deletedResult = await RunRepositoryReadOnlyAsync(
-            startDirectory,
-            repository.TopLevel,
-            ["ls-files", "--deleted", "--deduplicate", "-z"],
-            cancellationToken
-        );
-
-        if (!deletedResult.Succeeded)
-        {
-            return Failure(
-                CreateGitDiagnostic("Unable to enumerate deleted tracked files", deletedResult)
-            );
-        }
 
         IReadOnlyDictionary<string, string> stagedBaseModes = new Dictionary<string, string>(
             StringComparer.Ordinal
@@ -145,86 +141,143 @@ public sealed class GitSnapshotBuilder
             }
         }
 
-        var observedFileMode = OperatingSystem.IsWindows() ? "false" : "true";
-
-        var worktreeDiffResult = await RunRepositoryReadOnlyAsync(
+        var coreSymlinksResult = await RunRepositoryReadOnlyAsync(
             startDirectory,
             repository.TopLevel,
-            [
-                "-c",
-                $"core.fileMode={observedFileMode}",
-                "diff-files",
-                "--raw",
-                "-z",
-                "--no-abbrev",
-                "--no-renames",
-            ],
+            ["config", "--type=bool", "--default=true", "--get", "core.symlinks"],
             cancellationToken
         );
 
-        if (!worktreeDiffResult.Succeeded)
+        if (!coreSymlinksResult.Succeeded)
+        {
+            return Failure(CreateGitDiagnostic("Unable to read core.symlinks", coreSymlinksResult));
+        }
+
+        if (!bool.TryParse(coreSymlinksResult.StandardOutput.Trim(), out var coreSymlinksEnabled))
         {
             return Failure(
-                CreateGitDiagnostic(
-                    "Unable to read tracked working-tree metadata",
-                    worktreeDiffResult
-                )
+                $"Git returned an invalid core.symlinks value: "
+                    + $"'{coreSymlinksResult.StandardOutput.Trim()}'."
             );
         }
 
-        IReadOnlyDictionary<string, string> workingTreeModes;
-
-        try
-        {
-            workingTreeModes = ParseWorkingTreeModes(
-                indexEntries,
-                worktreeDiffResult.StandardOutput,
-                stagedBaseModes
-            );
-        }
-        catch (FormatException exception)
-        {
-            return Failure(
-                $"Unable to parse tracked working-tree metadata: " + $"{exception.Message}"
-            );
-        }
-
-        var trackedPaths = trackedResult.StandardOutput.Split(
-            '\0',
-            StringSplitOptions.RemoveEmptyEntries
-        );
-
-        var deletedPaths = deletedResult.StandardOutput.Split(
-            '\0',
-            StringSplitOptions.RemoveEmptyEntries
-        );
-
-        Array.Sort(trackedPaths, StringComparer.Ordinal);
-
-        var deletedPathSet = new HashSet<string>(deletedPaths, StringComparer.Ordinal);
-
-        var existingTrackedPaths = trackedPaths
-            .Where(path => !deletedPathSet.Contains(path))
+        var trackedPaths = indexEntries
+            .Select(entry => entry.Path)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(path => path, StringComparer.Ordinal)
             .ToArray();
 
+        var indexEntriesByPath = indexEntries
+            .GroupBy(entry => entry.Path, StringComparer.Ordinal)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<GitIndexEntry>)group.ToArray(),
+                StringComparer.Ordinal
+            );
+
+        var observer = new WorkingTreeEntryObserver(fileSystemTopLevel);
+
+        var trackedStates = new Dictionary<string, string>(StringComparer.Ordinal);
+        var trackedKinds = new Dictionary<string, string>(StringComparer.Ordinal);
+        var trackedModes = new Dictionary<string, string>(StringComparer.Ordinal);
         var trackedObjectIds = new Dictionary<string, string>(StringComparer.Ordinal);
 
-        foreach (var trackedPath in existingTrackedPaths)
+        var regularTrackedPaths = new List<string>();
+        var symbolicLinkPaths = new List<string>();
+
+        foreach (var trackedPath in trackedPaths)
         {
-            if (!workingTreeModes.ContainsKey(trackedPath))
+            var pathIndexEntries = indexEntriesByPath[trackedPath];
+
+            if (pathIndexEntries.Any(entry => entry.Mode == "160000"))
             {
                 return Failure(
-                    $"Git did not provide a working-tree mode "
-                        + $"for tracked path '{trackedPath}'."
+                    $"Tracked gitlink '{trackedPath}' is not yet supported "
+                        + "for exact working-tree observation."
                 );
             }
+
+            var observationResult = observer.Observe(trackedPath);
+
+            if (!observationResult.Succeeded)
+            {
+                return Failure(observationResult.Diagnostic);
+            }
+
+            var observation = observationResult.Observation!;
+
+            var skipWorktree = pathIndexEntries.Any(entry => entry.SkipWorktree);
+
+            if (observation.Kind == WorkingTreeEntryKind.Missing)
+            {
+                trackedStates[trackedPath] = skipWorktree ? "unmaterialized" : "missing";
+
+                continue;
+            }
+
+            if (observation.Kind == WorkingTreeEntryKind.ReparsePoint)
+            {
+                return Failure(
+                    $"Tracked reparse point '{trackedPath}' is not yet supported "
+                        + "for exact working-tree observation."
+                );
+            }
+
+            if (observation.Kind == WorkingTreeEntryKind.Directory)
+            {
+                trackedStates[trackedPath] = "type-conflict";
+                trackedKinds[trackedPath] = "directory";
+
+                continue;
+            }
+
+            trackedStates[trackedPath] = "present";
+
+            var stageZeroEntry = pathIndexEntries.SingleOrDefault(entry => entry.Stage == 0);
+
+            if (observation.Kind == WorkingTreeEntryKind.SymbolicLink)
+            {
+                trackedKinds[trackedPath] = "symlink";
+                trackedModes[trackedPath] = "120000";
+                symbolicLinkPaths.Add(trackedPath);
+
+                continue;
+            }
+
+            var materializedSymbolicLink = stageZeroEntry?.Mode == "120000" && !coreSymlinksEnabled;
+
+            if (materializedSymbolicLink)
+            {
+                trackedKinds[trackedPath] = "symlink";
+                trackedModes[trackedPath] = "120000";
+            }
+            else
+            {
+                trackedKinds[trackedPath] = "regular";
+
+                var workingTreeMode =
+                    observation.Mode
+                    ?? GetWindowsWorkingTreeRegularFileMode(
+                        trackedPath,
+                        pathIndexEntries,
+                        stagedBaseModes
+                    );
+
+                if (workingTreeMode is null)
+                {
+                    return Failure(
+                        $"Unable to determine working-tree mode "
+                            + $"for tracked path '{trackedPath}'."
+                    );
+                }
+
+                trackedModes[trackedPath] = workingTreeMode;
+            }
+
+            regularTrackedPaths.Add(trackedPath);
         }
 
-        var regularTrackedPaths = existingTrackedPaths
-            .Where(path => workingTreeModes[path] != "120000")
-            .ToArray();
-
-        if (regularTrackedPaths.Length > 0)
+        if (regularTrackedPaths.Count > 0)
         {
             var hashArguments = new List<string> { "hash-object", "--no-filters", "--" };
 
@@ -252,51 +305,28 @@ public sealed class GitSnapshotBuilder
                 StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
             );
 
-            if (regularObjectIds.Length != regularTrackedPaths.Length)
+            if (regularObjectIds.Length != regularTrackedPaths.Count)
             {
                 return Failure(
                     "Git returned an unexpected number " + "of tracked working-tree object hashes."
                 );
             }
 
-            for (var index = 0; index < regularTrackedPaths.Length; ++index)
+            for (var index = 0; index < regularTrackedPaths.Count; ++index)
             {
                 trackedObjectIds[regularTrackedPaths[index]] = regularObjectIds[index];
             }
         }
 
-        var symlinkPaths = existingTrackedPaths
-            .Where(path => workingTreeModes[path] == "120000")
-            .ToArray();
-
-        foreach (var symlinkPath in symlinkPaths)
+        foreach (var symbolicLinkPath in symbolicLinkPaths)
         {
-            var fullPath = Path.Combine(repository.TopLevel, symlinkPath);
+            var fullPath = Path.Combine(fileSystemTopLevel, symbolicLinkPath);
 
             var linkTarget = new FileInfo(fullPath).LinkTarget;
 
             if (linkTarget is null)
             {
-                var materializedHashResult = await RunRepositoryReadOnlyAsync(
-                    startDirectory,
-                    repository.TopLevel,
-                    ["hash-object", "--no-filters", "--", symlinkPath],
-                    cancellationToken
-                );
-
-                if (!materializedHashResult.Succeeded)
-                {
-                    return Failure(
-                        CreateGitDiagnostic(
-                            $"Unable to hash materialized symbolic link '{symlinkPath}'",
-                            materializedHashResult
-                        )
-                    );
-                }
-
-                trackedObjectIds[symlinkPath] = materializedHashResult.StandardOutput.Trim();
-
-                continue;
+                return Failure($"Unable to read tracked symbolic link " + $"'{symbolicLinkPath}'.");
             }
 
             var symlinkHashResult = await RunRepositoryReadOnlyAsync(
@@ -311,13 +341,13 @@ public sealed class GitSnapshotBuilder
             {
                 return Failure(
                     CreateGitDiagnostic(
-                        $"Unable to hash tracked symbolic link '{symlinkPath}'",
+                        $"Unable to hash tracked symbolic link " + $"'{symbolicLinkPath}'",
                         symlinkHashResult
                     )
                 );
             }
 
-            trackedObjectIds[symlinkPath] = symlinkHashResult.StandardOutput.Trim();
+            trackedObjectIds[symbolicLinkPath] = symlinkHashResult.StandardOutput.Trim();
         }
 
         var trackedParts = new List<string>();
@@ -327,28 +357,42 @@ public sealed class GitSnapshotBuilder
             trackedParts.Add("path");
             trackedParts.Add(trackedPath);
 
-            if (deletedPathSet.Contains(trackedPath))
+            var state = trackedStates[trackedPath];
+
+            trackedParts.Add("state");
+            trackedParts.Add(state);
+
+            if (state == "missing" || state == "unmaterialized")
             {
-                trackedParts.Add("state");
-                trackedParts.Add("missing");
                 continue;
             }
 
-            trackedParts.Add("state");
-            trackedParts.Add("present");
-
-            if (!workingTreeModes.TryGetValue(trackedPath, out var workingTreeMode))
+            if (!trackedKinds.TryGetValue(trackedPath, out var kind))
             {
                 return Failure(
-                    $"Git did not provide a working-tree mode "
-                        + $"for tracked path '{trackedPath}'."
+                    $"Unable to determine working-tree kind " + $"for tracked path '{trackedPath}'."
+                );
+            }
+
+            trackedParts.Add("kind");
+            trackedParts.Add(kind);
+
+            if (state == "type-conflict")
+            {
+                continue;
+            }
+
+            if (!trackedModes.TryGetValue(trackedPath, out var mode))
+            {
+                return Failure(
+                    $"Unable to determine working-tree mode " + $"for tracked path '{trackedPath}'."
                 );
             }
 
             trackedParts.Add("mode");
-            trackedParts.Add(workingTreeMode);
+            trackedParts.Add(mode);
 
-            if (!trackedObjectIds.TryGetValue(trackedPath, out var trackedObjectId))
+            if (!trackedObjectIds.TryGetValue(trackedPath, out var objectId))
             {
                 return Failure(
                     $"Git did not provide a working-tree object hash "
@@ -357,11 +401,11 @@ public sealed class GitSnapshotBuilder
             }
 
             trackedParts.Add("oid");
-            trackedParts.Add(trackedObjectId);
+            trackedParts.Add(objectId);
         }
 
         var trackedFingerprint = CreateFingerprint(
-            "codelaxy.snapshot.tracked-worktree.v2",
+            "codelaxy.snapshot.tracked-worktree.v3",
             trackedParts.ToArray()
         );
 
@@ -397,7 +441,7 @@ public sealed class GitSnapshotBuilder
 
             foreach (var untrackedPath in untrackedPaths)
             {
-                var fullPath = Path.Combine(repository.TopLevel, untrackedPath);
+                var fullPath = Path.Combine(fileSystemTopLevel, untrackedPath);
                 var linkTarget = new FileInfo(fullPath).LinkTarget;
 
                 if (linkTarget is null)
@@ -586,68 +630,6 @@ public sealed class GitSnapshotBuilder
         );
     }
 
-    private static IReadOnlyDictionary<string, string> ParseWorkingTreeModes(
-        IReadOnlyList<GitIndexEntry> indexEntries,
-        string rawDiff,
-        IReadOnlyDictionary<string, string> stagedBaseModes
-    )
-    {
-        var modes = new Dictionary<string, string>(StringComparer.Ordinal);
-
-        foreach (var entry in indexEntries)
-        {
-            if (entry.Stage != 0)
-            {
-                continue;
-            }
-
-            modes[entry.Path] = stagedBaseModes.TryGetValue(entry.Path, out var baseMode)
-                ? baseMode
-                : entry.Mode;
-        }
-
-        var records = rawDiff.Split('\0', StringSplitOptions.RemoveEmptyEntries);
-
-        if (records.Length % 2 != 0)
-        {
-            throw new FormatException("Git raw diff output contains an incomplete record.");
-        }
-
-        for (var index = 0; index < records.Length; index += 2)
-        {
-            var metadata = records[index];
-            var path = records[index + 1];
-
-            if (!metadata.StartsWith(':'))
-            {
-                throw new FormatException("Git raw diff record has an unexpected format.");
-            }
-
-            var fields = metadata[1..].Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-            if (fields.Length != 5)
-            {
-                throw new FormatException("Git raw diff metadata has an unexpected format.");
-            }
-
-            var oldMode = fields[0];
-            var newMode = fields[1];
-
-            if (newMode == "000000")
-            {
-                modes.Remove(path);
-                continue;
-            }
-
-            if (oldMode != newMode)
-            {
-                modes[path] = newMode;
-            }
-        }
-
-        return modes;
-    }
-
     private static IReadOnlyDictionary<string, string> ParseStagedBaseModes(string rawDiff)
     {
         var modes = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -691,6 +673,36 @@ public sealed class GitSnapshotBuilder
     private static bool IsRegularFileMode(string mode)
     {
         return mode is "100644" or "100755";
+    }
+
+    private static string? GetWindowsWorkingTreeRegularFileMode(
+        string path,
+        IReadOnlyList<GitIndexEntry> indexEntries,
+        IReadOnlyDictionary<string, string> stagedBaseModes
+    )
+    {
+        if (
+            stagedBaseModes.TryGetValue(path, out var stagedBaseMode)
+            && IsRegularFileMode(stagedBaseMode)
+        )
+        {
+            return stagedBaseMode;
+        }
+
+        var regularModes = indexEntries
+            .Select(entry => entry.Mode)
+            .Where(IsRegularFileMode)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        return regularModes.Length == 1 ? regularModes[0] : null;
+    }
+
+    private static string ResolveFileSystemTopLevel(string startDirectory, string rawCdup)
+    {
+        var relativeTopLevel = GitRepositoryDiscovery.RemoveGitLineTerminator(rawCdup);
+
+        return Path.GetFullPath(Path.Combine(Path.GetFullPath(startDirectory), relativeTopLevel));
     }
 
     private static GitSnapshotBuildResult Failure(string diagnostic)

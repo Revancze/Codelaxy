@@ -20,22 +20,36 @@ public static class GitIndexEntryParser
             }
 
             var metadata = record[..tabIndex];
-
             var path = record[(tabIndex + 1)..];
 
             var fields = metadata.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-            if (fields.Length != 3)
+            var fieldOffset = fields.Length switch
             {
-                throw new FormatException("Git index record metadata has an unexpected format.");
-            }
+                3 => 0,
+                4 when fields[0].Length == 1 => 1,
+                _ => throw new FormatException(
+                    "Git index record metadata has an unexpected format."
+                ),
+            };
 
-            if (!int.TryParse(fields[2], out var stage))
+            if (!int.TryParse(fields[fieldOffset + 2], out var stage))
             {
                 throw new FormatException("Git index record contains an invalid stage.");
             }
 
-            entries.Add(new GitIndexEntry(fields[0], fields[1], stage, path));
+            var skipWorktree =
+                fieldOffset == 1 && string.Equals(fields[0], "S", StringComparison.Ordinal);
+
+            entries.Add(
+                new GitIndexEntry(
+                    fields[fieldOffset],
+                    fields[fieldOffset + 1],
+                    stage,
+                    path,
+                    skipWorktree
+                )
+            );
         }
 
         return entries;

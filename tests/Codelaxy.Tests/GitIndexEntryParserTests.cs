@@ -49,6 +49,21 @@ public class GitIndexEntryParserTests
     }
 
     [Fact]
+    public void Parse_PreservesSkipWorktreeTag()
+    {
+        const string input =
+            "S 100644 " + "0123456789abcdef0123456789abcdef01234567 " + "0\tpath/to/file.txt\0";
+
+        var entry = Assert.Single(GitIndexEntryParser.Parse(input));
+
+        Assert.Equal("100644", entry.Mode);
+        Assert.Equal("0123456789abcdef0123456789abcdef01234567", entry.ObjectId);
+        Assert.Equal(0, entry.Stage);
+        Assert.Equal("path/to/file.txt", entry.Path);
+        Assert.True(entry.SkipWorktree);
+    }
+
+    [Fact]
     public async Task Parse_PreservesStagesFromRealUnmergedIndex()
     {
         var runner = new GitProcessRunner();
