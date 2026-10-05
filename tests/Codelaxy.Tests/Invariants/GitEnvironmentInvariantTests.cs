@@ -304,6 +304,48 @@ public class GitEnvironmentIsolationTests
         }
     }
 
+    [Fact]
+    public async Task RunAsync_IgnoresInheritedGitCeilingDirectories()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+        var nestedPath = Path.Combine(repositoryPath, "nested");
+
+        var originalValue = Environment.GetEnvironmentVariable("GIT_CEILING_DIRECTORIES");
+
+        try
+        {
+            var initResult = await runner.RunAsync(repositoryPath, ["init"]);
+
+            Assert.True(initResult.Succeeded, initResult.StandardError);
+
+            Directory.CreateDirectory(nestedPath);
+
+            var baselineResult = await runner.RunAsync(
+                nestedPath,
+                ["rev-parse", "--show-toplevel"]
+            );
+
+            Assert.True(baselineResult.Succeeded, baselineResult.StandardError);
+
+            var gitRepositoryPath = baselineResult.StandardOutput.Trim();
+
+            Environment.SetEnvironmentVariable("GIT_CEILING_DIRECTORIES", gitRepositoryPath);
+
+            var result = await runner.RunAsync(nestedPath, ["rev-parse", "--show-toplevel"]);
+
+            Assert.True(result.Succeeded, result.StandardError);
+
+            Assert.Equal(gitRepositoryPath, result.StandardOutput.Trim());
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("GIT_CEILING_DIRECTORIES", originalValue);
+
+            Directory.Delete(repositoryPath, recursive: true);
+        }
+    }
+
     private static async Task AssertVariableIsIgnoredAsync(
         string variableName,
         IEnumerable<string> arguments

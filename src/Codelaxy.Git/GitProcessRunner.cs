@@ -23,6 +23,7 @@ public sealed class GitProcessRunner
         "GIT_PREFIX",
         "GIT_SHALLOW_FILE",
         "GIT_COMMON_DIR",
+        "GIT_CEILING_DIRECTORIES",
     ];
 
     private readonly string _gitExecutable;
