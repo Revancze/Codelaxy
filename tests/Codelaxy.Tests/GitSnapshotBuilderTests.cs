@@ -3254,6 +3254,111 @@ public class GitSnapshotBuilderTests
         }
     }
 
+    [Fact]
+    public async Task BuildAsync_DoesNotExecuteRepositoryConfiguredFsmonitorHookOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            var trackedPath = Path.Combine(repositoryPath, "tracked.txt");
+
+            await File.WriteAllTextAsync(trackedPath, "committed\n");
+            await RunGitAsync(runner, repositoryPath, "add", "tracked.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            var hookDirectory = Path.Combine(repositoryPath, ".git", "hooks");
+            Directory.CreateDirectory(hookDirectory);
+
+            var hookPath = Path.Combine(hookDirectory, "fsmonitor-test");
+            var markerPath = Path.Combine(repositoryPath, ".git", "fsmonitor-ran");
+
+            await File.WriteAllTextAsync(
+                hookPath,
+                """
+                #!/bin/sh
+                : > .git/fsmonitor-ran
+                printf 'codelaxy-token\0'
+                """
+            );
+
+            var hookMode = File.GetUnixFileMode(hookPath);
+
+            File.SetUnixFileMode(
+                hookPath,
+                hookMode
+                    | UnixFileMode.UserExecute
+                    | UnixFileMode.GroupExecute
+                    | UnixFileMode.OtherExecute
+            );
+
+            await RunGitAsync(runner, repositoryPath, "config", "core.fsmonitorHookVersion", "2");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "config",
+                "core.fsmonitor",
+                ".git/hooks/fsmonitor-test"
+            );
+
+            await RunGitAsync(runner, repositoryPath, "update-index", "--fsmonitor");
+            if (File.Exists(markerPath))
+            {
+                File.Delete(markerPath);
+            }
+
+            var proofResult = await runner.RunAsync(
+                repositoryPath,
+                ["status", "--short"],
+                GitCommandTimeout
+            );
+
+            Assert.True(proofResult.Succeeded, proofResult.StandardError);
+
+            Assert.True(
+                File.Exists(markerPath),
+                "The repository-configured fsmonitor hook was not exercised by the test setup."
+            );
+
+            File.Delete(markerPath);
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var result = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(result.Succeeded, result.Diagnostic);
+
+            Assert.False(
+                File.Exists(markerPath),
+                "Snapshot observation executed the repository-configured core.fsmonitor hook."
+            );
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
     private static async Task RunGitAsync(
         GitProcessRunner runner,
         string repositoryPath,

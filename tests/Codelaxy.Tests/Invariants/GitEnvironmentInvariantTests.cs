@@ -278,8 +278,13 @@ public class GitEnvironmentIsolationTests
                     readOnly: true
                 );
 
+                // Codelaxy may set some of these itself after sanitizing the inherited
+                // environment. Only an inherited poisoned value is an isolation leak.
                 var remainingVariables = variableNames
-                    .Where(startInfo.Environment.ContainsKey)
+                    .Where(variableName =>
+                        startInfo.Environment.TryGetValue(variableName, out var value)
+                        && value == "codelaxy-poisoned"
+                    )
                     .OrderBy(variableName => variableName, StringComparer.Ordinal)
                     .ToArray();
 

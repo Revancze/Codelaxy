@@ -283,6 +283,10 @@ public sealed class GitProcessRunner
         if (readOnly)
         {
             startInfo.Environment["GIT_OPTIONAL_LOCKS"] = "0";
+
+            startInfo.Environment["GIT_CONFIG_COUNT"] = "1";
+            startInfo.Environment["GIT_CONFIG_KEY_0"] = "core.fsmonitor";
+            startInfo.Environment["GIT_CONFIG_VALUE_0"] = "false";
         }
 
         foreach (var argument in arguments)
