@@ -28,6 +28,7 @@ public sealed class GitProcessRunner
 
     private readonly string? _gitExecutable;
     private readonly string? _gitResolutionDiagnostic;
+    private readonly bool _gitExecutableResolvedFromPath;
 
     public GitProcessRunner()
         : this(Environment.GetEnvironmentVariable("PATH"), Environment.CurrentDirectory) { }
@@ -35,6 +36,7 @@ public sealed class GitProcessRunner
     internal GitProcessRunner(string? pathVariable, string currentDirectory)
     {
         _gitExecutable = ResolveDefaultGitExecutable(pathVariable, currentDirectory);
+        _gitExecutableResolvedFromPath = true;
 
         if (_gitExecutable is null)
         {
@@ -164,6 +166,25 @@ public sealed class GitProcessRunner
                 null,
                 string.Empty,
                 _gitResolutionDiagnostic ?? "Unable to locate Git executable.",
+                GitCommandFailureKind.LaunchFailure
+            );
+        }
+
+        // The executable was chosen relative to the directory the runner was
+        // created in; a command may target a different repository.
+        if (
+            _gitExecutableResolvedFromPath
+            && RepositoryControlledPaths.IsInsideAny(
+                _gitExecutable,
+                RepositoryControlledPaths.GetProtectedRoots(workingDirectory)
+            )
+        )
+        {
+            return new GitCommandResult(
+                null,
+                string.Empty,
+                $"Refusing to run Git '{_gitExecutable}' from inside the repository "
+                    + $"being observed at '{workingDirectory}'.",
                 GitCommandFailureKind.LaunchFailure
             );
         }
@@ -338,6 +359,8 @@ public sealed class GitProcessRunner
 
         var absoluteCurrentDirectory = Path.GetFullPath(currentDirectory);
 
+        var protectedRoots = RepositoryControlledPaths.GetProtectedRoots(absoluteCurrentDirectory);
+
         var pathComparison = OperatingSystem.IsWindows()
             ? StringComparison.OrdinalIgnoreCase
             : StringComparison.Ordinal;
@@ -393,9 +416,17 @@ public sealed class GitProcessRunner
                 continue;
             }
 
+            if (RepositoryControlledPaths.IsInsideAny(fullDirectory, protectedRoots))
+            {
+                continue;
+            }
+
             var candidate = Path.Combine(fullDirectory, executableName);
 
-            if (File.Exists(candidate))
+            if (
+                File.Exists(candidate)
+                && !RepositoryControlledPaths.IsInsideAny(candidate, protectedRoots)
+            )
             {
                 return Path.GetFullPath(candidate);
             }

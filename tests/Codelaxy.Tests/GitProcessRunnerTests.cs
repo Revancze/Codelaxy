@@ -93,6 +93,116 @@ public class GitProcessRunnerTests
     }
 
     [Fact]
+    public void ResolveDefaultGitExecutable_IgnoresCurrentDirectoryDescendantPathEntries()
+    {
+        var trustedRunner = new GitProcessRunner();
+
+        var trustedStartInfo = trustedRunner.CreateProcessStartInfo(
+            Directory.GetCurrentDirectory(),
+            ["--version"],
+            readOnly: true
+        );
+
+        var trustedGitPath = trustedStartInfo.FileName;
+        var trustedGitDirectory = Path.GetDirectoryName(trustedGitPath);
+
+        Assert.False(string.IsNullOrWhiteSpace(trustedGitDirectory));
+
+        var untrustedDirectory = CreateTemporaryDirectory();
+
+        try
+        {
+            // The start directory is the root of an untrusted worktree.
+            Directory.CreateDirectory(Path.Combine(untrustedDirectory, ".git"));
+
+            var projectBinDirectory = Path.Combine(untrustedDirectory, "bin");
+            Directory.CreateDirectory(projectBinDirectory);
+
+            var fakeGitName = OperatingSystem.IsWindows() ? "git.exe" : "git";
+            var fakeGitPath = Path.Combine(projectBinDirectory, fakeGitName);
+
+            File.WriteAllText(fakeGitPath, "not really git");
+
+            var pathVariable = string.Join(
+                Path.PathSeparator,
+                projectBinDirectory,
+                trustedGitDirectory
+            );
+
+            var resolvedPath = GitProcessRunner.ResolveDefaultGitExecutable(
+                pathVariable,
+                untrustedDirectory
+            );
+
+            Assert.NotNull(resolvedPath);
+
+            Assert.Equal(Path.GetFullPath(trustedGitPath), Path.GetFullPath(resolvedPath));
+
+            Assert.NotEqual(Path.GetFullPath(fakeGitPath), Path.GetFullPath(resolvedPath));
+        }
+        finally
+        {
+            Directory.Delete(untrustedDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ResolveDefaultGitExecutable_IgnoresWorktreePathEntriesWhenStartedFromSubdirectory()
+    {
+        var trustedRunner = new GitProcessRunner();
+
+        var trustedStartInfo = trustedRunner.CreateProcessStartInfo(
+            Directory.GetCurrentDirectory(),
+            ["--version"],
+            readOnly: true
+        );
+
+        var trustedGitPath = trustedStartInfo.FileName;
+        var trustedGitDirectory = Path.GetDirectoryName(trustedGitPath);
+
+        Assert.False(string.IsNullOrWhiteSpace(trustedGitDirectory));
+
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(repositoryPath, ".git"));
+
+            var startDirectory = Path.Combine(repositoryPath, "src", "nested");
+            Directory.CreateDirectory(startDirectory);
+
+            var projectBinDirectory = Path.Combine(repositoryPath, "bin");
+            Directory.CreateDirectory(projectBinDirectory);
+
+            var fakeGitName = OperatingSystem.IsWindows() ? "git.exe" : "git";
+            var fakeGitPath = Path.Combine(projectBinDirectory, fakeGitName);
+
+            File.WriteAllText(fakeGitPath, "not really git");
+
+            var pathVariable = string.Join(
+                Path.PathSeparator,
+                projectBinDirectory,
+                trustedGitDirectory
+            );
+
+            var resolvedPath = GitProcessRunner.ResolveDefaultGitExecutable(
+                pathVariable,
+                startDirectory
+            );
+
+            Assert.NotNull(resolvedPath);
+
+            Assert.Equal(Path.GetFullPath(trustedGitPath), Path.GetFullPath(resolvedPath));
+
+            Assert.NotEqual(Path.GetFullPath(fakeGitPath), Path.GetFullPath(resolvedPath));
+        }
+        finally
+        {
+            Directory.Delete(repositoryPath, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task RunAsync_ReturnsLaunchFailureWhenDefaultGitCannotBeResolved()
     {
         var runner = new GitProcessRunner(string.Empty, Directory.GetCurrentDirectory());
