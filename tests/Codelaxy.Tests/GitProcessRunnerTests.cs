@@ -22,6 +22,96 @@ public class GitProcessRunnerTests
     }
 
     [Fact]
+    public void CreateProcessStartInfo_PinsDefaultGitToAbsoluteExecutablePath()
+    {
+        var runner = new GitProcessRunner();
+
+        var startInfo = runner.CreateProcessStartInfo(
+            Directory.GetCurrentDirectory(),
+            ["--version"],
+            readOnly: true
+        );
+
+        Assert.True(
+            Path.IsPathFullyQualified(startInfo.FileName),
+            $"Default Git executable must be an absolute path, but was '{startInfo.FileName}'."
+        );
+
+        Assert.True(
+            File.Exists(startInfo.FileName),
+            $"Resolved Git executable does not exist: '{startInfo.FileName}'."
+        );
+    }
+
+    [Fact]
+    public void ResolveDefaultGitExecutable_IgnoresRelativePathEntries()
+    {
+        var trustedRunner = new GitProcessRunner();
+
+        var trustedStartInfo = trustedRunner.CreateProcessStartInfo(
+            Directory.GetCurrentDirectory(),
+            ["--version"],
+            readOnly: true
+        );
+
+        var trustedGitPath = trustedStartInfo.FileName;
+        var trustedGitDirectory = Path.GetDirectoryName(trustedGitPath);
+
+        Assert.False(string.IsNullOrWhiteSpace(trustedGitDirectory));
+
+        var untrustedDirectory = CreateTemporaryDirectory();
+
+        try
+        {
+            var fakeGitName = OperatingSystem.IsWindows() ? "git.exe" : "git";
+            var fakeGitPath = Path.Combine(untrustedDirectory, fakeGitName);
+
+            File.WriteAllText(fakeGitPath, "not really git");
+
+            var pathVariable = string.Join(
+                Path.PathSeparator,
+                ".",
+                "relative-tools",
+                trustedGitDirectory
+            );
+
+            var resolvedPath = GitProcessRunner.ResolveDefaultGitExecutable(
+                pathVariable,
+                untrustedDirectory
+            );
+
+            Assert.NotNull(resolvedPath);
+
+            Assert.Equal(Path.GetFullPath(trustedGitPath), Path.GetFullPath(resolvedPath));
+
+            Assert.NotEqual(Path.GetFullPath(fakeGitPath), Path.GetFullPath(resolvedPath));
+        }
+        finally
+        {
+            Directory.Delete(untrustedDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task RunAsync_ReturnsLaunchFailureWhenDefaultGitCannotBeResolved()
+    {
+        var runner = new GitProcessRunner(string.Empty, Directory.GetCurrentDirectory());
+
+        var result = await runner.RunAsync(Directory.GetCurrentDirectory(), ["--version"]);
+
+        Assert.False(result.Started);
+        Assert.False(result.Succeeded);
+        Assert.Null(result.ExitCode);
+        Assert.Equal(GitCommandFailureKind.LaunchFailure, result.FailureKind);
+
+        Assert.Contains(
+            "Unable to locate Git executable",
+            result.StandardError,
+            StringComparison.Ordinal
+        );
+    }
+
+    [Fact]
     public async Task RunAsync_UsesRequestedWorkingDirectory()
     {
         var runner = new GitProcessRunner();

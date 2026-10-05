@@ -26,9 +26,24 @@ public sealed class GitProcessRunner
         "GIT_CEILING_DIRECTORIES",
     ];
 
-    private readonly string _gitExecutable;
+    private readonly string? _gitExecutable;
+    private readonly string? _gitResolutionDiagnostic;
 
-    public GitProcessRunner(string gitExecutable = "git")
+    public GitProcessRunner()
+        : this(Environment.GetEnvironmentVariable("PATH"), Environment.CurrentDirectory) { }
+
+    internal GitProcessRunner(string? pathVariable, string currentDirectory)
+    {
+        _gitExecutable = ResolveDefaultGitExecutable(pathVariable, currentDirectory);
+
+        if (_gitExecutable is null)
+        {
+            _gitResolutionDiagnostic =
+                "Unable to locate Git executable in trusted absolute PATH entries.";
+        }
+    }
+
+    public GitProcessRunner(string gitExecutable)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(gitExecutable);
 
@@ -143,6 +158,16 @@ public sealed class GitProcessRunner
 
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (_gitExecutable is null)
+        {
+            return new GitCommandResult(
+                null,
+                string.Empty,
+                _gitResolutionDiagnostic ?? "Unable to locate Git executable.",
+                GitCommandFailureKind.LaunchFailure
+            );
+        }
+
         var startInfo = CreateProcessStartInfo(workingDirectory, arguments, readOnly);
 
         using var process = new Process { StartInfo = startInfo };
@@ -233,6 +258,11 @@ public sealed class GitProcessRunner
         bool readOnly
     )
     {
+        if (_gitExecutable is null)
+        {
+            throw new InvalidOperationException("Git executable has not been resolved.");
+        }
+
         var startInfo = new ProcessStartInfo
         {
             FileName = _gitExecutable,
@@ -286,6 +316,88 @@ public sealed class GitProcessRunner
                 startInfo.Environment.Remove(variableName);
             }
         }
+    }
+
+    internal static string? ResolveDefaultGitExecutable(
+        string? pathVariable,
+        string currentDirectory
+    )
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(currentDirectory);
+
+        var executableName = OperatingSystem.IsWindows() ? "git.exe" : "git";
+
+        if (string.IsNullOrEmpty(pathVariable))
+        {
+            return null;
+        }
+
+        var absoluteCurrentDirectory = Path.GetFullPath(currentDirectory);
+
+        var pathComparison = OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
+        foreach (var rawDirectory in pathVariable.Split(Path.PathSeparator))
+        {
+            if (rawDirectory.Length == 0)
+            {
+                continue;
+            }
+
+            var directory = rawDirectory;
+
+            if (directory.Length >= 2 && directory[0] == '"' && directory[^1] == '"')
+            {
+                directory = directory[1..^1];
+            }
+
+            if (!Path.IsPathFullyQualified(directory))
+            {
+                continue;
+            }
+
+            string fullDirectory;
+
+            try
+            {
+                fullDirectory = Path.GetFullPath(directory);
+            }
+            catch (ArgumentException)
+            {
+                continue;
+            }
+            catch (NotSupportedException)
+            {
+                continue;
+            }
+
+            if (
+                string.Equals(
+                    fullDirectory.TrimEnd(
+                        Path.DirectorySeparatorChar,
+                        Path.AltDirectorySeparatorChar
+                    ),
+                    absoluteCurrentDirectory.TrimEnd(
+                        Path.DirectorySeparatorChar,
+                        Path.AltDirectorySeparatorChar
+                    ),
+                    pathComparison
+                )
+            )
+            {
+                continue;
+            }
+
+            var candidate = Path.Combine(fullDirectory, executableName);
+
+            if (File.Exists(candidate))
+            {
+                return Path.GetFullPath(candidate);
+            }
+        }
+
+        return null;
     }
 
     private static async Task TerminateProcessTreeAsync(Process process)
