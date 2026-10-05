@@ -3123,6 +3123,137 @@ public class GitSnapshotBuilderTests
         }
     }
 
+    [Fact]
+    public async Task BuildAsync_FailsWhenRepositoryChangesDuringCaptureOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var setupRunner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+        var wrapperDirectory = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(setupRunner, repositoryPath, "init", "-b", "main");
+
+            var trackedPath = Path.Combine(repositoryPath, "tracked.txt");
+
+            await File.WriteAllTextAsync(trackedPath, "main\n");
+
+            await RunGitAsync(setupRunner, repositoryPath, "add", "tracked.txt");
+
+            await RunGitAsync(
+                setupRunner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "main state"
+            );
+
+            await RunGitAsync(setupRunner, repositoryPath, "switch", "-c", "race-target");
+
+            await File.WriteAllTextAsync(trackedPath, "race target\n");
+
+            await RunGitAsync(setupRunner, repositoryPath, "add", "tracked.txt");
+
+            await RunGitAsync(
+                setupRunner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "race target state"
+            );
+
+            await RunGitAsync(setupRunner, repositoryPath, "switch", "main");
+
+            var wrapperPath = Path.Combine(wrapperDirectory, "git-race-wrapper.sh");
+            var markerPath = wrapperPath + ".mutated";
+
+            await File.WriteAllTextAsync(
+                wrapperPath,
+                """
+                #!/bin/sh
+
+                marker="${0}.mutated"
+
+                if [ "$#" -ge 5 ] \
+                    && [ "$1" = "-C" ] \
+                    && [ "$3" = "rev-parse" ] \
+                    && [ "$4" = "--verify" ] \
+                    && [ "$5" = "HEAD" ] \
+                    && [ ! -e "$marker" ]; then
+                    output="$(git "$@")"
+                    status=$?
+
+                    if [ "$status" -eq 0 ]; then
+                        : > "$marker"
+                        GIT_OPTIONAL_LOCKS=1 git -C "$2" switch --quiet race-target
+                    fi
+
+                    printf '%s\n' "$output"
+                    exit "$status"
+                fi
+
+                exec git "$@"
+                """
+            );
+
+            var wrapperMode = File.GetUnixFileMode(wrapperPath);
+
+            File.SetUnixFileMode(
+                wrapperPath,
+                wrapperMode
+                    | UnixFileMode.UserExecute
+                    | UnixFileMode.GroupExecute
+                    | UnixFileMode.OtherExecute
+            );
+
+            var raceRunner = new GitProcessRunner(wrapperPath);
+            var builder = new GitSnapshotBuilder(raceRunner);
+
+            var result = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                File.Exists(markerPath),
+                "The test Git wrapper did not trigger the repository mutation."
+            );
+
+            var branchResult = await setupRunner.RunReadOnlyAsync(
+                repositoryPath,
+                ["branch", "--show-current"],
+                GitCommandTimeout
+            );
+
+            Assert.True(branchResult.Succeeded, branchResult.StandardError);
+            Assert.Equal("race-target", branchResult.StandardOutput.Trim());
+
+            Assert.False(result.Succeeded);
+            Assert.Null(result.Snapshot);
+
+            Assert.Contains(
+                "changed during snapshot capture",
+                result.Diagnostic,
+                StringComparison.OrdinalIgnoreCase
+            );
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+            DeleteDirectory(wrapperDirectory);
+        }
+    }
+
     private static async Task RunGitAsync(
         GitProcessRunner runner,
         string repositoryPath,

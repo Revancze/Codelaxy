@@ -551,6 +551,56 @@ public sealed class GitSnapshotBuilder
             }
         }
 
+        var finalHeadResult = await RunRepositoryReadOnlyAsync(
+            startDirectory,
+            repository.TopLevel,
+            ["rev-parse", "--verify", "HEAD"],
+            cancellationToken
+        );
+
+        if (!finalHeadResult.Succeeded)
+        {
+            return Failure(
+                CreateGitDiagnostic(
+                    "Unable to re-read HEAD after snapshot capture",
+                    finalHeadResult
+                )
+            );
+        }
+
+        var finalIndexResult = await RunRepositoryReadOnlyAsync(
+            startDirectory,
+            repository.TopLevel,
+            ["ls-files", "--stage", "-t", "-z"],
+            cancellationToken
+        );
+
+        if (!finalIndexResult.Succeeded)
+        {
+            return Failure(
+                CreateGitDiagnostic(
+                    "Unable to re-read Git index after snapshot capture",
+                    finalIndexResult
+                )
+            );
+        }
+
+        if (
+            !string.Equals(
+                headResult.StandardOutput,
+                finalHeadResult.StandardOutput,
+                StringComparison.Ordinal
+            )
+            || !string.Equals(
+                indexResult.StandardOutput,
+                finalIndexResult.StandardOutput,
+                StringComparison.Ordinal
+            )
+        )
+        {
+            return Failure("Repository changed during snapshot capture.");
+        }
+
         var untrackedFingerprint = CreateFingerprint(
             "codelaxy.snapshot.untracked.v3",
             untrackedParts.ToArray()
