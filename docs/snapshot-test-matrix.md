@@ -32,9 +32,9 @@ Every mode Git can store, and every kind of object that can appear untracked.
 | dangling symlink | ✅ supported | ✅ supported | legal Git state |
 | symlink to directory | ✅ supported | ✅ supported | |
 | symlink pointing outside repo | ✅ independent of external target content | ✅ same | |
-| gitlink / submodule `160000` | ❌ snapshot fails (`hash-object` on directory) | ➖ | verified on Windows |
-| nested repository | ➖ | ❌ listed as `dir/`, snapshot fails | hits main checkout via `.claude/worktrees/` |
-| linked worktree inside worktree | ➖ | ❌ same as nested repository | |
+| gitlink / submodule `160000` | 📝 reported failure (`hash-object` on directory); support decision pending | ➖ | observed on Windows; regression test and scope decision pending |
+| nested repository | ➖ | 📝 reported failure (`dir/` passed to `hash-object`); support decision pending | observed under `.claude/worktrees/`; reproduce independently |
+| linked worktree inside worktree | ➖ | 📝 suspected nested-repository failure mode; decision pending | requires independent test |
 | empty directory | ➖ | ❓ | Git ignores it; W should not change 📝 |
 | sparse index directory `040000` | ❓ | ➖ | only with sparse index |
 
@@ -54,8 +54,9 @@ What each change must and must not do to the four fingerprints.
 | staged rename | = | ≠ | ≠ | ≠ | ✅ ChangesIndexAndStagedFingerprintsForStagedRename |
 | staged copy | = | ≠ | ≠ | ≠ | ✅ RepresentsStagedCopyByHardState |
 | merge conflict (stages 1/2/3) | = | ≠ | ≠ | ≠ | ✅ SupportsUnmergedRepositoryState |
-| commit with identical tree | ≠ | = | ≠ | = | ❓ |
-| checkout another branch | ≠ | ≠ | ≠ | ≠ | ❓ |
+| new commit with identical tree, unchanged canonical index and materialized state | ≠ | = | ≠ | = | ❓ semantic expectation; runtime test pending |
+| switch branch name, same HEAD, index and materialized state | = | = | = | = | ❓ branch/ref name must not affect identity; runtime test pending |
+| checkout different repository state | depends | depends | depends | depends | 📝 define exact fixture before asserting fingerprint transitions |
 | touch file (mtime only) | = | = | = | = | ❓ runtime test missing; only static timestamp invariant exists |
 | index stat refresh (`git status` without optional-locks guard) | = | = | = | = | ❓ |
 | edit ignored file | = | = | = | = | ❓ |
@@ -78,6 +79,7 @@ Snapshot identity must not depend on how the observer is configured.
 | `core.ignoreCase` | ❓ |
 | inherited `GIT_*` repository-local variables | ✅ Invariants/GitEnvironmentInvariantTests + drift test |
 | console code page (e.g. 852) | ✅ CreateProcessStartInfo_PinsRedirectedGitOutputToUtf8 |
+| `core.untrackedCache` | ❓ independent probe pending |
 
 ## 4. Repository kinds
 
@@ -85,7 +87,7 @@ Snapshot identity must not depend on how the observer is configured.
 |---|---|---|
 | SHA-1 | ✅ (all tests) | |
 | SHA-256 | ✅ SupportsSha256Repository | |
-| unborn HEAD (no commit yet) | ❌ `rev-parse --verify HEAD` fails | 📝 fail or represent? |
+| unborn HEAD (no commit yet) | 📝 reported rejection by `rev-parse --verify HEAD` | decide whether to represent unborn HEAD or fail conservatively |
 | detached HEAD | ❓ | covered in discovery, not in snapshot |
 | linked worktree as the observed repo | ❓ | |
 | shallow clone | ❓ | H is commit oid; likely fine |
@@ -100,12 +102,29 @@ Snapshot identity must not depend on how the observer is configured.
 | path with spaces | ❓ in snapshot | runner test exists |
 | path with diacritics (`ž.txt`) | ❓ in snapshot | runner pins UTF-8 |
 | path with leading `-` | ❓ | `--` separator is used |
-| thousands of files | ❌ Windows 32 767-char command line | fix: `--stdin-paths` (needs stdin API, runner closes stdin) or batching |
-| file changes during snapshot | ❓ | ~8 separate Git calls; no before/after consistency check |
+| thousands of files | ❓ Windows command-line limit risk; reproduction pending | investigate path batching or Git stdin interface; no implementation decision yet |
+| file changes during snapshot | ✅ Linux regression tests | BuildAsync performs two complete observations and compares SchemaVersion, H/I/S/W fingerprints. Detected drift returns a diagnostic without a Snapshot. Coordinated ABA remains a known observation-model limitation. Windows-specific concurrency regression is not yet proven. |
 | filename differing only in case | ❓ | Windows, `core.ignoreCase` |
 | symlink target with invalid UTF-8 bytes (Unix) | ❓ | arbitrary target-byte fidelity not yet proven; current implementation round-trips through .NET `string` + UTF-8 |
 
 ## 6. Platforms
 
-Tests named `…OnLinux` run only on Linux/WSL. Every row above must be green on
-both Windows and Linux before P1.2 exit.
+Platform coverage is evaluated against the supported
+behavior of each scenario, not by requiring every test
+to pass on every operating system.
+
+Tests named `…OnLinux` exercise their target behavior
+only on Linux. An early return on Windows does not
+constitute Windows coverage, even if the test runner
+reports success.
+
+Every scenario must have an explicit disposition:
+
+- SUPPORTED
+- CONSERVATIVE FAILURE
+- OUT OF SCOPE
+- KNOWN LIMITATION
+
+A scenario is complete only when its required behavior
+is supported by applicable evidence or an explicitly
+documented scope decision.
