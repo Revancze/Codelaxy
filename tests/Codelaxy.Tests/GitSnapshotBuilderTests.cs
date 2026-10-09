@@ -3124,6 +3124,153 @@ public class GitSnapshotBuilderTests
     }
 
     [Fact]
+    public async Task BuildAsync_DoesNotReturnMixedWorkingTreeObservationOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var setupRunner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+        var wrapperDirectory = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(setupRunner, repositoryPath, "init", "-b", "main");
+
+            var trackedPath = Path.Combine(repositoryPath, "tracked.txt");
+            var untrackedPath = Path.Combine(repositoryPath, "untracked.txt");
+
+            await File.WriteAllTextAsync(trackedPath, "tracked-before\n");
+            await RunGitAsync(setupRunner, repositoryPath, "add", "tracked.txt");
+
+            await RunGitAsync(
+                setupRunner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            await File.WriteAllTextAsync(untrackedPath, "untracked-before\n");
+
+            var stableBuilder = new GitSnapshotBuilder(setupRunner);
+
+            var beforeResult = await stableBuilder.BuildAsync(repositoryPath);
+
+            Assert.True(beforeResult.Succeeded, beforeResult.Diagnostic);
+
+            var beforeSnapshot = Assert.IsType<Snapshot>(beforeResult.Snapshot);
+
+            var wrapperPath = Path.Combine(wrapperDirectory, "git-working-tree-mix-wrapper.sh");
+
+            var markerPath = wrapperPath + ".mutated";
+
+            await File.WriteAllTextAsync(
+                wrapperPath,
+                """
+                #!/bin/sh
+
+                marker="${0}.mutated"
+
+                if [ "$#" -ge 6 ] \
+                    && [ "$1" = "-C" ] \
+                    && [ "$3" = "ls-files" ] \
+                    && [ "$4" = "--others" ] \
+                    && [ "$5" = "--exclude-per-directory=.gitignore" ] \
+                    && [ "$6" = "-z" ] \
+                    && [ ! -e "$marker" ]; then
+
+                    printf 'tracked-after\n' > "$2/tracked.txt" || exit 97
+                    printf 'untracked-after\n' > "$2/untracked.txt" || exit 98
+                    : > "$marker" || exit 99
+                fi
+
+                exec git "$@"
+                """
+            );
+
+            var wrapperMode = File.GetUnixFileMode(wrapperPath);
+
+            File.SetUnixFileMode(
+                wrapperPath,
+                wrapperMode
+                    | UnixFileMode.UserExecute
+                    | UnixFileMode.GroupExecute
+                    | UnixFileMode.OtherExecute
+            );
+
+            var raceRunner = new GitProcessRunner(wrapperPath);
+            var builder = new GitSnapshotBuilder(raceRunner);
+
+            var result = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(
+                File.Exists(markerPath),
+                "The test Git wrapper did not mutate the working tree."
+            );
+
+            Assert.Equal("tracked-after\n", await File.ReadAllTextAsync(trackedPath));
+            Assert.Equal("untracked-after\n", await File.ReadAllTextAsync(untrackedPath));
+
+            var afterResult = await stableBuilder.BuildAsync(repositoryPath);
+
+            Assert.True(afterResult.Succeeded, afterResult.Diagnostic);
+
+            var afterSnapshot = Assert.IsType<Snapshot>(afterResult.Snapshot);
+
+            Assert.Equal(beforeSnapshot.HeadFingerprint, afterSnapshot.HeadFingerprint);
+            Assert.Equal(beforeSnapshot.IndexFingerprint, afterSnapshot.IndexFingerprint);
+            Assert.Equal(beforeSnapshot.StagedFingerprint, afterSnapshot.StagedFingerprint);
+
+            Assert.NotEqual(
+                beforeSnapshot.WorkingTreeFingerprint,
+                afterSnapshot.WorkingTreeFingerprint
+            );
+
+            if (!result.Succeeded)
+            {
+                Assert.Null(result.Snapshot);
+
+                Assert.Contains(
+                    "changed during snapshot capture",
+                    result.Diagnostic,
+                    StringComparison.OrdinalIgnoreCase
+                );
+
+                return;
+            }
+
+            var capturedSnapshot = Assert.IsType<Snapshot>(result.Snapshot);
+
+            Assert.True(
+                string.Equals(
+                    capturedSnapshot.WorkingTreeFingerprint,
+                    beforeSnapshot.WorkingTreeFingerprint,
+                    StringComparison.Ordinal
+                )
+                    || string.Equals(
+                        capturedSnapshot.WorkingTreeFingerprint,
+                        afterSnapshot.WorkingTreeFingerprint,
+                        StringComparison.Ordinal
+                    ),
+                "BuildAsync returned a mixed working-tree fingerprint "
+                    + "that matches neither the state before nor the state after the mutation."
+            );
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+            DeleteDirectory(wrapperDirectory);
+        }
+    }
+
+    [Fact]
     public async Task BuildAsync_FailsWhenRepositoryChangesDuringCaptureOnLinux()
     {
         if (!OperatingSystem.IsLinux())

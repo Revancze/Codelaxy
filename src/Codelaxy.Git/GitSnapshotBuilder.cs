@@ -27,6 +27,58 @@ public sealed class GitSnapshotBuilder
         CancellationToken cancellationToken = default
     )
     {
+        var firstResult = await BuildSingleObservationAsync(startDirectory, cancellationToken);
+
+        if (!firstResult.Succeeded)
+        {
+            return firstResult;
+        }
+
+        var secondResult = await BuildSingleObservationAsync(startDirectory, cancellationToken);
+
+        if (!secondResult.Succeeded)
+        {
+            return secondResult;
+        }
+
+        var firstSnapshot = firstResult.Snapshot!;
+        var secondSnapshot = secondResult.Snapshot!;
+
+        if (
+            firstSnapshot.SchemaVersion != secondSnapshot.SchemaVersion
+            || !string.Equals(
+                firstSnapshot.HeadFingerprint,
+                secondSnapshot.HeadFingerprint,
+                StringComparison.Ordinal
+            )
+            || !string.Equals(
+                firstSnapshot.IndexFingerprint,
+                secondSnapshot.IndexFingerprint,
+                StringComparison.Ordinal
+            )
+            || !string.Equals(
+                firstSnapshot.WorkingTreeFingerprint,
+                secondSnapshot.WorkingTreeFingerprint,
+                StringComparison.Ordinal
+            )
+            || !string.Equals(
+                firstSnapshot.StagedFingerprint,
+                secondSnapshot.StagedFingerprint,
+                StringComparison.Ordinal
+            )
+        )
+        {
+            return Failure("Repository changed during snapshot capture.");
+        }
+
+        return secondResult;
+    }
+
+    private async Task<GitSnapshotBuildResult> BuildSingleObservationAsync(
+        string startDirectory,
+        CancellationToken cancellationToken = default
+    )
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(startDirectory);
 
         var discoveryResult = await _discovery.DiscoverAsync(startDirectory, cancellationToken);
