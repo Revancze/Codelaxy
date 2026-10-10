@@ -147,6 +147,11 @@ public sealed class GitSnapshotBuilder
             return Failure($"Unable to parse Git index: {exception.Message}");
         }
 
+        if (indexEntries.FirstOrDefault(entry => IsLossyDecoded(entry.Path)) is { } lossyEntry)
+        {
+            return Failure(UnsupportedPathDiagnostic(lossyEntry.Path));
+        }
+
         var canonicalIndexParts = GitIndexEntryCanonicalizer.Canonicalize(indexEntries);
 
         IReadOnlyDictionary<string, string> stagedBaseModes = new Dictionary<string, string>(
@@ -403,6 +408,11 @@ public sealed class GitSnapshotBuilder
                 return Failure($"Unable to read tracked symbolic link " + $"'{symbolicLinkPath}'.");
             }
 
+            if (IsLossyDecoded(linkTarget))
+            {
+                return Failure(UnsupportedPathDiagnostic(symbolicLinkPath));
+            }
+
             var symlinkHashResult = await RunRepositoryReadOnlyAsync(
                 startDirectory,
                 repository.TopLevel,
@@ -502,6 +512,11 @@ public sealed class GitSnapshotBuilder
             StringSplitOptions.RemoveEmptyEntries
         );
 
+        if (untrackedPaths.FirstOrDefault(IsLossyDecoded) is { } lossyUntrackedPath)
+        {
+            return Failure(UnsupportedPathDiagnostic(lossyUntrackedPath));
+        }
+
         Array.Sort(untrackedPaths, StringComparer.Ordinal);
 
         var untrackedParts = new List<string>(untrackedPaths.Length * 8);
@@ -525,6 +540,11 @@ public sealed class GitSnapshotBuilder
                     untrackedModes[untrackedPath] = GetUntrackedRegularFileMode(fullPath);
 
                     continue;
+                }
+
+                if (IsLossyDecoded(linkTarget))
+                {
+                    return Failure(UnsupportedPathDiagnostic(untrackedPath));
                 }
 
                 untrackedKinds[untrackedPath] = "symlink";
@@ -828,6 +848,16 @@ public sealed class GitSnapshotBuilder
 
         return Path.GetFullPath(Path.Combine(Path.GetFullPath(startDirectory), relativeTopLevel));
     }
+
+    // Git output and .NET file names are decoded as UTF-8; invalid bytes become
+    // U+FFFD, so distinct names can collapse into one string. Such a path (or
+    // symlink target) cannot be observed faithfully, and neither can a genuine
+    // U+FFFD, which is indistinguishable from it here.
+    private static bool IsLossyDecoded(string value) => value.Contains('�');
+
+    private static string UnsupportedPathDiagnostic(string path) =>
+        $"Path '{path}' is not valid UTF-8 or contains U+FFFD; "
+        + "such paths are not supported for exact observation.";
 
     private static GitSnapshotBuildResult Failure(string diagnostic)
     {
