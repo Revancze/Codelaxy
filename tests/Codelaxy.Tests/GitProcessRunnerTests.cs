@@ -714,6 +714,80 @@ public class GitProcessRunnerTests
         Assert.Equal("0", result.StandardOutput);
     }
 
+    [Fact]
+    public async Task RunReadOnlyAsync_ReportsInvalidOutputForNonUtf8StandardOutput()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            ["exec", GetProcessTestHelperPath(), "emit-stdout-hex", "61FF62"],
+            GitCommandTimeout
+        );
+
+        Assert.True(result.Started);
+        Assert.Equal(0, result.ExitCode);
+        Assert.False(result.Succeeded);
+        Assert.NotEqual(GitCommandFailureKind.None, result.FailureKind);
+
+        Assert.Contains("not valid UTF-8", result.StandardError, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_DrainsLargeInvalidOutputWithoutTimeout()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            ["exec", GetProcessTestHelperPath(), "emit-large-invalid-stdout"],
+            TimeSpan.FromSeconds(15)
+        );
+
+        Assert.True(result.Started);
+        Assert.Equal(0, result.ExitCode);
+
+        Assert.NotEqual(GitCommandFailureKind.Timeout, result.FailureKind);
+        Assert.False(result.Succeeded);
+        Assert.NotEqual(GitCommandFailureKind.None, result.FailureKind);
+
+        Assert.Contains("not valid UTF-8", result.StandardError, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_KeepsLeadingByteOrderMarkInStandardOutput()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            ["exec", GetProcessTestHelperPath(), "emit-stdout-hex", "EFBBBF78"],
+            GitCommandTimeout
+        );
+
+        Assert.True(result.Succeeded, result.StandardError);
+        Assert.Equal("\uFEFFx", result.StandardOutput);
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_KeepsDiagnosticForNonUtf8StandardError()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            ["exec", GetProcessTestHelperPath(), "emit-stderr-hex", "FF"],
+            GitCommandTimeout
+        );
+
+        Assert.True(result.Started);
+        Assert.Equal(1, result.ExitCode);
+        Assert.False(result.Succeeded);
+        Assert.Equal(GitCommandFailureKind.None, result.FailureKind);
+
+        Assert.Contains('\uFFFD', result.StandardError);
+    }
+
     private static string GetProcessTestHelperPath()
     {
         var testOutputDirectory = new DirectoryInfo(AppContext.BaseDirectory);

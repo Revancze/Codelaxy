@@ -26,6 +26,16 @@ public sealed class GitProcessRunner
         "GIT_CEILING_DIRECTORIES",
     ];
 
+    private static readonly UTF8Encoding StrictUtf8 = new(
+        encoderShouldEmitUTF8Identifier: false,
+        throwOnInvalidBytes: true
+    );
+
+    private static readonly UTF8Encoding DiagnosticUtf8 = new(
+        encoderShouldEmitUTF8Identifier: false,
+        throwOnInvalidBytes: false
+    );
+
     private readonly string? _gitExecutable;
     private readonly string? _gitResolutionDiagnostic;
     private readonly bool _gitExecutableResolvedFromPath;
@@ -207,8 +217,8 @@ public sealed class GitProcessRunner
             );
         }
 
-        var standardOutputTask = process.StandardOutput.ReadToEndAsync();
-        var standardErrorTask = process.StandardError.ReadToEndAsync();
+        var standardOutputTask = ReadAllBytesAsync(process.StandardOutput.BaseStream);
+        var standardErrorTask = ReadAllBytesAsync(process.StandardError.BaseStream);
 
         using var timeoutCancellation = timeout.HasValue
             ? new CancellationTokenSource(timeout.Value)
@@ -256,7 +266,7 @@ public sealed class GitProcessRunner
 
             if (timeoutCancellation?.IsCancellationRequested == true)
             {
-                return new GitCommandResult(
+                return CreateResult(
                     process.ExitCode,
                     await standardOutputTask,
                     await standardErrorTask,
@@ -267,10 +277,58 @@ public sealed class GitProcessRunner
             throw;
         }
 
-        var standardOutput = await standardOutputTask;
-        var standardError = await standardErrorTask;
+        return CreateResult(
+            process.ExitCode,
+            await standardOutputTask,
+            await standardErrorTask,
+            GitCommandFailureKind.None
+        );
+    }
 
-        return new GitCommandResult(process.ExitCode, standardOutput, standardError);
+    // Git output is read as raw bytes and decoded afterwards. A StreamReader
+    // would honour a byte order mark at the start of the output (dropping it,
+    // or switching to UTF-16), and a throwing decoder inside it would stop
+    // draining the pipe while Git is still writing.
+    private static async Task<byte[]> ReadAllBytesAsync(Stream stream)
+    {
+        using var buffer = new MemoryStream();
+
+        await stream.CopyToAsync(buffer);
+
+        return buffer.ToArray();
+    }
+
+    // Standard output feeds observations and must decode exactly; standard
+    // error is diagnostics only and keeps replacement characters.
+    private static GitCommandResult CreateResult(
+        int exitCode,
+        byte[] standardOutput,
+        byte[] standardError,
+        GitCommandFailureKind failureKind
+    )
+    {
+        var diagnostic = DiagnosticUtf8.GetString(standardError);
+
+        try
+        {
+            return new GitCommandResult(
+                exitCode,
+                StrictUtf8.GetString(standardOutput),
+                diagnostic,
+                failureKind
+            );
+        }
+        catch (DecoderFallbackException)
+        {
+            return new GitCommandResult(
+                exitCode,
+                string.Empty,
+                ("Git output is not valid UTF-8. " + diagnostic).TrimEnd(),
+                failureKind == GitCommandFailureKind.None
+                    ? GitCommandFailureKind.InvalidOutput
+                    : failureKind
+            );
+        }
     }
 
     internal ProcessStartInfo CreateProcessStartInfo(
@@ -291,8 +349,8 @@ public sealed class GitProcessRunner
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
+            StandardOutputEncoding = StrictUtf8,
+            StandardErrorEncoding = DiagnosticUtf8,
             UseShellExecute = false,
             CreateNoWindow = true,
         };

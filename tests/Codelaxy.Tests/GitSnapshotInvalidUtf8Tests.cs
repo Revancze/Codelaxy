@@ -118,6 +118,109 @@ public class GitSnapshotInvalidUtf8Tests
         }
     }
 
+    [Fact]
+    public async Task BuildAsync_DistinguishesUntrackedNameWithLeadingByteOrderMark()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await InitializeRepositoryAsync(runner, repositoryPath);
+
+            // Two different files: "x" and "\uFEFFx".
+            var trackedPath = Path.Combine(repositoryPath, "x");
+            var untrackedPath = Path.Combine(repositoryPath, "\uFEFFx");
+
+            await File.WriteAllTextAsync(trackedPath, "tracked\n");
+
+            await RunGitAsync(runner, repositoryPath, "add", "x");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "add tracked x"
+            );
+
+            await File.WriteAllTextAsync(untrackedPath, "one\n");
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var first = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(first.Succeeded, first.Diagnostic);
+            Assert.NotNull(first.Snapshot);
+
+            await File.WriteAllTextAsync(untrackedPath, "two\n");
+
+            var second = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(second.Succeeded, second.Diagnostic);
+            Assert.NotNull(second.Snapshot);
+
+            Assert.NotEqual(
+                first.Snapshot.WorkingTreeFingerprint,
+                second.Snapshot.WorkingTreeFingerprint
+            );
+        }
+        finally
+        {
+            DeleteDirectoryNatively(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_RejectsUntrackedNameStartingWithUtf16ByteOrderMarkOnLinux()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await InitializeRepositoryAsync(runner, repositoryPath);
+
+            await File.WriteAllTextAsync(Path.Combine(repositoryPath, "a"), "tracked\n");
+
+            await RunGitAsync(runner, repositoryPath, "add", "a");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "add tracked a"
+            );
+
+            // Raw filename bytes: FF FE 61
+            RunShell(repositoryPath, "printf 'one\\n' > \"$(printf '\\377\\376a')\"");
+
+            Assert.Contains("ff fe 61 00", ListRawNameBytes(repositoryPath));
+
+            var result = await new GitSnapshotBuilder(runner).BuildAsync(repositoryPath);
+
+            AssertRefused(result);
+        }
+        finally
+        {
+            DeleteDirectoryNatively(repositoryPath);
+        }
+    }
+
     // Every refusal carries the expected diagnostic and no snapshot; every success
     // carries a snapshot; two successes must not share a working-tree identity.
     private static void AssertRefusedOrDistinct(

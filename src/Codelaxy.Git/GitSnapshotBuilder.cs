@@ -11,6 +11,14 @@ public sealed class GitSnapshotBuilder
 
     private static readonly TimeSpan GitCommandTimeout = TimeSpan.FromMinutes(2);
 
+    // Throws on unpaired surrogates instead of encoding them as U+FFFD, so two
+    // distinct strings can never produce the same bytes. Inputs are validated
+    // before they get here; for well-formed text the bytes equal Encoding.UTF8.
+    private static readonly UTF8Encoding StrictUtf8 = new(
+        encoderShouldEmitUTF8Identifier: false,
+        throwOnInvalidBytes: true
+    );
+
     private readonly GitProcessRunner _runner;
     private readonly GitRepositoryDiscovery _discovery;
 
@@ -417,7 +425,7 @@ public sealed class GitSnapshotBuilder
                 startDirectory,
                 repository.TopLevel,
                 ["hash-object", "--stdin"],
-                Encoding.UTF8.GetBytes(linkTarget),
+                StrictUtf8.GetBytes(linkTarget),
                 cancellationToken
             );
 
@@ -554,7 +562,7 @@ public sealed class GitSnapshotBuilder
                     startDirectory,
                     repository.TopLevel,
                     ["hash-object", "--stdin"],
-                    Encoding.UTF8.GetBytes(linkTarget),
+                    StrictUtf8.GetBytes(linkTarget),
                     cancellationToken
                 );
 
@@ -905,7 +913,7 @@ public sealed class GitSnapshotBuilder
 
     private static void AppendHashPart(IncrementalHash hash, string value)
     {
-        var bytes = Encoding.UTF8.GetBytes(value);
+        var bytes = StrictUtf8.GetBytes(value);
 
         Span<byte> length = stackalloc byte[sizeof(int)];
 
