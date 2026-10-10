@@ -101,3 +101,127 @@ csharp_style_namespace_declarations = file_scoped:warning
 
 # CSharpier owns C# layout.
 dotnet_diagnostic.IDE0055.severity = none
+
+# ============================================================
+#  Úklid a styl (IDE*). Závažnosti CA/S/MA/RCS jsou v .globalconfig.
+# ============================================================
+# nepoužité usingy
+dotnet_diagnostic.IDE0005.severity = warning
+# nepoužitý privátní člen
+dotnet_diagnostic.IDE0051.severity = warning
+# nepřečtený privátní člen
+dotnet_diagnostic.IDE0052.severity = warning
+# zbytečné přiřazení
+dotnet_diagnostic.IDE0059.severity = warning
+# nepoužitý parametr
+dotnet_diagnostic.IDE0060.severity = warning
+# file-scoped namespace
+dotnet_diagnostic.IDE0161.severity = warning
+# explicitní modifikátory přístupu
+dotnet_diagnostic.IDE0040.severity = warning
+# readonly pole
+dotnet_diagnostic.IDE0044.severity = warning
+# zbytečné přetypování
+dotnet_diagnostic.IDE0004.severity = warning
+# auto-vlastnost místo ručního backing pole
+dotnet_diagnostic.IDE0032.severity = warning
+# nedosažitelný kód
+dotnet_diagnostic.IDE0035.severity = warning
+# pořadí modifikátorů
+dotnet_diagnostic.IDE0036.severity = warning
+# GetHashCode přes System.HashCode
+dotnet_diagnostic.IDE0070.severity = warning
+# zbytečně složitá podmínka
+dotnet_diagnostic.IDE0075.severity = warning
+# zbytečný operátor potlačení
+dotnet_diagnostic.IDE0080.severity = warning
+# == true / == false
+dotnet_diagnostic.IDE0100.severity = warning
+# zbytečný discard
+dotnet_diagnostic.IDE0110.severity = warning
+# namespace odpovídá složce
+dotnet_diagnostic.IDE0130.severity = warning
+# struct může být readonly
+dotnet_diagnostic.IDE0250.severity = warning
+# člen structu může být readonly
+dotnet_diagnostic.IDE0251.severity = warning
+# nameof místo literálu
+dotnet_diagnostic.IDE0280.severity = warning
+
+# Vždy složené závorky u if/else/for/... (chrání před chybami typu „goto fail“).
+# CSharpier závorky nepřidává ani neodebírá, s formátováním se to nebije.
+csharp_prefer_braces = true:warning
+dotnet_diagnostic.IDE0011.severity = warning
+
+# ============================================================
+#  Pojmenování
+#  IDE1006 musí mít závažnost, jinak se naming rules v buildu nehlásí.
+# ============================================================
+dotnet_diagnostic.IDE1006.severity = warning
+
+# Rozhraní: IJmeno hlídá CA1715 v .globalconfig (navíc i prefix T u generik).
+
+# Typy a veřejné členy: PascalCase
+dotnet_naming_rule.types_pascal.symbols = type_symbols
+dotnet_naming_rule.types_pascal.style = pascal
+dotnet_naming_rule.types_pascal.severity = warning
+dotnet_naming_symbols.type_symbols.applicable_kinds = class, struct, enum, delegate, method, property, event
+dotnet_naming_style.pascal.capitalization = pascal_case
+
+# Async metody: ...Async
+dotnet_naming_rule.async_suffix.symbols = async_methods
+dotnet_naming_rule.async_suffix.style = async_style
+dotnet_naming_rule.async_suffix.severity = warning
+dotnet_naming_symbols.async_methods.applicable_kinds = method
+dotnet_naming_symbols.async_methods.required_modifiers = async
+dotnet_naming_style.async_style.required_suffix = Async
+dotnet_naming_style.async_style.capitalization = pascal_case
+
+# Privátní static readonly pole: PascalCase (konvence repa)
+dotnet_naming_rule.private_static_readonly.symbols = private_static_readonly_fields
+dotnet_naming_rule.private_static_readonly.style = pascal
+dotnet_naming_rule.private_static_readonly.severity = warning
+dotnet_naming_symbols.private_static_readonly_fields.applicable_kinds = field
+dotnet_naming_symbols.private_static_readonly_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_static_readonly_fields.required_modifiers = static, readonly
+
+# Privátní pole: _camelCase
+dotnet_naming_rule.private_fields.symbols = private_fields
+dotnet_naming_rule.private_fields.style = underscore_camel
+dotnet_naming_rule.private_fields.severity = warning
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_style.underscore_camel.required_prefix = _
+dotnet_naming_style.underscore_camel.capitalization = camel_case
+
+# Konstanty: PascalCase
+dotnet_naming_rule.constants.symbols = const_fields
+dotnet_naming_rule.constants.style = pascal
+dotnet_naming_rule.constants.severity = warning
+dotnet_naming_symbols.const_fields.applicable_kinds = field
+dotnet_naming_symbols.const_fields.required_modifiers = const
+
+# ============================================================
+#  Testy – povolit, co je v testech normální
+#  (celé tests/, tedy i Codelaxy.ProcessTestHelper)
+# ============================================================
+[tests/**.cs]
+# podtržítka v názvech testů
+dotnet_diagnostic.CA1707.severity = none
+# xUnit konvence ...Collection
+dotnet_diagnostic.CA1711.severity = none
+dotnet_diagnostic.CA1062.severity = none
+dotnet_diagnostic.CA1506.severity = suggestion
+dotnet_diagnostic.CA2000.severity = suggestion
+dotnet_diagnostic.CA1822.severity = none
+# Assert.* bez StringComparison
+dotnet_diagnostic.CA1307.severity = suggestion
+# comparer v testovacích kolekcích
+dotnet_diagnostic.MA0002.severity = suggestion
+# regexy nad konstantním testovacím vstupem
+dotnet_diagnostic.MA0009.severity = suggestion
+# arrange/act/assert bývá dlouhé
+dotnet_diagnostic.MA0051.severity = suggestion
+# testy smí stavět fixtures třeba přes Encoding.UTF8
+dotnet_diagnostic.RS0030.severity = suggestion
+dotnet_naming_rule.async_suffix.severity = none

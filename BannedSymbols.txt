@@ -1,0 +1,16 @@
+P:System.Text.Encoding.UTF8;Lossy: silently replaces invalid data with U+FFFD (BUG-1 class). Use a strict UTF8Encoding(false, throwOnInvalidBytes: true) or document why loss is detected.
+P:System.Text.Encoding.Default;Platform-dependent encoding. Use an explicit strict encoding.
+P:System.Text.Encoding.ASCII;Lossy: replaces non-ASCII with '?'. Use an explicit strict encoding.
+P:System.Text.Encoding.Latin1;Lossy for path identity. Use an explicit strict encoding.
+M:System.String.Normalize;Path identity is never Unicode-normalized (OPERATION BABEL, section E).
+M:System.String.Normalize(System.Text.NormalizationForm);Path identity is never Unicode-normalized (OPERATION BABEL, section E).
+P:System.Globalization.CultureInfo.CurrentCulture;Fingerprints must not depend on culture (INV-3).
+P:System.Globalization.CultureInfo.CurrentUICulture;Fingerprints must not depend on culture (INV-3).
+P:System.StringComparer.CurrentCulture;Culture-sensitive. Use StringComparer.Ordinal.
+P:System.StringComparer.CurrentCultureIgnoreCase;Culture-sensitive. Use StringComparer.Ordinal or OrdinalIgnoreCase.
+P:System.StringComparer.InvariantCulture;Linguistic comparison. Use StringComparer.Ordinal for paths.
+P:System.StringComparer.InvariantCultureIgnoreCase;Linguistic comparison. Use StringComparer.Ordinal or OrdinalIgnoreCase for paths.
+P:System.DateTime.Now;Local time is non-deterministic across hosts. Use DateTime.UtcNow or TimeProvider.
+P:System.DateTime.Today;Local time is non-deterministic across hosts. Use DateTime.UtcNow or TimeProvider.
+P:System.DateTimeOffset.Now;Local time is non-deterministic across hosts. Use DateTimeOffset.UtcNow or TimeProvider.
+M:System.IO.Directory.SetCurrentDirectory(System.String);Process-global state; races with parallel tests and Git calls.
