@@ -3506,6 +3506,210 @@ public class GitSnapshotBuilderTests
         }
     }
 
+    [Fact]
+    public async Task BuildAsync_DoesNotLoseCaseOnlyRenamedTrackedFileOnWindows()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+
+            await RunGitAsync(runner, repositoryPath, "config", "core.ignoreCase", "true");
+
+            await RunGitAsync(runner, repositoryPath, "config", "core.autocrlf", "false");
+
+            var originalPath = Path.Combine(repositoryPath, "Foo.txt");
+            var temporaryPath = Path.Combine(repositoryPath, "rename-temp.txt");
+            var renamedPath = Path.Combine(repositoryPath, "foo.txt");
+
+            await File.WriteAllTextAsync(originalPath, "AAA");
+
+            await RunGitAsync(runner, repositoryPath, "add", "Foo.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var baseline = await builder.BuildAsync(repositoryPath);
+            Assert.True(baseline.Succeeded, baseline.Diagnostic);
+
+            File.Move(originalPath, temporaryPath);
+            File.Move(temporaryPath, renamedPath);
+
+            var physicalNames = Directory
+                .EnumerateFiles(repositoryPath)
+                .Select(Path.GetFileName)
+                .ToArray();
+
+            Assert.Contains("foo.txt", physicalNames);
+            Assert.DoesNotContain("Foo.txt", physicalNames);
+
+            Assert.True(
+                File.Exists(originalPath),
+                "This test requires a case-insensitive Windows directory."
+            );
+
+            var first = await builder.BuildAsync(repositoryPath);
+
+            await File.WriteAllTextAsync(renamedPath, "CHANGED");
+
+            var second = await builder.BuildAsync(repositoryPath);
+
+            File.Delete(renamedPath);
+
+            var third = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(third.Succeeded, third.Diagnostic);
+
+            foreach (var result in new[] { first, second, third })
+            {
+                if (result.Succeeded)
+                {
+                    Assert.NotNull(result.Snapshot);
+                }
+                else
+                {
+                    Assert.Null(result.Snapshot);
+                    Assert.False(string.IsNullOrWhiteSpace(result.Diagnostic));
+                    Assert.Contains(
+                        "Case-only path mismatch",
+                        result.Diagnostic,
+                        StringComparison.Ordinal
+                    );
+                }
+            }
+
+            if (first.Succeeded && second.Succeeded)
+            {
+                Assert.NotEqual(
+                    first.Snapshot!.WorkingTreeFingerprint,
+                    second.Snapshot!.WorkingTreeFingerprint
+                );
+            }
+
+            if (first.Succeeded && third.Succeeded)
+            {
+                Assert.NotEqual(
+                    first.Snapshot!.WorkingTreeFingerprint,
+                    third.Snapshot!.WorkingTreeFingerprint
+                );
+            }
+
+            if (second.Succeeded && third.Succeeded)
+            {
+                Assert.NotEqual(
+                    second.Snapshot!.WorkingTreeFingerprint,
+                    third.Snapshot!.WorkingTreeFingerprint
+                );
+            }
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_DoesNotLoseCaseOnlyRenamedTrackedFileWhenGitIgnoresCase()
+    {
+        // The loss comes from Git: with core.ignoreCase=true, `ls-files --others`
+        // matches foo.txt to the tracked Foo.txt and never reports it. That is
+        // reproducible on a case-sensitive filesystem too, so this runs everywhere.
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+            await RunGitAsync(runner, repositoryPath, "config", "core.ignoreCase", "true");
+            await RunGitAsync(runner, repositoryPath, "config", "core.autocrlf", "false");
+
+            await File.WriteAllTextAsync(Path.Combine(repositoryPath, "Foo.txt"), "AAA\n");
+            await RunGitAsync(runner, repositoryPath, "add", "Foo.txt");
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "initial"
+            );
+
+            var temporaryPath = Path.Combine(repositoryPath, "rename.tmp");
+            var renamedPath = Path.Combine(repositoryPath, "foo.txt");
+
+            File.Move(Path.Combine(repositoryPath, "Foo.txt"), temporaryPath);
+            File.Move(temporaryPath, renamedPath);
+
+            var physicalNames = Directory
+                .EnumerateFiles(repositoryPath)
+                .Select(Path.GetFileName)
+                .ToArray();
+
+            Assert.Contains("foo.txt", physicalNames);
+            Assert.DoesNotContain("Foo.txt", physicalNames);
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var first = await builder.BuildAsync(repositoryPath);
+
+            await File.WriteAllTextAsync(renamedPath, "CHANGED\n");
+
+            var second = await builder.BuildAsync(repositoryPath);
+
+            // Either refuse, or represent the renamed content; never a snapshot
+            // that is blind to foo.txt.
+            foreach (var result in new[] { first, second })
+            {
+                if (result.Succeeded)
+                {
+                    Assert.NotNull(result.Snapshot);
+                }
+                else
+                {
+                    Assert.Null(result.Snapshot);
+                    Assert.Contains(
+                        "Case-only path mismatch",
+                        result.Diagnostic,
+                        StringComparison.Ordinal
+                    );
+                }
+            }
+
+            if (first.Succeeded && second.Succeeded)
+            {
+                Assert.NotEqual(
+                    first.Snapshot!.WorkingTreeFingerprint,
+                    second.Snapshot!.WorkingTreeFingerprint
+                );
+            }
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
     private static async Task RunGitAsync(
         GitProcessRunner runner,
         string repositoryPath,

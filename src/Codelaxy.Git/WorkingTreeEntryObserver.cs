@@ -6,14 +6,20 @@ internal sealed class WorkingTreeEntryObserver
 {
     private readonly string _repositoryTopLevel;
 
+    // With core.ignoreCase=true Git matches untracked names to tracked paths
+    // case-insensitively, so a case-only rename is invisible to its untracked
+    // enumeration. That, not the operating system, is what loses the entry.
+    private readonly bool _gitIgnoresCase;
+
     private readonly Dictionary<string, IReadOnlyDictionary<string, string>> _directoryEntries =
         new(StringComparer.Ordinal);
 
-    public WorkingTreeEntryObserver(string repositoryTopLevel)
+    public WorkingTreeEntryObserver(string repositoryTopLevel, bool gitIgnoresCase)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryTopLevel);
 
         _repositoryTopLevel = Path.GetFullPath(repositoryTopLevel);
+        _gitIgnoresCase = gitIgnoresCase;
     }
 
     public WorkingTreeEntryObservationResult Observe(string relativePath)
@@ -49,6 +55,18 @@ internal sealed class WorkingTreeEntryObserver
 
             if (!entries.TryGetValue(segment, out var exactPath))
             {
+                if (
+                    _gitIgnoresCase
+                    && entries.Keys.Any(name =>
+                        string.Equals(name, segment, StringComparison.OrdinalIgnoreCase)
+                    )
+                )
+                {
+                    throw new IOException(
+                        $"Case-only path mismatch while observing '{relativePath}'."
+                    );
+                }
+
                 return Missing(relativePath);
             }
 

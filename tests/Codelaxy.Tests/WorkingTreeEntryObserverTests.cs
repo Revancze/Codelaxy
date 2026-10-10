@@ -23,7 +23,7 @@ public class WorkingTreeEntryObserverTests
 
             Directory.CreateSymbolicLink(linkPath, externalPath);
 
-            var observer = new WorkingTreeEntryObserver(repositoryPath);
+            var observer = new WorkingTreeEntryObserver(repositoryPath, gitIgnoresCase: false);
 
             var result = observer.Observe("dir/file.txt");
 
@@ -61,7 +61,7 @@ public class WorkingTreeEntryObserverTests
 
             File.WriteAllText(path, "content\n");
 
-            var observer = new WorkingTreeEntryObserver(repositoryPath);
+            var observer = new WorkingTreeEntryObserver(repositoryPath, gitIgnoresCase: false);
 
             var result = observer.Observe(@"a\b.txt");
 
@@ -97,7 +97,7 @@ public class WorkingTreeEntryObserverTests
 
             File.SetUnixFileMode(blockedPath, UnixFileMode.None);
 
-            var observer = new WorkingTreeEntryObserver(repositoryPath);
+            var observer = new WorkingTreeEntryObserver(repositoryPath, gitIgnoresCase: false);
 
             var result = observer.Observe("blocked/file.txt");
 

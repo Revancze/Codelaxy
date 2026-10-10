@@ -213,6 +213,28 @@ public sealed class GitSnapshotBuilder
             );
         }
 
+        var coreIgnoreCaseResult = await RunRepositoryReadOnlyAsync(
+            startDirectory,
+            repository.TopLevel,
+            ["config", "--type=bool", "--default=false", "--get", "core.ignoreCase"],
+            cancellationToken
+        );
+
+        if (!coreIgnoreCaseResult.Succeeded)
+        {
+            return Failure(
+                CreateGitDiagnostic("Unable to read core.ignoreCase", coreIgnoreCaseResult)
+            );
+        }
+
+        if (!bool.TryParse(coreIgnoreCaseResult.StandardOutput.Trim(), out var coreIgnoreCase))
+        {
+            return Failure(
+                $"Git returned an invalid core.ignoreCase value: "
+                    + $"'{coreIgnoreCaseResult.StandardOutput.Trim()}'."
+            );
+        }
+
         var trackedPaths = indexEntries
             .Select(entry => entry.Path)
             .Distinct(StringComparer.Ordinal)
@@ -227,7 +249,7 @@ public sealed class GitSnapshotBuilder
                 StringComparer.Ordinal
             );
 
-        var observer = new WorkingTreeEntryObserver(fileSystemTopLevel);
+        var observer = new WorkingTreeEntryObserver(fileSystemTopLevel, coreIgnoreCase);
 
         var trackedStates = new Dictionary<string, string>(StringComparer.Ordinal);
         var trackedKinds = new Dictionary<string, string>(StringComparer.Ordinal);
