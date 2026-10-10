@@ -78,6 +78,31 @@ public sealed class GitProcessRunner
         );
     }
 
+    public Task<GitCommandResult> RunAsync(
+        string workingDirectory,
+        IEnumerable<string> arguments,
+        TimeSpan timeout,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (timeout <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(timeout),
+                "Timeout must be greater than zero."
+            );
+        }
+
+        return RunCoreAsync(
+            workingDirectory,
+            arguments,
+            readOnly: false,
+            timeout,
+            standardInput: null,
+            cancellationToken
+        );
+    }
+
     public Task<GitCommandResult> RunReadOnlyAsync(
         string workingDirectory,
         IEnumerable<string> arguments,
@@ -127,31 +152,6 @@ public sealed class GitProcessRunner
             readOnly: true,
             timeout,
             standardInput,
-            cancellationToken
-        );
-    }
-
-    public Task<GitCommandResult> RunAsync(
-        string workingDirectory,
-        IEnumerable<string> arguments,
-        TimeSpan timeout,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (timeout <= TimeSpan.Zero)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(timeout),
-                "Timeout must be greater than zero."
-            );
-        }
-
-        return RunCoreAsync(
-            workingDirectory,
-            arguments,
-            readOnly: false,
-            timeout,
-            standardInput: null,
             cancellationToken
         );
     }
