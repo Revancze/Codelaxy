@@ -36,7 +36,7 @@ internal sealed class WorkingTreeEntryObserver
             when (exception is IOException or UnauthorizedAccessException or SecurityException)
         {
             return WorkingTreeEntryObservationResult.Failure(
-                $"Unable to observe working-tree path " + $"'{relativePath}': {exception.Message}"
+                "Unable to observe working-tree path " + $"'{relativePath}': {exception.Message}"
             );
         }
     }

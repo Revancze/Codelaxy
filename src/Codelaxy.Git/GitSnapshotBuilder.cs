@@ -221,7 +221,7 @@ public sealed class GitSnapshotBuilder
         if (!bool.TryParse(coreSymlinksResult.StandardOutput.Trim(), out var coreSymlinksEnabled))
         {
             return Failure(
-                $"Git returned an invalid core.symlinks value: "
+                "Git returned an invalid core.symlinks value: "
                     + $"'{coreSymlinksResult.StandardOutput.Trim()}'."
             );
         }
@@ -243,7 +243,7 @@ public sealed class GitSnapshotBuilder
         if (!bool.TryParse(coreIgnoreCaseResult.StandardOutput.Trim(), out var coreIgnoreCase))
         {
             return Failure(
-                $"Git returned an invalid core.ignoreCase value: "
+                "Git returned an invalid core.ignoreCase value: "
                     + $"'{coreIgnoreCaseResult.StandardOutput.Trim()}'."
             );
         }
@@ -353,7 +353,7 @@ public sealed class GitSnapshotBuilder
                 if (workingTreeMode is null)
                 {
                     return Failure(
-                        $"Unable to determine working-tree mode "
+                        "Unable to determine working-tree mode "
                             + $"for tracked path '{trackedPath}'."
                     );
                 }
@@ -413,7 +413,7 @@ public sealed class GitSnapshotBuilder
 
             if (linkTarget is null)
             {
-                return Failure($"Unable to read tracked symbolic link " + $"'{symbolicLinkPath}'.");
+                return Failure("Unable to read tracked symbolic link " + $"'{symbolicLinkPath}'.");
             }
 
             if (IsLossyDecoded(linkTarget))
@@ -433,7 +433,7 @@ public sealed class GitSnapshotBuilder
             {
                 return Failure(
                     CreateGitDiagnostic(
-                        $"Unable to hash tracked symbolic link " + $"'{symbolicLinkPath}'",
+                        "Unable to hash tracked symbolic link " + $"'{symbolicLinkPath}'",
                         symlinkHashResult
                     )
                 );
@@ -462,7 +462,7 @@ public sealed class GitSnapshotBuilder
             if (!trackedKinds.TryGetValue(trackedPath, out var kind))
             {
                 return Failure(
-                    $"Unable to determine working-tree kind " + $"for tracked path '{trackedPath}'."
+                    "Unable to determine working-tree kind " + $"for tracked path '{trackedPath}'."
                 );
             }
 
@@ -477,7 +477,7 @@ public sealed class GitSnapshotBuilder
             if (!trackedModes.TryGetValue(trackedPath, out var mode))
             {
                 return Failure(
-                    $"Unable to determine working-tree mode " + $"for tracked path '{trackedPath}'."
+                    "Unable to determine working-tree mode " + $"for tracked path '{trackedPath}'."
                 );
             }
 
@@ -487,7 +487,7 @@ public sealed class GitSnapshotBuilder
             if (!trackedObjectIds.TryGetValue(trackedPath, out var objectId))
             {
                 return Failure(
-                    $"Git did not provide a working-tree object hash "
+                    "Git did not provide a working-tree object hash "
                         + $"for tracked path '{trackedPath}'."
                 );
             }
@@ -627,7 +627,7 @@ public sealed class GitSnapshotBuilder
                 if (!untrackedObjectIds.TryGetValue(untrackedPath, out var objectId))
                 {
                     return Failure(
-                        $"Git did not provide a working-tree object hash "
+                        "Git did not provide a working-tree object hash "
                             + $"for untracked path '{untrackedPath}'."
                     );
                 }
