@@ -201,6 +201,7 @@ public class GitSnapshotInvalidUtf8Tests
             {
                 WorkingDirectory = workingDirectory,
                 RedirectStandardOutput = true,
+                UseShellExecute = false,
             }
         )!;
 
@@ -235,7 +236,7 @@ public class GitSnapshotInvalidUtf8Tests
     // .NET cannot delete a name it decodes to U+FFFD; remove the tree natively.
     private static void DeleteDirectoryNatively(string path)
     {
-        using var process = Process.Start("rm", ["-rf", "--", path])!;
+        using var process = Process.Start("rm", ["-rf", "--", path]);
 
         process.WaitForExit();
         Assert.Equal(0, process.ExitCode);
