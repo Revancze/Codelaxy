@@ -3300,29 +3300,27 @@ public class GitSnapshotBuilderTests
 
             var markerPath = wrapperPath + ".mutated";
 
-            await File.WriteAllTextAsync(
-                wrapperPath,
-                """
-                #!/bin/sh
+            const string wrapperScript =
+                "#!/bin/sh\n"
+                + "\n"
+                + "marker=\"${0}.mutated\"\n"
+                + "\n"
+                + "if [ \"$#\" -ge 6 ] \\\n"
+                + "    && [ \"$1\" = \"-C\" ] \\\n"
+                + "    && [ \"$3\" = \"ls-files\" ] \\\n"
+                + "    && [ \"$4\" = \"--others\" ] \\\n"
+                + "    && [ \"$5\" = \"--exclude-per-directory=.gitignore\" ] \\\n"
+                + "    && [ \"$6\" = \"-z\" ] \\\n"
+                + "    && [ ! -e \"$marker\" ]; then\n"
+                + "\n"
+                + "    printf 'tracked-after\\n' > \"$2/tracked.txt\" || exit 97\n"
+                + "    printf 'untracked-after\\n' > \"$2/untracked.txt\" || exit 98\n"
+                + "    : > \"$marker\" || exit 99\n"
+                + "fi\n"
+                + "\n"
+                + "exec git \"$@\"\n";
 
-                marker="${0}.mutated"
-
-                if [ "$#" -ge 6 ] \
-                    && [ "$1" = "-C" ] \
-                    && [ "$3" = "ls-files" ] \
-                    && [ "$4" = "--others" ] \
-                    && [ "$5" = "--exclude-per-directory=.gitignore" ] \
-                    && [ "$6" = "-z" ] \
-                    && [ ! -e "$marker" ]; then
-
-                    printf 'tracked-after\n' > "$2/tracked.txt" || exit 97
-                    printf 'untracked-after\n' > "$2/untracked.txt" || exit 98
-                    : > "$marker" || exit 99
-                fi
-
-                exec git "$@"
-                """
-            );
+            await File.WriteAllTextAsync(wrapperPath, wrapperScript);
 
             var wrapperMode = File.GetUnixFileMode(wrapperPath);
 
@@ -3456,34 +3454,32 @@ public class GitSnapshotBuilderTests
             var wrapperPath = Path.Combine(wrapperDirectory, "git-race-wrapper.sh");
             var markerPath = wrapperPath + ".mutated";
 
-            await File.WriteAllTextAsync(
-                wrapperPath,
-                """
-                #!/bin/sh
+            const string wrapperScript =
+                "#!/bin/sh\n"
+                + "\n"
+                + "marker=\"${0}.mutated\"\n"
+                + "\n"
+                + "if [ \"$#\" -ge 5 ] \\\n"
+                + "    && [ \"$1\" = \"-C\" ] \\\n"
+                + "    && [ \"$3\" = \"rev-parse\" ] \\\n"
+                + "    && [ \"$4\" = \"--verify\" ] \\\n"
+                + "    && [ \"$5\" = \"HEAD\" ] \\\n"
+                + "    && [ ! -e \"$marker\" ]; then\n"
+                + "    output=\"$(git \"$@\")\"\n"
+                + "    status=$?\n"
+                + "\n"
+                + "    if [ \"$status\" -eq 0 ]; then\n"
+                + "        : > \"$marker\"\n"
+                + "        GIT_OPTIONAL_LOCKS=1 git -C \"$2\" switch --quiet race-target\n"
+                + "    fi\n"
+                + "\n"
+                + "    printf '%s\\n' \"$output\"\n"
+                + "    exit \"$status\"\n"
+                + "fi\n"
+                + "\n"
+                + "exec git \"$@\"\n";
 
-                marker="${0}.mutated"
-
-                if [ "$#" -ge 5 ] \
-                    && [ "$1" = "-C" ] \
-                    && [ "$3" = "rev-parse" ] \
-                    && [ "$4" = "--verify" ] \
-                    && [ "$5" = "HEAD" ] \
-                    && [ ! -e "$marker" ]; then
-                    output="$(git "$@")"
-                    status=$?
-
-                    if [ "$status" -eq 0 ]; then
-                        : > "$marker"
-                        GIT_OPTIONAL_LOCKS=1 git -C "$2" switch --quiet race-target
-                    fi
-
-                    printf '%s\n' "$output"
-                    exit "$status"
-                fi
-
-                exec git "$@"
-                """
-            );
+            await File.WriteAllTextAsync(wrapperPath, wrapperScript);
 
             var wrapperMode = File.GetUnixFileMode(wrapperPath);
 
@@ -3568,14 +3564,10 @@ public class GitSnapshotBuilderTests
             var hookPath = Path.Combine(hookDirectory, "fsmonitor-test");
             var markerPath = Path.Combine(repositoryPath, ".git", "fsmonitor-ran");
 
-            await File.WriteAllTextAsync(
-                hookPath,
-                """
-                #!/bin/sh
-                : > .git/fsmonitor-ran
-                printf 'codelaxy-token\0'
-                """
-            );
+            const string hookScript =
+                "#!/bin/sh\n" + ": > .git/fsmonitor-ran\n" + "printf 'codelaxy-token\\0'\n";
+
+            await File.WriteAllTextAsync(hookPath, hookScript);
 
             var hookMode = File.GetUnixFileMode(hookPath);
 
