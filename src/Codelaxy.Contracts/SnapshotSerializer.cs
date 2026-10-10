@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Globalization;
 using System.Text.Json;
 
 namespace Codelaxy.Contracts;
@@ -15,7 +16,7 @@ public static class SnapshotSerializer
         if (snapshot.SchemaVersion != SupportedSchemaVersion)
         {
             throw new ArgumentException(
-                $"Unsupported snapshot schema version: {snapshot.SchemaVersion}.",
+                $"Unsupported snapshot schema version: {snapshot.SchemaVersion.ToString(CultureInfo.InvariantCulture)}.",
                 nameof(snapshot)
             );
         }
@@ -75,7 +76,7 @@ public static class SnapshotSerializer
         if (schemaVersion != SupportedSchemaVersion)
         {
             throw new FormatException(
-                $"Unsupported snapshot schema version: " + $"{schemaVersion}."
+                $"Unsupported snapshot schema version: {schemaVersion.ToString(CultureInfo.InvariantCulture)}."
             );
         }
 
@@ -97,7 +98,7 @@ public static class SnapshotSerializer
         )
         {
             throw new FormatException(
-                $"Snapshot record is missing " + $"required string property '{propertyName}'."
+                $"Snapshot record is missing required string property '{propertyName}'."
             );
         }
 

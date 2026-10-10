@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Codelaxy.Contracts;
 
@@ -5,6 +6,37 @@ namespace Codelaxy.Tests;
 
 public class SnapshotSerializerTests
 {
+    [Theory]
+    [InlineData("en-US", "-")]
+    [InlineData("cs-CZ", "-")]
+    [InlineData("en-US", "Qapla-")]
+    public void Deserialize_UnsupportedSchemaVersion_UsesInvariantCulture(
+        string cultureName,
+        string negativeSign
+    )
+    {
+        var originalCulture = CultureInfo.CurrentCulture;
+
+        try
+        {
+            var culture = (CultureInfo)CultureInfo.GetCultureInfo(cultureName).Clone();
+            culture.NumberFormat.NegativeSign = negativeSign;
+            CultureInfo.CurrentCulture = culture;
+
+            var input = """{"recordType":"snapshot","schemaVersion":-1}"""u8.ToArray();
+
+            var exception = Assert.Throws<FormatException>(() =>
+                SnapshotSerializer.Deserialize(input)
+            );
+
+            Assert.Equal("Unsupported snapshot schema version: -1.", exception.Message);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
     [Fact]
     public void Deserialize_RejectsUnknownSchemaVersion()
     {
