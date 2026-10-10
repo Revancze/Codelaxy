@@ -475,12 +475,10 @@ public class GitExecutableResolutionSecurityTests
             return link;
         }
 
-        public string CreateFileSymlink(string link, string target)
+        public void CreateFileSymlink(string link, string target)
         {
             File.CreateSymbolicLink(link, target);
             _links.Add(link);
-
-            return link;
         }
 
         public string CreateJunction(string link, string target)
