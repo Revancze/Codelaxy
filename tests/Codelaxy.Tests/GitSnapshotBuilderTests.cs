@@ -2958,7 +2958,7 @@ public class GitSnapshotBuilderTests
 
             var workingTreeMode = File.GetUnixFileMode(scriptPath);
 
-            Assert.True((workingTreeMode & UnixFileMode.UserExecute) != 0);
+            Assert.True((workingTreeMode & UnixFileMode.UserExecute) != UnixFileMode.None);
 
             var afterResult = await builder.BuildAsync(repositoryPath);
 

@@ -12,7 +12,7 @@ public static class GitIndexEntryParser
 
         foreach (var record in records)
         {
-            var tabIndex = record.IndexOf('\t');
+            var tabIndex = record.IndexOf('\t', StringComparison.Ordinal);
 
             if (tabIndex < 0)
             {

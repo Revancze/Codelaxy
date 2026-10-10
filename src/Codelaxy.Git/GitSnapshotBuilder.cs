@@ -924,6 +924,6 @@ public sealed class GitSnapshotBuilder
 
         var mode = File.GetUnixFileMode(path);
 
-        return (mode & UnixFileMode.UserExecute) != 0 ? "100755" : "100644";
+        return (mode & UnixFileMode.UserExecute) != UnixFileMode.None ? "100755" : "100644";
     }
 }

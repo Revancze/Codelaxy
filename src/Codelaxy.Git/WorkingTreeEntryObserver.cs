@@ -76,9 +76,10 @@ internal sealed class WorkingTreeEntryObserver
             var linkTarget = fileInfo.LinkTarget;
             var attributes = File.GetAttributes(exactPath);
 
-            var isReparsePoint = (attributes & FileAttributes.ReparsePoint) != 0;
+            var isReparsePoint =
+                (attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
 
-            var isDirectory = (attributes & FileAttributes.Directory) != 0;
+            var isDirectory = (attributes & FileAttributes.Directory) == FileAttributes.Directory;
 
             if (!isFinalSegment)
             {
@@ -182,6 +183,6 @@ internal sealed class WorkingTreeEntryObserver
 
         var mode = File.GetUnixFileMode(path);
 
-        return (mode & UnixFileMode.UserExecute) != 0 ? "100755" : "100644";
+        return (mode & UnixFileMode.UserExecute) != UnixFileMode.None ? "100755" : "100644";
     }
 }
