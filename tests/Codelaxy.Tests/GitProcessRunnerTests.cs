@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using Codelaxy.Git;
 
@@ -430,7 +431,10 @@ public class GitProcessRunnerTests
                 await Task.Delay(20, startTimeout.Token);
             }
 
-            var processId = int.Parse(await File.ReadAllTextAsync(pidFile, startTimeout.Token));
+            var processId = int.Parse(
+                await File.ReadAllTextAsync(pidFile, startTimeout.Token),
+                CultureInfo.InvariantCulture
+            );
 
             helperProcess = Process.GetProcessById(processId);
 
@@ -752,7 +756,7 @@ public class GitProcessRunnerTests
                 {
                     var contents = await File.ReadAllTextAsync(pidFile, cancellationToken);
 
-                    return int.Parse(contents);
+                    return int.Parse(contents, CultureInfo.InvariantCulture);
                 }
                 catch (IOException)
                 {

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using Codelaxy.Git;
 
 namespace Codelaxy.Tests;
@@ -354,7 +355,7 @@ public class GitExecutableResolutionSecurityTests
 
         var worktree = sandbox.CreateLinkedWorktreeWithDotGitFile(
             "feature",
-            string.Format(dotGitTemplate, gitDirectory)
+            string.Format(CultureInfo.InvariantCulture, dotGitTemplate, gitDirectory)
         );
 
         var roots = RepositoryControlledPaths.GetProtectedRoots(Path.Combine(worktree, "src"));

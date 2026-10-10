@@ -1,3 +1,5 @@
+using System.Globalization;
+
 if (args.Length == 1 && args[0] == "read-stdin")
 {
     var input = await Console.In.ReadToEndAsync();
@@ -22,7 +24,10 @@ if (args.Length != 1)
 var pidFile = args[0];
 var temporaryPidFile = pidFile + ".tmp";
 
-await File.WriteAllTextAsync(temporaryPidFile, Environment.ProcessId.ToString());
+await File.WriteAllTextAsync(
+    temporaryPidFile,
+    Environment.ProcessId.ToString(CultureInfo.InvariantCulture)
+);
 
 File.Move(temporaryPidFile, pidFile, overwrite: true);
 
