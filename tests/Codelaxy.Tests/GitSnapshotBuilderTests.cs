@@ -2309,6 +2309,61 @@ public class GitSnapshotBuilderTests
     }
 
     [Fact]
+    public async Task BuildAsync_RejectsUnpairedUtf16SurrogateInUntrackedSymlinkOnWindows()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+            await RunGitAsync(runner, repositoryPath, "config", "core.symlinks", "true");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "--allow-empty",
+                "-m",
+                "baseline"
+            );
+
+            var linkPath = Path.Combine(repositoryPath, "link.txt");
+            var builder = new GitSnapshotBuilder(runner);
+
+            foreach (var target in new[] { "\uD800x", "\uD801x" })
+            {
+                File.CreateSymbolicLink(linkPath, target);
+
+                // Musíme ověřit, že OS zachoval původní UTF-16.
+                Assert.Equal(target, new FileInfo(linkPath).LinkTarget);
+
+                var result = await builder.BuildAsync(repositoryPath);
+
+                Assert.False(result.Succeeded);
+                Assert.Null(result.Snapshot);
+                Assert.Contains("link.txt", result.Diagnostic);
+                Assert.Contains("not supported", result.Diagnostic);
+
+                File.Delete(linkPath);
+            }
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
     public async Task BuildAsync_SupportsTrackedSymlinkMaterializedAsRegularFileWhenCoreSymlinksFalse()
     {
         var runner = new GitProcessRunner();
@@ -3116,6 +3171,80 @@ public class GitSnapshotBuilderTests
                 beforeSnapshot.WorkingTreeFingerprint,
                 afterSnapshot.WorkingTreeFingerprint
             );
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [Fact]
+    public async Task BuildAsync_RejectsUnpairedUtf16SurrogateInTrackedSymlinkOnWindows()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            await RunGitAsync(runner, repositoryPath, "init", "-b", "main");
+            await RunGitAsync(runner, repositoryPath, "config", "core.symlinks", "true");
+
+            var linkPath = Path.Combine(repositoryPath, "link.txt");
+
+            File.CreateSymbolicLink(linkPath, "valid-target.txt");
+
+            await RunGitAsync(runner, repositoryPath, "add", "link.txt");
+
+            await RunGitAsync(
+                runner,
+                repositoryPath,
+                "-c",
+                "user.name=Codelaxy Tests",
+                "-c",
+                "user.email=codelaxy@example.invalid",
+                "commit",
+                "-m",
+                "tracked symlink baseline"
+            );
+
+            var builder = new GitSnapshotBuilder(runner);
+
+            var baseline = await builder.BuildAsync(repositoryPath);
+            Assert.True(baseline.Succeeded, baseline.Diagnostic);
+
+            // Valid UTF-16 surrogate pair: U+1F596 (Vulcan salute).
+            File.Delete(linkPath);
+
+            const string validTarget = "\U0001F596.txt";
+            File.CreateSymbolicLink(linkPath, validTarget);
+
+            Assert.Equal(validTarget, new FileInfo(linkPath).LinkTarget);
+
+            var validResult = await builder.BuildAsync(repositoryPath);
+
+            Assert.True(validResult.Succeeded, validResult.Diagnostic);
+            Assert.IsType<Snapshot>(validResult.Snapshot);
+
+            // Invalid UTF-16: unpaired high surrogate.
+            File.Delete(linkPath);
+
+            const string invalidTarget = "\uD800x";
+
+            File.CreateSymbolicLink(linkPath, invalidTarget);
+
+            Assert.Equal(invalidTarget, new FileInfo(linkPath).LinkTarget);
+
+            var result = await builder.BuildAsync(repositoryPath);
+
+            Assert.False(result.Succeeded);
+            Assert.Null(result.Snapshot);
+            Assert.Contains("link.txt", result.Diagnostic);
+            Assert.Contains("not supported", result.Diagnostic);
         }
         finally
         {

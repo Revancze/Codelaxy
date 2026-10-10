@@ -853,10 +853,21 @@ public sealed class GitSnapshotBuilder
     // U+FFFD, so distinct names can collapse into one string. Such a path (or
     // symlink target) cannot be observed faithfully, and neither can a genuine
     // U+FFFD, which is indistinguishable from it here.
-    private static bool IsLossyDecoded(string value) => value.Contains('�');
+    private static bool IsLossyDecoded(string value)
+    {
+        foreach (var rune in value.EnumerateRunes())
+        {
+            if (rune.Value == '\uFFFD')
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private static string UnsupportedPathDiagnostic(string path) =>
-        $"Path '{path}' is not valid UTF-8 or contains U+FFFD; "
+        $"Path '{path}' is not valid UTF-8, contains invalid UTF-16, or contains U+FFFD; "
         + "such paths are not supported for exact observation.";
 
     private static GitSnapshotBuildResult Failure(string diagnostic)
