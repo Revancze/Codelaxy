@@ -146,6 +146,44 @@ public class GitIndexEntryParserTests
         }
     }
 
+    [Theory]
+    [InlineData("not-an-object-id")]
+    [InlineData("\uFFFD")]
+    [InlineData("1234")]
+    [InlineData("00000000000000000000000000000000000000G0")]
+    public void Parse_RejectsInvalidObjectId(string invalidObjectId)
+    {
+        var input = $"H 100644 {invalidObjectId} 0\tfile.txt\0";
+
+        Assert.Throws<FormatException>(() => GitIndexEntryParser.Parse(input));
+    }
+
+    [Theory]
+    [InlineData(40)]
+    [InlineData(64)]
+    public void Parse_AcceptsValidObjectId(int length)
+    {
+        var objectId = new string('a', length);
+        var input = $"H 100644 {objectId} 0\tfile.txt\0";
+
+        var entry = Assert.Single(GitIndexEntryParser.Parse(input));
+
+        Assert.Equal(objectId, entry.ObjectId);
+    }
+
+    [Theory]
+    [InlineData(40)]
+    [InlineData(64)]
+    public void Parse_AcceptsZeroObjectId(int length)
+    {
+        var objectId = new string('0', length);
+        var input = $"H 100644 {objectId} 0\tfile.txt\0";
+
+        var entry = Assert.Single(GitIndexEntryParser.Parse(input));
+
+        Assert.Equal(objectId, entry.ObjectId);
+    }
+
     private static async Task RunGitAsync(
         GitProcessRunner runner,
         string repositoryPath,

@@ -2,6 +2,11 @@ namespace Codelaxy.Git;
 
 public static class GitIndexEntryParser
 {
+    private static bool IsValidObjectId(string objectId)
+    {
+        return objectId.Length is 40 or 64 && objectId.All(Uri.IsHexDigit);
+    }
+
     public static IReadOnlyList<GitIndexEntry> Parse(string input)
     {
         ArgumentNullException.ThrowIfNull(input);
@@ -33,6 +38,13 @@ public static class GitIndexEntryParser
                 ),
             };
 
+            var objectId = fields[fieldOffset + 1];
+
+            if (!IsValidObjectId(objectId))
+            {
+                throw new FormatException("Git index record contains an invalid object ID.");
+            }
+
             if (!int.TryParse(fields[fieldOffset + 2], out var stage))
             {
                 throw new FormatException("Git index record contains an invalid stage.");
@@ -42,13 +54,7 @@ public static class GitIndexEntryParser
                 fieldOffset == 1 && string.Equals(fields[0], "S", StringComparison.Ordinal);
 
             entries.Add(
-                new GitIndexEntry(
-                    fields[fieldOffset],
-                    fields[fieldOffset + 1],
-                    stage,
-                    path,
-                    skipWorktree
-                )
+                new GitIndexEntry(fields[fieldOffset], objectId, stage, path, skipWorktree)
             );
         }
 
