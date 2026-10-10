@@ -1,12 +1,9 @@
 using Codelaxy.Git;
 
-namespace Codelaxy.Tests;
-
-[CollectionDefinition("Git environment", DisableParallelization = true)]
-public sealed class GitEnvironmentCollection;
+namespace Codelaxy.Tests.Invariants;
 
 [Collection("Git environment")]
-public class GitEnvironmentIsolationTests
+public class GitEnvironmentInvariantTests
 {
     [Fact]
     public async Task RunAsync_IgnoresInheritedGitDir()
