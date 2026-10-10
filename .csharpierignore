@@ -1,0 +1,17 @@
+**/bin/**
+**/obj/**
+.claude/worktrees/**
+
+# Codelaxy uses CSharpier for C# only.
+# XML/MSBuild formatting remains governed separately.
+**/*.csproj
+**/*.props
+**/*.targets
+**/*.xml
+**/*.config
+**/*.Config
+**/*.nuspec
+**/*.resx
+**/*.xaml
+**/*.axaml
+**/*.slnx
