@@ -284,7 +284,30 @@ public class GitExecutableResolutionSecurityTests
 
         using (var mkfifo = Process.Start("mkfifo", [fifo]))
         {
-            mkfifo.WaitForExit();
+            using var mkfifoDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+            try
+            {
+                await mkfifo.WaitForExitAsync(mkfifoDeadline.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                try
+                {
+                    mkfifo.Kill(entireProcessTree: true);
+                }
+                catch (InvalidOperationException)
+                {
+                    // mkfifo exited between the deadline and Kill.
+                }
+
+                using var killDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+                await mkfifo.WaitForExitAsync(killDeadline.Token);
+
+                throw;
+            }
+
             Assert.Equal(0, mkfifo.ExitCode);
         }
 
@@ -304,8 +327,9 @@ public class GitExecutableResolutionSecurityTests
         {
             if (!resolution.IsCompleted)
             {
-                // Release a reader blocked in open(2).
-                using var writer = new FileStream(fifo, FileMode.Open, FileAccess.Write);
+                // Release a reader blocked in open(2). Opening for read and write
+                // never blocks on Linux (fifo(7)), even when no reader is left.
+                await using var writer = new FileStream(fifo, FileMode.Open, FileAccess.ReadWrite);
             }
         }
     }
