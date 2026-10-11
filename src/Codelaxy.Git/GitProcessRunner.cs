@@ -474,17 +474,27 @@ public sealed class GitProcessRunner
                 continue;
             }
 
-            if (RepositoryControlledPaths.IsInsideAny(fullDirectory, protectedRoots))
+            if (
+                !OperatingSystem.IsWindows()
+                && RepositoryControlledPaths.IsInsideAny(fullDirectory, protectedRoots)
+            )
             {
                 continue;
             }
 
             var candidate = Path.Combine(fullDirectory, executableName);
 
-            if (
-                File.Exists(candidate)
-                && !RepositoryControlledPaths.IsInsideAny(candidate, protectedRoots)
-            )
+            if (!File.Exists(candidate))
+            {
+                continue;
+            }
+
+            var trusted = OperatingSystem.IsWindows()
+                ? GitExecutableLocationVerifier.Verify(candidate, absoluteCurrentDirectory)
+                    == GitExecutableLocationVerifier.Verdict.Allow
+                : !RepositoryControlledPaths.IsInsideAny(candidate, protectedRoots);
+
+            if (trusted)
             {
                 return Path.GetFullPath(candidate);
             }

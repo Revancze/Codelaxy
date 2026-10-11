@@ -79,7 +79,14 @@ public class GitExecutableResolutionSecurityTests
 
         var resolved = Resolve(Path.Combine(repository, "bin"), linkedStart);
 
-        AssertTrustedGit(resolved, fakeGit);
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.Null(resolved);
+        }
+        else
+        {
+            AssertTrustedGit(resolved, fakeGit);
+        }
     }
 
     [Theory]
@@ -361,7 +368,14 @@ public class GitExecutableResolutionSecurityTests
 
         var resolved = Resolve(Path.Combine(worktree, "bin"), Path.Combine(worktree, "src"));
 
-        AssertTrustedGit(resolved, fakeGit);
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.Null(resolved);
+        }
+        else
+        {
+            AssertTrustedGit(resolved, fakeGit);
+        }
     }
 
     [Theory]
@@ -385,7 +399,14 @@ public class GitExecutableResolutionSecurityTests
 
         var resolved = Resolve(Path.Combine(worktree, "bin"), Path.Combine(worktree, "src"));
 
-        AssertTrustedGit(resolved, fakeGit);
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.Null(resolved);
+        }
+        else
+        {
+            AssertTrustedGit(resolved, fakeGit);
+        }
     }
 
     [Theory]
