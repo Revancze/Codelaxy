@@ -77,6 +77,41 @@ corrects, rewrites, or guesses them with string manipulation.
 Source of this rule: `C:\msys64\tmp` versus `C:\tmp`. The fix was to stop
 arguing with Git, not to add another translation layer.
 
+**The one exception: choosing Git before Git can be asked.** Before any Git
+runs, Codelaxy decides which directories the observed repository controls, so
+that a Git planted there is never started. Git cannot answer that question,
+because Git is what is being chosen. MSYS2 and Cygwin Git write POSIX paths
+such as `/tmp/repo/.git/worktrees/x` into linked-worktree metadata, and on
+Windows that text names a different directory (`C:\tmp\...`) than the one Git
+uses (`C:\msys64\tmp\...`).
+
+An unverified translation would rewrite Git's data and then trust the rewrite.
+That remains forbidden. What is allowed is a verified translation: a hypothesis
+that the filesystem must confirm, used only under these conditions:
+
+- the environment is named explicitly by `CODELAXY_GIT_ENVIRONMENT_ROOT`
+  (Windows only); it is never derived from the Git being checked;
+- its mount table (`<root>\etc\fstab`) is read completely or not at all, and
+  the root must be a plain local drive path outside repository-controlled
+  directories;
+- a translated path counts only when the metadata proves it by file identity:
+  the back-link names this worktree's `.git`, the directory sits in
+  `<common>\worktrees\<id>`, and `commondir` names that same `<common>`;
+- the result can only add protected roots and narrow `Allow`: after a
+  translated chain, only the environment's own `usr\bin\git.exe` may run;
+- an unusable value refuses every command; nothing falls back to running as
+  if no environment were configured.
+
+When the proof fails, the result is `Indeterminate` and no Git runs. Once Git
+has been chosen, I4 applies without exception: repository paths come from
+Git's own answers, and filesystem access uses `--show-cdup` relative to the
+start directory, never this table.
+
+In an MSYS2 shell the environment is set with
+`export CODELAXY_GIT_ENVIRONMENT_ROOT="$(cygpath -w /)"`. In CI the variable is
+set by the workflow, which the repository controls; CI trusts it exactly as
+much as it trusts running the repository's build.
+
 ### I5 — Git runs in an isolated environment
 
 Before every Git invocation, the inherited environment is stripped of the

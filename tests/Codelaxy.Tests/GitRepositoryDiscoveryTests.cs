@@ -73,7 +73,13 @@ public class GitRepositoryDiscoveryTests
     [Fact]
     public async Task TryDiscoverAsync_DistinguishesGitDirectoryFromCommonDirectoryInLinkedWorktree()
     {
-        var runner = new GitProcessRunner();
+        // MSYS2 Git writes POSIX paths into linked-worktree metadata; the fixture
+        // configures that environment explicitly instead of relying on the machine.
+        var runner = new GitProcessRunner(
+            Environment.GetEnvironmentVariable("PATH"),
+            Environment.CurrentDirectory,
+            GetEnvironmentRootForTestGit()
+        );
         var repositoryPath = CreateTemporaryDirectory();
         var linkedWorktreePath = CreateTemporaryDirectory();
 
@@ -204,6 +210,45 @@ public class GitRepositoryDiscoveryTests
         {
             DeleteDirectory(repositoryPath);
         }
+    }
+
+    // The environment of the Git this test runs: an MSYS2 layout
+    // (<root>\usr\bin\git.exe next to msys-2.0.dll) must load; Git for Windows
+    // and Linux need none. CODELAXY_GIT_ENVIRONMENT_ROOT is deliberately not read.
+    private static string? GetEnvironmentRootForTestGit()
+    {
+        var gitExecutable = new GitProcessRunner(
+            Environment.GetEnvironmentVariable("PATH"),
+            Environment.CurrentDirectory
+        )
+            .CreateProcessStartInfo(Directory.GetCurrentDirectory(), ["--version"], readOnly: true)
+            .FileName;
+
+        var binDirectory = Path.GetDirectoryName(gitExecutable)!;
+
+        if (
+            !OperatingSystem.IsWindows()
+            || !File.Exists(Path.Combine(binDirectory, "msys-2.0.dll"))
+            || !string.Equals(
+                Path.GetFileName(binDirectory),
+                "bin",
+                StringComparison.OrdinalIgnoreCase
+            )
+            || !string.Equals(
+                Path.GetFileName(Path.GetDirectoryName(binDirectory)),
+                "usr",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        {
+            return null;
+        }
+
+        var environmentRoot = Path.GetDirectoryName(Path.GetDirectoryName(binDirectory))!;
+
+        Assert.NotNull(PosixMountTable.TryLoad(environmentRoot));
+
+        return environmentRoot;
     }
 
     private static string CreateTemporaryDirectory()
