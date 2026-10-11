@@ -20,6 +20,21 @@ public sealed class GitRepositoryDiscovery
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(startDirectory);
 
+        var rejection = await GetWorkTreeRejectionAsync(startDirectory, cancellationToken);
+
+        if (rejection is not null)
+        {
+            return rejection;
+        }
+
+        return await ReadRepositoryPathsAsync(startDirectory, cancellationToken);
+    }
+
+    private async Task<GitRepositoryDiscoveryResult?> GetWorkTreeRejectionAsync(
+        string startDirectory,
+        CancellationToken cancellationToken
+    )
+    {
         var workTreeResult = await _runner.RunReadOnlyAsync(
             startDirectory,
             ["rev-parse", "--is-inside-work-tree"],
@@ -53,13 +68,7 @@ public sealed class GitRepositoryDiscovery
             return CreateFailure(bareResult);
         }
 
-        if (
-            string.Equals(
-                bareResult.StandardOutput.Trim(),
-                "true",
-                StringComparison.OrdinalIgnoreCase
-            )
-        )
+        if (IsGitTrue(bareResult.StandardOutput))
         {
             return new GitRepositoryDiscoveryResult(
                 null,
@@ -68,13 +77,7 @@ public sealed class GitRepositoryDiscovery
             );
         }
 
-        if (
-            !string.Equals(
-                workTreeResult.StandardOutput.Trim(),
-                "true",
-                StringComparison.OrdinalIgnoreCase
-            )
-        )
+        if (!IsGitTrue(workTreeResult.StandardOutput))
         {
             return new GitRepositoryDiscoveryResult(
                 null,
@@ -83,6 +86,14 @@ public sealed class GitRepositoryDiscovery
             );
         }
 
+        return null;
+    }
+
+    private async Task<GitRepositoryDiscoveryResult> ReadRepositoryPathsAsync(
+        string startDirectory,
+        CancellationToken cancellationToken
+    )
+    {
         var topLevelResult = await _runner.RunReadOnlyAsync(
             startDirectory,
             ["rev-parse", "--show-toplevel"],
@@ -124,6 +135,7 @@ public sealed class GitRepositoryDiscovery
             RemoveGitLineTerminator(gitDirectoryResult.StandardOutput),
             RemoveGitLineTerminator(gitCommonDirectoryResult.StandardOutput)
         );
+
         return new GitRepositoryDiscoveryResult(
             repository,
             GitRepositoryDiscoveryFailureKind.None,
@@ -157,6 +169,11 @@ public sealed class GitRepositoryDiscovery
             GitRepositoryDiscoveryFailureKind.CommandFailure,
             result.StandardError
         );
+    }
+
+    private static bool IsGitTrue(string output)
+    {
+        return string.Equals(output.Trim(), "true", StringComparison.OrdinalIgnoreCase);
     }
 
     internal static string RemoveGitLineTerminator(string output)
