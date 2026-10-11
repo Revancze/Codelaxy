@@ -438,43 +438,31 @@ public class GitProcessRunnerTests
 
             helperProcess = Process.GetProcessById(processId);
 
-            cancellation.Cancel();
+            // Open the process handle early to reduce PID reuse risks.
+            _ = helperProcess.Handle;
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => runTask);
+            // Bound the wait for cancellation callbacks.
+            await cancellation
+                .CancelAsync()
+                .WaitAsync(TimeSpan.FromSeconds(5), CancellationToken.None);
 
-            var exitTask = helperProcess.WaitForExitAsync();
+            // The runner must complete after cancellation.
+            // Do not use cancellation.Token: it is already cancelled.
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+                runTask.WaitAsync(TimeSpan.FromSeconds(10), CancellationToken.None)
+            );
 
-            var completedTask = await Task.WhenAny(exitTask, Task.Delay(TimeSpan.FromSeconds(2)));
+            // Verify that the actual process has terminated.
+            // This deadline is independent of the cancelled test token.
+            using var exitDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(2));
 
-            Assert.Same(exitTask, completedTask);
+            await helperProcess.WaitForExitAsync(exitDeadline.Token);
+
+            Assert.True(helperProcess.HasExited);
         }
         finally
         {
-            cancellation.Cancel();
-
-            if (helperProcess is not null)
-            {
-                try
-                {
-                    if (!helperProcess.HasExited)
-                    {
-                        helperProcess.Kill(entireProcessTree: true);
-
-                        await helperProcess.WaitForExitAsync();
-                    }
-                }
-                catch (InvalidOperationException)
-                {
-                    // Process exited between HasExited and Kill.
-                }
-
-                helperProcess.Dispose();
-            }
-
-            if (File.Exists(pidFile))
-            {
-                File.Delete(pidFile);
-            }
+            await CleanupHelperProcessAsync(cancellation, helperProcess, pidFile);
         }
     }
 
@@ -786,6 +774,59 @@ public class GitProcessRunnerTests
         Assert.Equal(GitCommandFailureKind.None, result.FailureKind);
 
         Assert.Contains('\uFFFD', result.StandardError);
+    }
+
+    private static async Task CleanupHelperProcessAsync(
+        CancellationTokenSource cancellation,
+        Process? process,
+        string pidFile
+    )
+    {
+        try
+        {
+            try
+            {
+                await cancellation
+                    .CancelAsync()
+                    .WaitAsync(TimeSpan.FromSeconds(5), CancellationToken.None);
+            }
+            finally
+            {
+                await StopHelperProcessAsync(process);
+            }
+        }
+        finally
+        {
+            try
+            {
+                process?.Dispose();
+            }
+            finally
+            {
+                File.Delete(pidFile);
+            }
+        }
+    }
+
+    private static async Task StopHelperProcessAsync(Process? process)
+    {
+        if (process is null || process.HasExited)
+        {
+            return;
+        }
+
+        try
+        {
+            process.Kill(entireProcessTree: true);
+        }
+        catch (InvalidOperationException) when (process.HasExited)
+        {
+            // Process exited between HasExited and Kill.
+        }
+
+        using var cleanupDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+        await process.WaitForExitAsync(cleanupDeadline.Token);
     }
 
     private static string GetProcessTestHelperPath()
