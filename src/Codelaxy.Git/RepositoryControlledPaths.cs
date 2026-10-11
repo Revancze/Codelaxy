@@ -10,6 +10,14 @@ internal static class RepositoryControlledPaths
     private static StringComparison PathComparison =>
         OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
+    internal enum DotGitObservation
+    {
+        Missing,
+        File,
+        Directory,
+        Indeterminate,
+    }
+
     // Every worktree enclosing the directory (nested repositories included), the
     // Git directories of linked worktrees and their main worktree, seen through
     // both the given path and its symlink-resolved physical path.
@@ -29,6 +37,41 @@ internal static class RepositoryControlledPaths
         }
 
         return roots.Distinct(StringComparer.FromComparison(PathComparison)).ToArray();
+    }
+
+    // Classifies the .git entry without parsing its contents.
+    // A missing parent or inaccessible entry is not proof of absence.
+    internal static DotGitObservation ObserveDotGit(string directory)
+    {
+        try
+        {
+            var dotGit = Path.Combine(directory, ".git");
+            var attributes = File.GetAttributes(dotGit);
+
+            if ((attributes & FileAttributes.ReparsePoint) != FileAttributes.None)
+            {
+                return DotGitObservation.Indeterminate;
+            }
+
+            return (attributes & FileAttributes.Directory) != FileAttributes.None
+                ? DotGitObservation.Directory
+                : DotGitObservation.File;
+        }
+        catch (FileNotFoundException)
+        {
+            return DotGitObservation.Missing;
+        }
+        catch (Exception exception)
+            when (exception
+                    is IOException
+                        or UnauthorizedAccessException
+                        or System.Security.SecurityException
+                        or ArgumentException
+                        or NotSupportedException
+            )
+        {
+            return DotGitObservation.Indeterminate;
+        }
     }
 
     // True when the path, or what it finally resolves to, lies in a protected root.

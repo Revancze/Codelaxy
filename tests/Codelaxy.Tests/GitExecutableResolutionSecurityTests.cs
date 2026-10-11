@@ -582,6 +582,70 @@ public class GitExecutableResolutionSecurityTests
         AssertTrustedGit(resolved, fakeGit);
     }
 
+    [Fact]
+    public void ObserveDotGit_DistinguishesFileDirectoryAndMissing()
+    {
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+
+        var linkedWorktree = sandbox.CreateLinkedWorktreeWithDotGitFile(
+            "feature",
+            "gitdir: invalid\n"
+        );
+
+        var outside = Directory.CreateDirectory(Path.Combine(sandbox.Root, "outside")).FullName;
+
+        Assert.Equal(
+            RepositoryControlledPaths.DotGitObservation.Directory,
+            RepositoryControlledPaths.ObserveDotGit(repository)
+        );
+
+        Assert.Equal(
+            RepositoryControlledPaths.DotGitObservation.File,
+            RepositoryControlledPaths.ObserveDotGit(linkedWorktree)
+        );
+
+        Assert.Equal(
+            RepositoryControlledPaths.DotGitObservation.Missing,
+            RepositoryControlledPaths.ObserveDotGit(outside)
+        );
+
+        Assert.Equal(
+            RepositoryControlledPaths.DotGitObservation.Indeterminate,
+            RepositoryControlledPaths.ObserveDotGit(
+                Path.Combine(sandbox.Root, "nonexistent-parent")
+            )
+        );
+    }
+
+    [Fact]
+    public void ObserveDotGit_DoesNotTrustReparsePointOnWindows()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+
+        var linkedDirectory = Directory
+            .CreateDirectory(Path.Combine(sandbox.Root, "linked-directory"))
+            .FullName;
+
+        sandbox.CreateDirectorySymlink(
+            Path.Combine(linkedDirectory, ".git"),
+            Path.Combine(repository, ".git")
+        );
+
+        Assert.Equal(
+            RepositoryControlledPaths.DotGitObservation.Indeterminate,
+            RepositoryControlledPaths.ObserveDotGit(linkedDirectory)
+        );
+    }
+
     [Theory]
     [InlineData("gitdir:{0}\n")]
     [InlineData(" gitdir: {0}\n")]
