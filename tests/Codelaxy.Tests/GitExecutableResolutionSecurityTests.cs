@@ -388,6 +388,56 @@ public class GitExecutableResolutionSecurityTests
         AssertTrustedGit(resolved, fakeGit);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ResolveDefaultGitExecutable_FailsClosedWhenLinkedMetadataIsLockedOnWindows(
+        bool lockCommondir
+    )
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var mainWorktree = sandbox.CreateRepository("main");
+
+        var fakeGit = sandbox.WriteFakeGit(Path.Combine(mainWorktree, "bin"));
+
+        Assert.True(File.Exists(fakeGit), "The untrusted Git fixture must exist.");
+
+        var gitDirectory = Path.Combine(mainWorktree, ".git", "worktrees", "feature");
+
+        Directory.CreateDirectory(gitDirectory);
+
+        var commondir = Path.Combine(gitDirectory, "commondir");
+        File.WriteAllText(commondir, "../..\n");
+
+        var linkedWorktree = sandbox.CreateLinkedWorktreeWithDotGitFile(
+            "feature",
+            $"gitdir: {gitDirectory}\n"
+        );
+
+        var metadataToLock = lockCommondir ? commondir : Path.Combine(linkedWorktree, ".git");
+
+        using var lockedFile = new FileStream(
+            metadataToLock,
+            FileMode.Open,
+            FileAccess.ReadWrite,
+            FileShare.None
+        );
+
+        var resolved = Resolve(
+            Path.Combine(mainWorktree, "bin"),
+            Path.Combine(linkedWorktree, "src")
+        );
+
+        // Incomplete root discovery cannot establish trust in any PATH candidate.
+        Assert.Null(resolved);
+    }
+
     [Fact]
     public async Task RunReadOnlyAsync_HandlesInvalidLinkedWorktreeMetadataWithoutThrowing()
     {
