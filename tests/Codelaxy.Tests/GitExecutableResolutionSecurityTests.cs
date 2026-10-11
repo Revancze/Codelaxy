@@ -294,6 +294,59 @@ public class GitExecutableResolutionSecurityTests
     }
 
     [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task RunReadOnlyAsync_RefusesRepositoryGitWithAliasedWorkingDirectoryOnWindows(
+        int aliasForm
+    )
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+        var fakeGit = sandbox.WriteFakeGit(Path.Combine(repository, "bin"));
+
+        var outside = Directory.CreateDirectory(Path.Combine(sandbox.Root, "outside")).FullName;
+
+        // Git is resolved before the runner knows which repository
+        // will be used as the working directory.
+        var runner = new GitProcessRunner(
+            string.Join(Path.PathSeparator, Path.GetDirectoryName(fakeGit), TrustedGitDirectory()),
+            outside
+        );
+
+        var workingDirectory = Path.Combine(repository, "src");
+
+        var aliasedWorkingDirectory = aliasForm switch
+        {
+            0 => @"\\?\" + workingDirectory,
+            1 => ToLocalAdminSharePath(workingDirectory, extended: false),
+            2 => ToLocalAdminSharePath(workingDirectory, extended: true),
+            _ => throw new ArgumentOutOfRangeException(nameof(aliasForm)),
+        };
+
+        Assert.True(
+            Directory.Exists(aliasedWorkingDirectory),
+            $"Test alias is inaccessible: '{aliasedWorkingDirectory}'."
+        );
+
+        var result = await runner.RunReadOnlyAsync(
+            aliasedWorkingDirectory,
+            ["--version"],
+            GitCommandTimeout
+        );
+
+        Assert.Equal(GitCommandFailureKind.LaunchFailure, result.FailureKind);
+
+        Assert.Contains("Refusing to run Git", result.StandardError, StringComparison.Ordinal);
+    }
+
+    [Theory]
     [InlineData("gitdir: bad\0path\n")]
     [InlineData("gitdir: \0\n")]
     [InlineData("gitdir: ::\\\\?\\\0\n")]
