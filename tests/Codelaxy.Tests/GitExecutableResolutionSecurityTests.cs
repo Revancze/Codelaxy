@@ -576,6 +576,118 @@ public class GitExecutableResolutionSecurityTests
         Assert.Contains(Path.GetFullPath(gitDirectory), roots, PathComparer);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ProtectedAncestorMatcher_RecognizesLocalAndUncAliasesOnWindows(bool extended)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+        var fakeGit = sandbox.WriteFakeGit(Path.Combine(repository, "bin"));
+
+        var aliasedGit = ToLocalAdminSharePath(fakeGit, extended);
+        var aliasedRoot = ToLocalAdminSharePath(repository, extended);
+
+        Assert.True(File.Exists(aliasedGit));
+        Assert.True(Directory.Exists(aliasedRoot));
+
+        Assert.Equal(
+            WindowsProtectedAncestorMatcher.MatchResult.Match,
+            WindowsProtectedAncestorMatcher.Check(aliasedGit, repository)
+        );
+
+        Assert.Equal(
+            WindowsProtectedAncestorMatcher.MatchResult.Match,
+            WindowsProtectedAncestorMatcher.Check(fakeGit, aliasedRoot)
+        );
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ProtectedAncestorMatcher_DistinguishesExternalUncGitOnWindows(bool extended)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+
+        var externalGit = sandbox.WriteFakeGit(Path.Combine(sandbox.Root, "external", "bin"));
+
+        var aliasedGit = ToLocalAdminSharePath(externalGit, extended);
+
+        Assert.True(File.Exists(aliasedGit));
+
+        Assert.Equal(
+            WindowsProtectedAncestorMatcher.MatchResult.NoMatch,
+            WindowsProtectedAncestorMatcher.Check(aliasedGit, repository)
+        );
+    }
+
+    [Fact]
+    public void ProtectedAncestorMatcher_ReturnsIndeterminateForMissingObjectsOnWindows()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+        var fakeGit = sandbox.WriteFakeGit(Path.Combine(repository, "bin"));
+
+        Assert.Equal(
+            WindowsProtectedAncestorMatcher.MatchResult.Indeterminate,
+            WindowsProtectedAncestorMatcher.Check(
+                fakeGit,
+                Path.Combine(sandbox.Root, "missing-root")
+            )
+        );
+
+        Assert.Equal(
+            WindowsProtectedAncestorMatcher.MatchResult.Indeterminate,
+            WindowsProtectedAncestorMatcher.Check(
+                Path.Combine(repository, "missing", "git.exe"),
+                repository
+            )
+        );
+    }
+
+    [Fact]
+    public void ProtectedAncestorMatcher_DoesNotTrustUnresolvedDirectorySymlink()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+        sandbox.WriteFakeGit(Path.Combine(repository, "bin"));
+
+        var linkedBin = sandbox.CreateDirectorySymlink(
+            Path.Combine(sandbox.Root, "outside", "tools"),
+            Path.Combine(repository, "bin")
+        );
+
+        Assert.Equal(
+            WindowsProtectedAncestorMatcher.MatchResult.Indeterminate,
+            WindowsProtectedAncestorMatcher.Check(Path.Combine(linkedBin, GitFileName), repository)
+        );
+    }
+
     private static StringComparer PathComparer =>
         OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 
