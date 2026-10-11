@@ -291,7 +291,7 @@ public sealed class GitProcessRunner
     // draining the pipe while Git is still writing.
     private static async Task<byte[]> ReadAllBytesAsync(Stream stream)
     {
-        using var buffer = new MemoryStream();
+        await using var buffer = new MemoryStream();
 
         await stream.CopyToAsync(buffer);
 
