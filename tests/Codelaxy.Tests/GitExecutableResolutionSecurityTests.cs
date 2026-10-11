@@ -471,7 +471,8 @@ public class GitExecutableResolutionSecurityTests
         var fakeGit = sandbox.WriteFakeGit(Path.Combine(worktree, "bin"));
         var outside = Directory.CreateDirectory(Path.Combine(sandbox.Root, "outside")).FullName;
 
-        // A trusted Git still runs against the damaged worktree ...
+        // Windows fails closed when linked-worktree metadata is incomplete.
+        // Other platforms retain the existing execution behavior.
         var trustedRunner = new GitProcessRunner(TrustedGitDirectory(), outside);
 
         var trustedResult = await trustedRunner.RunReadOnlyAsync(
@@ -480,9 +481,27 @@ public class GitExecutableResolutionSecurityTests
             GitCommandTimeout
         );
 
-        Assert.True(trustedResult.Succeeded, trustedResult.StandardError);
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.Equal(GitCommandFailureKind.LaunchFailure, trustedResult.FailureKind);
+            Assert.Null(trustedResult.ExitCode);
+            Assert.Contains(
+                "Refusing to run Git",
+                trustedResult.StandardError,
+                StringComparison.Ordinal
+            );
+            Assert.Contains(
+                "IncompleteDiscovery",
+                trustedResult.StandardError,
+                StringComparison.Ordinal
+            );
+        }
+        else
+        {
+            Assert.True(trustedResult.Succeeded, trustedResult.StandardError);
+        }
 
-        // ... while a Git inside it is still refused.
+        // A repository-controlled Git must also be refused.
         var untrustedRunner = new GitProcessRunner(
             string.Join(Path.PathSeparator, Path.GetDirectoryName(fakeGit), TrustedGitDirectory()),
             outside

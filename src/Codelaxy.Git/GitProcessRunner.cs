@@ -180,23 +180,21 @@ public sealed class GitProcessRunner
             );
         }
 
-        // The executable was chosen relative to the directory the runner was
-        // created in; a command may target a different repository.
-        if (
-            _gitExecutableResolvedFromPath
-            && RepositoryControlledPaths.IsInsideAny(
-                _gitExecutable,
-                RepositoryControlledPaths.GetProtectedRoots(workingDirectory)
-            )
-        )
+        // A PATH-resolved executable must be verified again against the
+        // repository targeted by this command.
+        if (_gitExecutableResolvedFromPath)
         {
-            return new GitCommandResult(
-                null,
-                string.Empty,
-                $"Refusing to run Git '{_gitExecutable}' from inside the repository "
-                    + $"being observed at '{workingDirectory}'.",
-                GitCommandFailureKind.LaunchFailure
-            );
+            var refusal = GetGitLaunchRefusalDiagnostic(_gitExecutable, workingDirectory);
+
+            if (refusal is not null)
+            {
+                return new GitCommandResult(
+                    null,
+                    string.Empty,
+                    refusal,
+                    GitCommandFailureKind.LaunchFailure
+                );
+            }
         }
 
         var startInfo = CreateProcessStartInfo(workingDirectory, arguments, readOnly);
@@ -283,6 +281,40 @@ public sealed class GitProcessRunner
             await standardErrorTask,
             GitCommandFailureKind.None
         );
+    }
+
+    private static string? GetGitLaunchRefusalDiagnostic(
+        string gitExecutable,
+        string workingDirectory
+    )
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return RepositoryControlledPaths.IsInsideAny(
+                gitExecutable,
+                RepositoryControlledPaths.GetProtectedRoots(workingDirectory)
+            )
+                ? $"Refusing to run Git '{gitExecutable}' from inside the repository "
+                    + $"being observed at '{workingDirectory}'."
+                : null;
+        }
+
+        var decision = GitExecutableLocationVerifier.VerifyDetailed(
+            gitExecutable,
+            workingDirectory
+        );
+
+        return decision.Verdict switch
+        {
+            GitExecutableLocationVerifier.Verdict.Allow => null,
+
+            GitExecutableLocationVerifier.Verdict.Deny =>
+                $"Refusing to run Git '{gitExecutable}' from inside the repository "
+                    + $"being observed at '{workingDirectory}'.",
+
+            _ => $"Refusing to run Git '{gitExecutable}' for '{workingDirectory}': "
+                + $"unable to verify executable location ({decision.Reason}).",
+        };
     }
 
     // Git output is read as raw bytes and decoded afterwards. A StreamReader
