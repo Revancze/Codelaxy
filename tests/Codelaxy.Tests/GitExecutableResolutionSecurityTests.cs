@@ -82,6 +82,58 @@ public class GitExecutableResolutionSecurityTests
         AssertTrustedGit(resolved, fakeGit);
     }
 
+    [Theory]
+    [InlineData(@"\\?\")]
+    [InlineData(@"\\.\")]
+    public void ResolveDefaultGitExecutable_RejectsDevicePrefixedWorktreeGitOnWindows(string prefix)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+        var fakeGit = sandbox.WriteFakeGit(Path.Combine(repository, "bin"));
+
+        var aliasedBin = prefix + Path.Combine(repository, "bin");
+
+        Assert.True(
+            File.Exists(Path.Combine(aliasedBin, GitFileName)),
+            $"Test alias is inaccessible: '{aliasedBin}'."
+        );
+
+        var resolved = Resolve(aliasedBin, Path.Combine(repository, "src"));
+
+        AssertTrustedGit(resolved, fakeGit);
+    }
+
+    [Fact]
+    public void ResolveDefaultGitExecutable_RejectsWorktreeGitWhenStartDirectoryHasDevicePrefixOnWindows()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+        var fakeGit = sandbox.WriteFakeGit(Path.Combine(repository, "bin"));
+
+        var aliasedStart = @"\\?\" + Path.Combine(repository, "src");
+
+        Assert.True(
+            Directory.Exists(aliasedStart),
+            $"Test alias is inaccessible: '{aliasedStart}'."
+        );
+
+        var resolved = Resolve(Path.Combine(repository, "bin"), aliasedStart);
+
+        AssertTrustedGit(resolved, fakeGit);
+    }
+
     [Fact]
     public void ResolveDefaultGitExecutable_ProtectsMainWorktreeOfExternalLinkedWorktree()
     {
