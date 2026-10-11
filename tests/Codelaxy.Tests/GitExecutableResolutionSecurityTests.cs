@@ -161,6 +161,67 @@ public class GitExecutableResolutionSecurityTests
         AssertTrustedGit(resolved, fakeGit);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ResolveDefaultGitExecutable_RejectsWorktreeGitReachedThroughUncOnWindows(
+        bool extended
+    )
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+        var fakeGit = sandbox.WriteFakeGit(Path.Combine(repository, "bin"));
+
+        var aliasedBin = ToLocalAdminSharePath(Path.Combine(repository, "bin"), extended);
+
+        Assert.True(
+            File.Exists(Path.Combine(aliasedBin, GitFileName)),
+            $"UNC test fixture is inaccessible: '{aliasedBin}'."
+        );
+
+        var resolved = Resolve(aliasedBin, Path.Combine(repository, "src"));
+
+        AssertTrustedGit(resolved, fakeGit);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ResolveDefaultGitExecutable_AllowsExternalGitReachedThroughUncOnWindows(
+        bool extended
+    )
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+
+        sandbox.WriteFakeGit(Path.Combine(sandbox.Root, "external", "bin"));
+
+        var aliasedBin = ToLocalAdminSharePath(
+            Path.Combine(sandbox.Root, "external", "bin"),
+            extended
+        );
+
+        var aliasedGit = Path.Combine(aliasedBin, GitFileName);
+
+        Assert.True(File.Exists(aliasedGit), $"UNC test fixture is inaccessible: '{aliasedGit}'.");
+
+        var resolved = Resolve(aliasedBin, Path.Combine(repository, "src"));
+
+        Assert.Equal(Path.GetFullPath(aliasedGit), resolved);
+    }
+
     [Fact]
     public void ResolveDefaultGitExecutable_ProtectsEnclosingRepositoryOfNestedRepository()
     {
@@ -464,6 +525,29 @@ public class GitExecutableResolutionSecurityTests
 
     private static StringComparer PathComparer =>
         OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+
+    private static string ToLocalAdminSharePath(string path, bool extended)
+    {
+        var fullPath = Path.GetFullPath(path);
+        var root = Path.GetPathRoot(fullPath);
+
+        if (
+            root is null
+            || root.Length != 3
+            || !char.IsLetter(root[0])
+            || root[1] != ':'
+            || root[2] != '\\'
+        )
+        {
+            throw new NotSupportedException(
+                "UNC test requires a drive-letter-based temporary directory."
+            );
+        }
+
+        var unc = $@"\\localhost\{char.ToUpperInvariant(root[0])}$" + fullPath[2..];
+
+        return extended ? @"\\?\UNC\" + unc[2..] : unc;
+    }
 
     private static string? Resolve(string firstPathEntry, string startDirectory)
     {
