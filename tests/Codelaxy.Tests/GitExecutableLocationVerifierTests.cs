@@ -190,7 +190,7 @@ public class GitExecutableLocationVerifierTests
     }
 
     [Fact]
-    public void Verify_DoesNotAllowGitWithUnverifiedRootlessDiscovery()
+    public void Verify_AllowsCompleteRootlessLocalDiscovery()
     {
         if (!OperatingSystem.IsWindows())
         {
@@ -211,7 +211,7 @@ public class GitExecutableLocationVerifierTests
 
         var verdict = GitExecutableLocationVerifier.Verify(externalGit, outside);
 
-        Assert.Equal(GitExecutableLocationVerifier.Verdict.Indeterminate, verdict);
+        Assert.Equal(GitExecutableLocationVerifier.Verdict.Allow, verdict);
     }
 
     [Theory]
@@ -262,7 +262,7 @@ public class GitExecutableLocationVerifierTests
     }
 
     [Fact]
-    public void VerifyDetailed_ExplainsRootlessIndeterminate()
+    public void VerifyDetailed_ExplainsCompleteRootlessAllow()
     {
         if (!OperatingSystem.IsWindows())
         {
@@ -277,9 +277,9 @@ public class GitExecutableLocationVerifierTests
 
         var decision = GitExecutableLocationVerifier.VerifyDetailed(externalGit, outside);
 
-        Assert.Equal(GitExecutableLocationVerifier.Verdict.Indeterminate, decision.Verdict);
+        Assert.Equal(GitExecutableLocationVerifier.Verdict.Allow, decision.Verdict);
 
-        Assert.Equal(GitExecutableLocationVerifier.Reason.IncompleteDiscovery, decision.Reason);
+        Assert.Equal(GitExecutableLocationVerifier.Reason.OutsideProtectedRoots, decision.Reason);
     }
 
     [Theory]
@@ -304,6 +304,29 @@ public class GitExecutableLocationVerifierTests
         Assert.Equal(GitExecutableLocationVerifier.Verdict.Indeterminate, decision.Verdict);
 
         Assert.Equal(GitExecutableLocationVerifier.Reason.UnsupportedNamespace, decision.Reason);
+    }
+
+    [Fact]
+    public void VerifyDetailed_RejectsMissingRootlessWorkingDirectory()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var externalGit = sandbox.WriteGit(Path.Combine(sandbox.Root, "external", "bin"));
+
+        var missingDirectory = Path.Combine(sandbox.Root, "missing");
+
+        Assert.False(Directory.Exists(missingDirectory));
+
+        var decision = GitExecutableLocationVerifier.VerifyDetailed(externalGit, missingDirectory);
+
+        Assert.Equal(GitExecutableLocationVerifier.Verdict.Indeterminate, decision.Verdict);
+
+        Assert.Equal(GitExecutableLocationVerifier.Reason.IncompleteDiscovery, decision.Reason);
     }
 
     private static string ToLocalAdminSharePath(string path, bool extended)

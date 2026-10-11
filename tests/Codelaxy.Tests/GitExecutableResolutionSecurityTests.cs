@@ -802,6 +802,18 @@ public class GitExecutableResolutionSecurityTests
         );
     }
 
+    [Fact]
+    public void ResolveDefaultGitExecutable_SelectsTrustedGitOutsideRepository()
+    {
+        using var sandbox = new Sandbox();
+
+        var outside = Directory.CreateDirectory(Path.Combine(sandbox.Root, "outside")).FullName;
+
+        var resolved = Resolve(TrustedGitDirectory(), outside);
+
+        Assert.Equal(TrustedGitPath(), resolved, PathComparer);
+    }
+
     private static StringComparer PathComparer =>
         OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 

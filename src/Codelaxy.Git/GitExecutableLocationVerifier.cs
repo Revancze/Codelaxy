@@ -91,10 +91,7 @@ internal static class GitExecutableLocationVerifier
             }
         }
 
-        if (
-            discovery.Status != ProtectedRootDiscovery.DiscoveryStatus.Complete
-            || discovery.Roots.Count == 0
-        )
+        if (discovery.Status != ProtectedRootDiscovery.DiscoveryStatus.Complete)
         {
             return new(Verdict.Indeterminate, Reason.IncompleteDiscovery);
         }
