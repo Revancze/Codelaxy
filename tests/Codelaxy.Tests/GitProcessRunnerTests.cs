@@ -494,45 +494,31 @@ public class GitProcessRunnerTests
             try
             {
                 helperProcess = Process.GetProcessById(processId);
+
+                // Open the process handle early to reduce PID reuse risks.
+                _ = helperProcess.Handle;
             }
             catch (ArgumentException)
             {
-                // The timed-out process already exited.
+                // The process may already have exited.
             }
 
-            var result = await runTask;
+            var result = await runTask.WaitAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
 
             Assert.Equal(GitCommandFailureKind.Timeout, result.FailureKind);
 
             if (helperProcess is not null)
             {
-                await helperProcess.WaitForExitAsync(startTimeout.Token);
+                using var exitDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+                await helperProcess.WaitForExitAsync(exitDeadline.Token);
 
                 Assert.True(helperProcess.HasExited);
             }
         }
         finally
         {
-            if (helperProcess is not null)
-            {
-                try
-                {
-                    if (!helperProcess.HasExited)
-                    {
-                        helperProcess.Kill(entireProcessTree: true);
-
-                        await helperProcess.WaitForExitAsync();
-                    }
-                }
-                catch (InvalidOperationException) { }
-
-                helperProcess.Dispose();
-            }
-
-            if (File.Exists(pidFile))
-            {
-                File.Delete(pidFile);
-            }
+            await CleanupTimedOutHelperProcessAsync(helperProcess, pidFile);
         }
     }
 
@@ -567,48 +553,31 @@ public class GitProcessRunnerTests
             try
             {
                 helperProcess = Process.GetProcessById(processId);
+
+                // Open the process handle early to reduce PID reuse risks.
+                _ = helperProcess.Handle;
             }
             catch (ArgumentException)
             {
-                // The timed-out process already exited.
+                // The process may already have exited.
             }
 
-            var result = await runTask;
+            var result = await runTask.WaitAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
 
             Assert.Equal(GitCommandFailureKind.Timeout, result.FailureKind);
 
             if (helperProcess is not null)
             {
-                await helperProcess.WaitForExitAsync(startTimeout.Token);
+                using var exitDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+                await helperProcess.WaitForExitAsync(exitDeadline.Token);
 
                 Assert.True(helperProcess.HasExited);
             }
         }
         finally
         {
-            if (helperProcess is not null)
-            {
-                try
-                {
-                    if (!helperProcess.HasExited)
-                    {
-                        helperProcess.Kill(entireProcessTree: true);
-
-                        await helperProcess.WaitForExitAsync();
-                    }
-                }
-                catch (InvalidOperationException)
-                {
-                    // Process exited between HasExited and Kill.
-                }
-
-                helperProcess.Dispose();
-            }
-
-            if (File.Exists(pidFile))
-            {
-                File.Delete(pidFile);
-            }
+            await CleanupTimedOutHelperProcessAsync(helperProcess, pidFile);
         }
     }
 
@@ -794,6 +763,25 @@ public class GitProcessRunnerTests
             {
                 await StopHelperProcessAsync(process);
             }
+        }
+        finally
+        {
+            try
+            {
+                process?.Dispose();
+            }
+            finally
+            {
+                File.Delete(pidFile);
+            }
+        }
+    }
+
+    private static async Task CleanupTimedOutHelperProcessAsync(Process? process, string pidFile)
+    {
+        try
+        {
+            await StopHelperProcessAsync(process);
         }
         finally
         {
