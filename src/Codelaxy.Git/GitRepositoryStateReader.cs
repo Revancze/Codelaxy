@@ -68,16 +68,26 @@ public sealed class GitRepositoryStateReader
             return Failure("Unable to read Git bare state", bareResult);
         }
 
+        var state = CreateRepositoryState(headResult, branchResult, workTreeResult, bareResult);
+
+        return new GitRepositoryStateReadResult(state, string.Empty);
+    }
+
+    private static GitRepositoryState CreateRepositoryState(
+        GitCommandResult headResult,
+        GitCommandResult branchResult,
+        GitCommandResult workTreeResult,
+        GitCommandResult bareResult
+    )
+    {
         var branch = branchResult.StandardOutput.Trim();
 
-        var state = new GitRepositoryState(
+        return new GitRepositoryState(
             headResult.StandardOutput.Trim(),
             string.IsNullOrEmpty(branch) ? null : branch,
             bool.Parse(workTreeResult.StandardOutput.Trim()),
             bool.Parse(bareResult.StandardOutput.Trim())
         );
-
-        return new GitRepositoryStateReadResult(state, string.Empty);
     }
 
     private static GitRepositoryStateReadResult Failure(string prefix, GitCommandResult result)
