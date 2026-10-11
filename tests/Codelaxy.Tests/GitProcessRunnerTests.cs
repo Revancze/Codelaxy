@@ -394,7 +394,7 @@ public class GitProcessRunnerTests
 
         using var cancellation = new CancellationTokenSource();
 
-        cancellation.Cancel();
+        await cancellation.CancelAsync();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             runner.RunAsync(Directory.GetCurrentDirectory(), ["--version"], cancellation.Token)
