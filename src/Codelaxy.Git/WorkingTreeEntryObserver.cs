@@ -51,22 +51,14 @@ internal sealed class WorkingTreeEntryObserver
         {
             var segment = segments[index];
 
-            var entries = GetDirectoryEntries(currentDirectory);
+            var exactPath = FindExactEntryOrRejectCaseMismatch(
+                currentDirectory,
+                segment,
+                relativePath
+            );
 
-            if (!entries.TryGetValue(segment, out var exactPath))
+            if (exactPath is null)
             {
-                if (
-                    _gitIgnoresCase
-                    && entries.Keys.Any(name =>
-                        string.Equals(name, segment, StringComparison.OrdinalIgnoreCase)
-                    )
-                )
-                {
-                    throw new IOException(
-                        $"Case-only path mismatch while observing '{relativePath}'."
-                    );
-                }
-
                 return Missing(relativePath);
             }
 
@@ -93,25 +85,55 @@ internal sealed class WorkingTreeEntryObserver
                 continue;
             }
 
-            if (OperatingSystem.IsWindows() && isReparsePoint)
-            {
-                if (!isDirectory && linkTarget is not null)
-                {
-                    return new WorkingTreeEntryObservation(
-                        relativePath,
-                        WorkingTreeEntryKind.SymbolicLink,
-                        "120000"
-                    );
-                }
+            return CreateFinalEntryObservation(
+                relativePath,
+                exactPath,
+                linkTarget,
+                isReparsePoint,
+                isDirectory
+            );
+        }
 
-                return new WorkingTreeEntryObservation(
-                    relativePath,
-                    WorkingTreeEntryKind.ReparsePoint,
-                    null
-                );
-            }
+        return Missing(relativePath);
+    }
 
-            if (linkTarget is not null)
+    private string? FindExactEntryOrRejectCaseMismatch(
+        string currentDirectory,
+        string segment,
+        string relativePath
+    )
+    {
+        var entries = GetDirectoryEntries(currentDirectory);
+
+        if (entries.TryGetValue(segment, out var exactPath))
+        {
+            return exactPath;
+        }
+
+        if (
+            _gitIgnoresCase
+            && entries.Keys.Any(name =>
+                string.Equals(name, segment, StringComparison.OrdinalIgnoreCase)
+            )
+        )
+        {
+            throw new IOException($"Case-only path mismatch while observing '{relativePath}'.");
+        }
+
+        return null;
+    }
+
+    private static WorkingTreeEntryObservation CreateFinalEntryObservation(
+        string relativePath,
+        string exactPath,
+        string? linkTarget,
+        bool isReparsePoint,
+        bool isDirectory
+    )
+    {
+        if (OperatingSystem.IsWindows() && isReparsePoint)
+        {
+            if (!isDirectory && linkTarget is not null)
             {
                 return new WorkingTreeEntryObservation(
                     relativePath,
@@ -120,32 +142,45 @@ internal sealed class WorkingTreeEntryObserver
                 );
             }
 
-            if (isReparsePoint)
-            {
-                return new WorkingTreeEntryObservation(
-                    relativePath,
-                    WorkingTreeEntryKind.ReparsePoint,
-                    null
-                );
-            }
-
-            if (isDirectory)
-            {
-                return new WorkingTreeEntryObservation(
-                    relativePath,
-                    WorkingTreeEntryKind.Directory,
-                    null
-                );
-            }
-
             return new WorkingTreeEntryObservation(
                 relativePath,
-                WorkingTreeEntryKind.RegularFile,
-                GetRegularFileMode(exactPath)
+                WorkingTreeEntryKind.ReparsePoint,
+                null
             );
         }
 
-        return Missing(relativePath);
+        if (linkTarget is not null)
+        {
+            return new WorkingTreeEntryObservation(
+                relativePath,
+                WorkingTreeEntryKind.SymbolicLink,
+                "120000"
+            );
+        }
+
+        if (isReparsePoint)
+        {
+            return new WorkingTreeEntryObservation(
+                relativePath,
+                WorkingTreeEntryKind.ReparsePoint,
+                null
+            );
+        }
+
+        if (isDirectory)
+        {
+            return new WorkingTreeEntryObservation(
+                relativePath,
+                WorkingTreeEntryKind.Directory,
+                null
+            );
+        }
+
+        return new WorkingTreeEntryObservation(
+            relativePath,
+            WorkingTreeEntryKind.RegularFile,
+            GetRegularFileMode(exactPath)
+        );
     }
 
     private IReadOnlyDictionary<string, string> GetDirectoryEntries(string directoryPath)
