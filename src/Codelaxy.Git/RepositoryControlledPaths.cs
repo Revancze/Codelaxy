@@ -7,15 +7,16 @@ internal static class RepositoryControlledPaths
 {
     private const int MaxLinkDepth = 40;
 
-    // Git refuses gitfiles larger than this (setup.c, max_file_size).
-    private const int MaxMetadataFileLength = 1 << 20;
-
-    private static readonly System.Text.Encoding MetadataEncoding = new System.Text.UTF8Encoding(
-        encoderShouldEmitUTF8Identifier: false
-    );
-
     private static StringComparison PathComparison =>
         OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+
+    internal enum DotGitObservation
+    {
+        Missing,
+        File,
+        Directory,
+        Indeterminate,
+    }
 
     // Every worktree enclosing the directory (nested repositories included), the
     // Git directories of linked worktrees and their main worktree, seen through
@@ -36,6 +37,41 @@ internal static class RepositoryControlledPaths
         }
 
         return roots.Distinct(StringComparer.FromComparison(PathComparison)).ToArray();
+    }
+
+    // Classifies the .git entry without parsing its contents.
+    // A missing parent or inaccessible entry is not proof of absence.
+    internal static DotGitObservation ObserveDotGit(string directory)
+    {
+        try
+        {
+            var dotGit = Path.Combine(directory, ".git");
+            var attributes = File.GetAttributes(dotGit);
+
+            if ((attributes & FileAttributes.ReparsePoint) != FileAttributes.None)
+            {
+                return DotGitObservation.Indeterminate;
+            }
+
+            return (attributes & FileAttributes.Directory) != FileAttributes.None
+                ? DotGitObservation.Directory
+                : DotGitObservation.File;
+        }
+        catch (FileNotFoundException)
+        {
+            return DotGitObservation.Missing;
+        }
+        catch (Exception exception)
+            when (exception
+                    is IOException
+                        or UnauthorizedAccessException
+                        or System.Security.SecurityException
+                        or ArgumentException
+                        or NotSupportedException
+            )
+        {
+            return DotGitObservation.Indeterminate;
+        }
     }
 
     // True when the path, or what it finally resolves to, lies in a protected root.
@@ -152,37 +188,15 @@ internal static class RepositoryControlledPaths
         roots.Add(ResolvePhysicalPath(fullRoot));
     }
 
-    // Mirrors Git's read_gitfile_gently(): the whole file must start with the
-    // exact prefix, and only trailing CR/LF is stripped; any other whitespace
-    // belongs to the path. A BOM is not skipped, so it fails the prefix as in Git.
+    // Compatibility adapter for the existing root collector.
+    // Security-sensitive discovery must inspect ReadStatus directly.
     private static string? ReadMetadataValue(string path, string prefix)
     {
-        try
-        {
-            var info = new FileInfo(path);
+        var observation = GitMetadataObservation.Read(path, prefix);
 
-            // A FIFO or device reports length 0; opening one could block forever.
-            // Real `.git` and `commondir` files are never empty.
-            if (!info.Exists || info.Length == 0 || info.Length > MaxMetadataFileLength)
-            {
-                return null;
-            }
-
-            var content = MetadataEncoding.GetString(File.ReadAllBytes(path));
-
-            if (!content.StartsWith(prefix, StringComparison.Ordinal))
-            {
-                return null;
-            }
-
-            var value = content[prefix.Length..].TrimEnd('\r', '\n');
-
-            return value.Length == 0 ? null : value;
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            return null;
-        }
+        return observation.Status == GitMetadataObservation.ReadStatus.Valid
+            ? observation.Value
+            : null;
     }
 
     // Resolves every symlink or junction along the path, segment by segment.

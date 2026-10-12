@@ -79,6 +79,65 @@ public class GitExecutableResolutionSecurityTests
 
         var resolved = Resolve(Path.Combine(repository, "bin"), linkedStart);
 
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.Null(resolved);
+        }
+        else
+        {
+            AssertTrustedGit(resolved, fakeGit);
+        }
+    }
+
+    [Theory]
+    [InlineData(@"\\?\")]
+    [InlineData(@"\\.\")]
+    public void ResolveDefaultGitExecutable_RejectsDevicePrefixedWorktreeGitOnWindows(string prefix)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+        var fakeGit = sandbox.WriteFakeGit(Path.Combine(repository, "bin"));
+
+        var aliasedBin = prefix + Path.Combine(repository, "bin");
+
+        Assert.True(
+            File.Exists(Path.Combine(aliasedBin, GitFileName)),
+            $"Test alias is inaccessible: '{aliasedBin}'."
+        );
+
+        var resolved = Resolve(aliasedBin, Path.Combine(repository, "src"));
+
+        AssertTrustedGit(resolved, fakeGit);
+    }
+
+    [Fact]
+    public void ResolveDefaultGitExecutable_RejectsWorktreeGitWhenStartDirectoryHasDevicePrefixOnWindows()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+        var fakeGit = sandbox.WriteFakeGit(Path.Combine(repository, "bin"));
+
+        var aliasedStart = @"\\?\" + Path.Combine(repository, "src");
+
+        Assert.True(
+            Directory.Exists(aliasedStart),
+            $"Test alias is inaccessible: '{aliasedStart}'."
+        );
+
+        var resolved = Resolve(Path.Combine(repository, "bin"), aliasedStart);
+
         AssertTrustedGit(resolved, fakeGit);
     }
 
@@ -107,6 +166,67 @@ public class GitExecutableResolutionSecurityTests
         );
 
         AssertTrustedGit(resolved, fakeGit);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ResolveDefaultGitExecutable_RejectsWorktreeGitReachedThroughUncOnWindows(
+        bool extended
+    )
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+        var fakeGit = sandbox.WriteFakeGit(Path.Combine(repository, "bin"));
+
+        var aliasedBin = ToLocalAdminSharePath(Path.Combine(repository, "bin"), extended);
+
+        Assert.True(
+            File.Exists(Path.Combine(aliasedBin, GitFileName)),
+            $"UNC test fixture is inaccessible: '{aliasedBin}'."
+        );
+
+        var resolved = Resolve(aliasedBin, Path.Combine(repository, "src"));
+
+        AssertTrustedGit(resolved, fakeGit);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ResolveDefaultGitExecutable_AllowsExternalGitReachedThroughUncOnWindows(
+        bool extended
+    )
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+
+        sandbox.WriteFakeGit(Path.Combine(sandbox.Root, "external", "bin"));
+
+        var aliasedBin = ToLocalAdminSharePath(
+            Path.Combine(sandbox.Root, "external", "bin"),
+            extended
+        );
+
+        var aliasedGit = Path.Combine(aliasedBin, GitFileName);
+
+        Assert.True(File.Exists(aliasedGit), $"UNC test fixture is inaccessible: '{aliasedGit}'.");
+
+        var resolved = Resolve(aliasedBin, Path.Combine(repository, "src"));
+
+        Assert.Equal(Path.GetFullPath(aliasedGit), resolved);
     }
 
     [Fact]
@@ -181,6 +301,59 @@ public class GitExecutableResolutionSecurityTests
     }
 
     [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task RunReadOnlyAsync_RefusesRepositoryGitWithAliasedWorkingDirectoryOnWindows(
+        int aliasForm
+    )
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+        var fakeGit = sandbox.WriteFakeGit(Path.Combine(repository, "bin"));
+
+        var outside = Directory.CreateDirectory(Path.Combine(sandbox.Root, "outside")).FullName;
+
+        // Git is resolved before the runner knows which repository
+        // will be used as the working directory.
+        var runner = new GitProcessRunner(
+            string.Join(Path.PathSeparator, Path.GetDirectoryName(fakeGit), TrustedGitDirectory()),
+            outside
+        );
+
+        var workingDirectory = Path.Combine(repository, "src");
+
+        var aliasedWorkingDirectory = aliasForm switch
+        {
+            0 => @"\\?\" + workingDirectory,
+            1 => ToLocalAdminSharePath(workingDirectory, extended: false),
+            2 => ToLocalAdminSharePath(workingDirectory, extended: true),
+            _ => throw new ArgumentOutOfRangeException(nameof(aliasForm)),
+        };
+
+        Assert.True(
+            Directory.Exists(aliasedWorkingDirectory),
+            $"Test alias is inaccessible: '{aliasedWorkingDirectory}'."
+        );
+
+        var result = await runner.RunReadOnlyAsync(
+            aliasedWorkingDirectory,
+            ["--version"],
+            GitCommandTimeout
+        );
+
+        Assert.Equal(GitCommandFailureKind.LaunchFailure, result.FailureKind);
+
+        Assert.Contains("Refusing to run Git", result.StandardError, StringComparison.Ordinal);
+    }
+
+    [Theory]
     [InlineData("gitdir: bad\0path\n")]
     [InlineData("gitdir: \0\n")]
     [InlineData("gitdir: ::\\\\?\\\0\n")]
@@ -195,7 +368,14 @@ public class GitExecutableResolutionSecurityTests
 
         var resolved = Resolve(Path.Combine(worktree, "bin"), Path.Combine(worktree, "src"));
 
-        AssertTrustedGit(resolved, fakeGit);
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.Null(resolved);
+        }
+        else
+        {
+            AssertTrustedGit(resolved, fakeGit);
+        }
     }
 
     [Theory]
@@ -219,7 +399,64 @@ public class GitExecutableResolutionSecurityTests
 
         var resolved = Resolve(Path.Combine(worktree, "bin"), Path.Combine(worktree, "src"));
 
-        AssertTrustedGit(resolved, fakeGit);
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.Null(resolved);
+        }
+        else
+        {
+            AssertTrustedGit(resolved, fakeGit);
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ResolveDefaultGitExecutable_FailsClosedWhenLinkedMetadataIsLockedOnWindows(
+        bool lockCommondir
+    )
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var mainWorktree = sandbox.CreateRepository("main");
+
+        var fakeGit = sandbox.WriteFakeGit(Path.Combine(mainWorktree, "bin"));
+
+        Assert.True(File.Exists(fakeGit), "The untrusted Git fixture must exist.");
+
+        var gitDirectory = Path.Combine(mainWorktree, ".git", "worktrees", "feature");
+
+        Directory.CreateDirectory(gitDirectory);
+
+        var commondir = Path.Combine(gitDirectory, "commondir");
+        File.WriteAllText(commondir, "../..\n");
+
+        var linkedWorktree = sandbox.CreateLinkedWorktreeWithDotGitFile(
+            "feature",
+            $"gitdir: {gitDirectory}\n"
+        );
+
+        var metadataToLock = lockCommondir ? commondir : Path.Combine(linkedWorktree, ".git");
+
+        using var lockedFile = new FileStream(
+            metadataToLock,
+            FileMode.Open,
+            FileAccess.ReadWrite,
+            FileShare.None
+        );
+
+        var resolved = Resolve(
+            Path.Combine(mainWorktree, "bin"),
+            Path.Combine(linkedWorktree, "src")
+        );
+
+        // Incomplete root discovery cannot establish trust in any PATH candidate.
+        Assert.Null(resolved);
     }
 
     [Fact]
@@ -234,7 +471,8 @@ public class GitExecutableResolutionSecurityTests
         var fakeGit = sandbox.WriteFakeGit(Path.Combine(worktree, "bin"));
         var outside = Directory.CreateDirectory(Path.Combine(sandbox.Root, "outside")).FullName;
 
-        // A trusted Git still runs against the damaged worktree ...
+        // Windows fails closed when linked-worktree metadata is incomplete.
+        // Other platforms retain the existing execution behavior.
         var trustedRunner = new GitProcessRunner(TrustedGitDirectory(), outside);
 
         var trustedResult = await trustedRunner.RunReadOnlyAsync(
@@ -243,9 +481,27 @@ public class GitExecutableResolutionSecurityTests
             GitCommandTimeout
         );
 
-        Assert.True(trustedResult.Succeeded, trustedResult.StandardError);
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.Equal(GitCommandFailureKind.LaunchFailure, trustedResult.FailureKind);
+            Assert.Null(trustedResult.ExitCode);
+            Assert.Contains(
+                "Refusing to run Git",
+                trustedResult.StandardError,
+                StringComparison.Ordinal
+            );
+            Assert.Contains(
+                "IncompleteDiscovery",
+                trustedResult.StandardError,
+                StringComparison.Ordinal
+            );
+        }
+        else
+        {
+            Assert.True(trustedResult.Succeeded, trustedResult.StandardError);
+        }
 
-        // ... while a Git inside it is still refused.
+        // A repository-controlled Git must also be refused.
         var untrustedRunner = new GitProcessRunner(
             string.Join(Path.PathSeparator, Path.GetDirectoryName(fakeGit), TrustedGitDirectory()),
             outside
@@ -366,6 +622,70 @@ public class GitExecutableResolutionSecurityTests
         AssertTrustedGit(resolved, fakeGit);
     }
 
+    [Fact]
+    public void ObserveDotGit_DistinguishesFileDirectoryAndMissing()
+    {
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+
+        var linkedWorktree = sandbox.CreateLinkedWorktreeWithDotGitFile(
+            "feature",
+            "gitdir: invalid\n"
+        );
+
+        var outside = Directory.CreateDirectory(Path.Combine(sandbox.Root, "outside")).FullName;
+
+        Assert.Equal(
+            RepositoryControlledPaths.DotGitObservation.Directory,
+            RepositoryControlledPaths.ObserveDotGit(repository)
+        );
+
+        Assert.Equal(
+            RepositoryControlledPaths.DotGitObservation.File,
+            RepositoryControlledPaths.ObserveDotGit(linkedWorktree)
+        );
+
+        Assert.Equal(
+            RepositoryControlledPaths.DotGitObservation.Missing,
+            RepositoryControlledPaths.ObserveDotGit(outside)
+        );
+
+        Assert.Equal(
+            RepositoryControlledPaths.DotGitObservation.Indeterminate,
+            RepositoryControlledPaths.ObserveDotGit(
+                Path.Combine(sandbox.Root, "nonexistent-parent")
+            )
+        );
+    }
+
+    [Fact]
+    public void ObserveDotGit_DoesNotTrustReparsePointOnWindows()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+
+        var linkedDirectory = Directory
+            .CreateDirectory(Path.Combine(sandbox.Root, "linked-directory"))
+            .FullName;
+
+        sandbox.CreateDirectorySymlink(
+            Path.Combine(linkedDirectory, ".git"),
+            Path.Combine(repository, ".git")
+        );
+
+        Assert.Equal(
+            RepositoryControlledPaths.DotGitObservation.Indeterminate,
+            RepositoryControlledPaths.ObserveDotGit(linkedDirectory)
+        );
+    }
+
     [Theory]
     [InlineData("gitdir:{0}\n")]
     [InlineData(" gitdir: {0}\n")]
@@ -410,8 +730,155 @@ public class GitExecutableResolutionSecurityTests
         Assert.Contains(Path.GetFullPath(gitDirectory), roots, PathComparer);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ProtectedAncestorMatcher_RecognizesLocalAndUncAliasesOnWindows(bool extended)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+        var fakeGit = sandbox.WriteFakeGit(Path.Combine(repository, "bin"));
+
+        var aliasedGit = ToLocalAdminSharePath(fakeGit, extended);
+        var aliasedRoot = ToLocalAdminSharePath(repository, extended);
+
+        Assert.True(File.Exists(aliasedGit));
+        Assert.True(Directory.Exists(aliasedRoot));
+
+        Assert.Equal(
+            WindowsProtectedAncestorMatcher.MatchResult.Match,
+            WindowsProtectedAncestorMatcher.Check(aliasedGit, repository)
+        );
+
+        Assert.Equal(
+            WindowsProtectedAncestorMatcher.MatchResult.Match,
+            WindowsProtectedAncestorMatcher.Check(fakeGit, aliasedRoot)
+        );
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ProtectedAncestorMatcher_DistinguishesExternalUncGitOnWindows(bool extended)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+
+        var externalGit = sandbox.WriteFakeGit(Path.Combine(sandbox.Root, "external", "bin"));
+
+        var aliasedGit = ToLocalAdminSharePath(externalGit, extended);
+
+        Assert.True(File.Exists(aliasedGit));
+
+        Assert.Equal(
+            WindowsProtectedAncestorMatcher.MatchResult.NoMatch,
+            WindowsProtectedAncestorMatcher.Check(aliasedGit, repository)
+        );
+    }
+
+    [Fact]
+    public void ProtectedAncestorMatcher_ReturnsIndeterminateForMissingObjectsOnWindows()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+        var fakeGit = sandbox.WriteFakeGit(Path.Combine(repository, "bin"));
+
+        Assert.Equal(
+            WindowsProtectedAncestorMatcher.MatchResult.Indeterminate,
+            WindowsProtectedAncestorMatcher.Check(
+                fakeGit,
+                Path.Combine(sandbox.Root, "missing-root")
+            )
+        );
+
+        Assert.Equal(
+            WindowsProtectedAncestorMatcher.MatchResult.Indeterminate,
+            WindowsProtectedAncestorMatcher.Check(
+                Path.Combine(repository, "missing", "git.exe"),
+                repository
+            )
+        );
+    }
+
+    [Fact]
+    public void ProtectedAncestorMatcher_DoesNotTrustUnresolvedDirectorySymlink()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sandbox = new Sandbox();
+
+        var repository = sandbox.CreateRepository("repo");
+        sandbox.WriteFakeGit(Path.Combine(repository, "bin"));
+
+        var linkedBin = sandbox.CreateDirectorySymlink(
+            Path.Combine(sandbox.Root, "outside", "tools"),
+            Path.Combine(repository, "bin")
+        );
+
+        Assert.Equal(
+            WindowsProtectedAncestorMatcher.MatchResult.Indeterminate,
+            WindowsProtectedAncestorMatcher.Check(Path.Combine(linkedBin, GitFileName), repository)
+        );
+    }
+
+    [Fact]
+    public void ResolveDefaultGitExecutable_SelectsTrustedGitOutsideRepository()
+    {
+        using var sandbox = new Sandbox();
+
+        var outside = Directory.CreateDirectory(Path.Combine(sandbox.Root, "outside")).FullName;
+
+        var resolved = Resolve(TrustedGitDirectory(), outside);
+
+        Assert.Equal(TrustedGitPath(), resolved, PathComparer);
+    }
+
     private static StringComparer PathComparer =>
         OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+
+    private static string ToLocalAdminSharePath(string path, bool extended)
+    {
+        var fullPath = Path.GetFullPath(path);
+        var root = Path.GetPathRoot(fullPath);
+
+        if (
+            root is null
+            || root.Length != 3
+            || !char.IsLetter(root[0])
+            || root[1] != ':'
+            || root[2] != '\\'
+        )
+        {
+            throw new NotSupportedException(
+                "UNC test requires a drive-letter-based temporary directory."
+            );
+        }
+
+        var unc = $@"\\localhost\{char.ToUpperInvariant(root[0])}$" + fullPath[2..];
+
+        return extended ? @"\\?\UNC\" + unc[2..] : unc;
+    }
 
     private static string? Resolve(string firstPathEntry, string startDirectory)
     {

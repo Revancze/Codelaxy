@@ -36,22 +36,62 @@ public sealed class GitProcessRunner
         throwOnInvalidBytes: false
     );
 
+    // The MSYS2 root used to interpret POSIX paths in Git metadata (Windows only).
+    internal const string GitEnvironmentRootVariable = "CODELAXY_GIT_ENVIRONMENT_ROOT";
+
     private readonly string? _gitExecutable;
     private readonly string? _gitResolutionDiagnostic;
     private readonly bool _gitExecutableResolvedFromPath;
 
+    // Shared by the PATH resolver and the launch guard. Never authorizes on its own.
+    private readonly PosixMountTable? _posixMounts;
+
     public GitProcessRunner()
-        : this(Environment.GetEnvironmentVariable("PATH"), Environment.CurrentDirectory) { }
+        : this(
+            Environment.GetEnvironmentVariable("PATH"),
+            Environment.CurrentDirectory,
+            Environment.GetEnvironmentVariable(GitEnvironmentRootVariable)
+        ) { }
 
     internal GitProcessRunner(string? pathVariable, string currentDirectory)
+        : this(pathVariable, currentDirectory, gitEnvironmentRoot: null) { }
+
+    // gitEnvironmentRoot: the explicitly configured MSYS2 root, or null/empty when
+    // none is configured. An unusable value refuses every command; PATH is then not
+    // searched, so there is no fallback to running as if nothing were configured.
+    internal GitProcessRunner(
+        string? pathVariable,
+        string currentDirectory,
+        string? gitEnvironmentRoot
+    )
     {
-        _gitExecutable = ResolveDefaultGitExecutable(pathVariable, currentDirectory);
         _gitExecutableResolvedFromPath = true;
+
+        if (!string.IsNullOrEmpty(gitEnvironmentRoot))
+        {
+            _posixMounts = PosixMountTable.TryLoad(gitEnvironmentRoot, out var problem);
+
+            if (_posixMounts is null)
+            {
+                _gitResolutionDiagnostic =
+                    $"{GitEnvironmentRootVariable} '{gitEnvironmentRoot}' is not a usable "
+                    + $"MSYS2 environment root: {problem}. Git was not searched on PATH.";
+
+                return;
+            }
+        }
+
+        _gitExecutable = ResolveDefaultGitExecutable(
+            pathVariable,
+            currentDirectory,
+            _posixMounts,
+            out var refusal
+        );
 
         if (_gitExecutable is null)
         {
             _gitResolutionDiagnostic =
-                "Unable to locate Git executable in trusted absolute PATH entries.";
+                refusal ?? "Unable to locate Git executable in trusted absolute PATH entries.";
         }
     }
 
@@ -180,23 +220,21 @@ public sealed class GitProcessRunner
             );
         }
 
-        // The executable was chosen relative to the directory the runner was
-        // created in; a command may target a different repository.
-        if (
-            _gitExecutableResolvedFromPath
-            && RepositoryControlledPaths.IsInsideAny(
-                _gitExecutable,
-                RepositoryControlledPaths.GetProtectedRoots(workingDirectory)
-            )
-        )
+        // A PATH-resolved executable must be verified again against the
+        // repository targeted by this command.
+        if (_gitExecutableResolvedFromPath)
         {
-            return new GitCommandResult(
-                null,
-                string.Empty,
-                $"Refusing to run Git '{_gitExecutable}' from inside the repository "
-                    + $"being observed at '{workingDirectory}'.",
-                GitCommandFailureKind.LaunchFailure
-            );
+            var refusal = GetGitLaunchRefusalDiagnostic(_gitExecutable, workingDirectory);
+
+            if (refusal is not null)
+            {
+                return new GitCommandResult(
+                    null,
+                    string.Empty,
+                    refusal,
+                    GitCommandFailureKind.LaunchFailure
+                );
+            }
         }
 
         var startInfo = CreateProcessStartInfo(workingDirectory, arguments, readOnly);
@@ -283,6 +321,76 @@ public sealed class GitProcessRunner
             await standardErrorTask,
             GitCommandFailureKind.None
         );
+    }
+
+    private string? GetGitLaunchRefusalDiagnostic(string gitExecutable, string workingDirectory)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return RepositoryControlledPaths.IsInsideAny(
+                gitExecutable,
+                RepositoryControlledPaths.GetProtectedRoots(workingDirectory)
+            )
+                ? $"Refusing to run Git '{gitExecutable}' from inside the repository "
+                    + $"being observed at '{workingDirectory}'."
+                : null;
+        }
+
+        return GetWindowsLocationRefusal(gitExecutable, workingDirectory, _posixMounts);
+    }
+
+    // The one Windows location check: the PATH resolver and the launch guard ask the
+    // same question with the same environment and word the answer the same way.
+    private static string? GetWindowsLocationRefusal(
+        string gitExecutable,
+        string directory,
+        PosixMountTable? posixMounts
+    )
+    {
+        var decision = GitExecutableLocationVerifier.VerifyDetailed(
+            gitExecutable,
+            directory,
+            posixMounts
+        );
+
+        if (decision.Verdict == GitExecutableLocationVerifier.Verdict.Allow)
+        {
+            return null;
+        }
+
+        if (decision.Verdict == GitExecutableLocationVerifier.Verdict.Deny)
+        {
+            return $"Refusing to run Git '{gitExecutable}' from inside the repository "
+                + $"being observed at '{directory}'.";
+        }
+
+        var refusal =
+            $"Refusing to run Git '{gitExecutable}' for '{directory}': "
+            + $"unable to verify executable location ({decision.Reason}).";
+
+        var environmentRoot = posixMounts?.Root;
+
+        return decision.Reason switch
+        {
+            GitExecutableLocationVerifier.Reason.UnmappedPosixMetadata => refusal
+                + " Its Git metadata uses MSYS2/Cygwin POSIX paths; set "
+                + $"{GitEnvironmentRootVariable} to the MSYS2 root (in an MSYS2 shell: "
+                + $"export {GitEnvironmentRootVariable}=\"$(cygpath -w /)\").",
+
+            GitExecutableLocationVerifier.Reason.UnprovenPosixMetadata => refusal
+                + $" Its Git metadata could not be proven under {GitEnvironmentRootVariable} "
+                + $"'{environmentRoot}'.",
+
+            GitExecutableLocationVerifier.Reason.PosixEnvironmentMismatch => refusal
+                + $" Only '{environmentRoot}\\usr\\bin\\git.exe' from "
+                + $"{GitEnvironmentRootVariable} reads its metadata the same way.",
+
+            GitExecutableLocationVerifier.Reason.UntrustedPosixEnvironment => refusal
+                + $" {GitEnvironmentRootVariable} '{environmentRoot}' lies inside "
+                + "a repository-controlled directory.",
+
+            _ => refusal,
+        };
     }
 
     // Git output is read as raw bytes and decoded afterwards. A StreamReader
@@ -406,6 +514,24 @@ public sealed class GitProcessRunner
         string currentDirectory
     )
     {
+        return ResolveDefaultGitExecutable(
+            pathVariable,
+            currentDirectory,
+            posixMounts: null,
+            out _
+        );
+    }
+
+    // refusal: on Windows, why the first Git found on PATH was not accepted.
+    internal static string? ResolveDefaultGitExecutable(
+        string? pathVariable,
+        string currentDirectory,
+        PosixMountTable? posixMounts,
+        out string? refusal
+    )
+    {
+        refusal = null;
+
         ArgumentException.ThrowIfNullOrWhiteSpace(currentDirectory);
 
         var executableName = OperatingSystem.IsWindows() ? "git.exe" : "git";
@@ -474,20 +600,36 @@ public sealed class GitProcessRunner
                 continue;
             }
 
-            if (RepositoryControlledPaths.IsInsideAny(fullDirectory, protectedRoots))
+            if (
+                !OperatingSystem.IsWindows()
+                && RepositoryControlledPaths.IsInsideAny(fullDirectory, protectedRoots)
+            )
             {
                 continue;
             }
 
             var candidate = Path.Combine(fullDirectory, executableName);
 
-            if (
-                File.Exists(candidate)
-                && !RepositoryControlledPaths.IsInsideAny(candidate, protectedRoots)
-            )
+            if (!File.Exists(candidate))
+            {
+                continue;
+            }
+
+            // On Windows the same check, with the same environment, as the launch guard.
+            var windowsRefusal = OperatingSystem.IsWindows()
+                ? GetWindowsLocationRefusal(candidate, absoluteCurrentDirectory, posixMounts)
+                : null;
+
+            var trusted = OperatingSystem.IsWindows()
+                ? windowsRefusal is null
+                : !RepositoryControlledPaths.IsInsideAny(candidate, protectedRoots);
+
+            if (trusted)
             {
                 return Path.GetFullPath(candidate);
             }
+
+            refusal ??= windowsRefusal;
         }
 
         return null;
