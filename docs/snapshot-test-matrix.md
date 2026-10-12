@@ -25,7 +25,7 @@ Every mode Git can store, and every kind of object that can appear untracked.
 | Entry | Tracked | Untracked | Notes |
 |---|---|---|---|
 | regular file `100644` | ✅ ChangesWorkingTreeFingerprintWhenContentChanges | ✅ ChangesWorkingTreeFingerprintWhenUntrackedContentChanges | |
-| executable file `100755` | ✅ covered by 5 executable/fileMode tests | ❓ | untracked has no index mode; decide whether the bit counts |
+| executable file `100755` | ✅ covered by 5 executable/fileMode tests | ✅ Linux: BuildAsync_ChangesWorkingTreeIdentityWhenUntrackedExecutableBitChangesOnLinux | Linux: the observer reads the executable bit of an untracked file, and the bit counts in W. Windows: the observer does not read an executable bit and records untracked regular files as `100644`. |
 | empty file | ✅ DistinguishesDeletedAndEmptyTrackedFile | ❓ | |
 | symlink to file `120000` | ✅ tracked symlink tests | ✅ untracked symlink tests | hashes link target text |
 | symlink retargeted, same content | ✅ W changes | ✅ W changes | |
@@ -76,7 +76,7 @@ Snapshot identity must not depend on how the observer is configured.
 | `core.excludesFile` | ✅ FingerprintsDoNotDependOnCoreExcludesFile |
 | `core.fileMode` | ✅ FileModeConfigurationDoesNotChangeExecutableWorkingTreeIdentityOnLinux |
 | `core.symlinks` | ✅ SupportsTrackedSymlinkMaterializedAsRegularFileWhenCoreSymlinksFalse + UsesSameWorkingTreeFingerprintForMaterializedAndNativeTrackedSymlinkOnLinux |
-| `core.ignoreCase` | ❓ |
+| `core.ignoreCase` | ❓ identity independence untested; with `true`, a case-only rename never yields a Snapshot blind to it (see §5) |
 | inherited `GIT_*` repository-local variables | ✅ Invariants/GitEnvironmentInvariantTests + drift test |
 | console code page (e.g. 852) | ✅ CreateProcessStartInfo_PinsRedirectedGitOutputToUtf8 |
 | `core.untrackedCache` | ❓ independent probe pending |
@@ -100,12 +100,12 @@ Snapshot identity must not depend on how the observer is configured.
 | Case | Status | Notes |
 |---|---|---|
 | path with spaces | ❓ in snapshot | runner test exists |
-| path with diacritics (`ž.txt`) | ❓ in snapshot | runner pins UTF-8 |
+| Unicode paths in index (NFC/NFD and supplementary-plane characters) | ✅ IndexGoldenUnicode001_GitFixturePreservesPathsAndProducesExpectedIndexFingerprint | A real Git fixture with NFC and NFD `é` and supplementary-plane names pins the index fingerprint. Unicode paths in W ❓ |
 | path with leading `-` | ❓ | `--` separator is used |
-| thousands of files | ❓ Windows command-line limit risk; reproduction pending | investigate path batching or Git stdin interface; no implementation decision yet |
+| many files (long path list) | ❌ Windows: reproduced, CONSERVATIVE FAILURE | All regular tracked paths, and separately all regular untracked paths, go to one `git hash-object` command line; Windows limits a command line to 32 767 characters. Reproduced manually on 2026-10-12 with Git for Windows 2.55: about 21 200 characters of paths succeed, about 42 400 fail with "Unable to hash tracked working-tree files" and no Snapshot. The limit depends on total path length, not on a file count. Linux `ARG_MAX` not measured. Regression test and fix (batching or `--stdin-paths`) pending as F1; P1.2 cannot be completed before it. |
 | file changes during snapshot | ✅ Linux regression tests | BuildAsync performs two complete observations and compares SchemaVersion, H/I/S/W fingerprints. Detected drift returns a diagnostic without a Snapshot. Coordinated ABA remains a known observation-model limitation. Windows-specific concurrency regression is not yet proven. |
-| filename differing only in case | ❓ | Windows, `core.ignoreCase` |
-| symlink target with invalid UTF-8 bytes (Unix) | ❓ | arbitrary target-byte fidelity not yet proven; current implementation round-trips through .NET `string` + UTF-8 |
+| filename differing only in case | ✅ with `core.ignoreCase=true`, never a Snapshot blind to the rename: BuildAsync_DoesNotLoseCaseOnlyRenamedTrackedFileWhenGitIgnoresCase (all platforms) + BuildAsync_DoesNotLoseCaseOnlyRenamedTrackedFileOnWindows | The tests accept either a refusal ("Case-only path mismatch") or a correctly distinct W. The current implementation refuses. `core.ignoreCase=false` ❓ |
+| symlink target with invalid UTF-8 bytes (Unix) | untracked ✅ never merged: BuildAsync_DoesNotMergeSymlinkTargetsWithDifferentInvalidUtf8OnLinux; tracked ❓ untested | The test accepts either a refusal or a distinct W. The current implementation refuses a lossily decoded target. Tracked symlinks pass through the same check in code, but no test proves it. Arbitrary target-byte fidelity stays unsupported. |
 
 ## 6. Platforms
 
