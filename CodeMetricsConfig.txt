@@ -1,0 +1,6 @@
+CA1501: 5
+CA1502(Method): 25
+CA1502(Type): 100
+CA1505: 20
+CA1506(Method): 40
+CA1506(Type): 80

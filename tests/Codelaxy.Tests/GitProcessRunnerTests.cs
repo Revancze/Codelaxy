@@ -1,0 +1,883 @@
+using System.Diagnostics;
+using System.Globalization;
+using System.Text;
+using Codelaxy.Git;
+
+namespace Codelaxy.Tests;
+
+public class GitProcessRunnerTests
+{
+    private static readonly TimeSpan GitCommandTimeout = TimeSpan.FromSeconds(30);
+
+    [Fact]
+    public async Task RunAsync_CanExecuteGit()
+    {
+        var runner = new GitProcessRunner();
+
+        var result = await runner.RunAsync(Directory.GetCurrentDirectory(), ["--version"]);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(0, result.ExitCode);
+        Assert.StartsWith("git version ", result.StandardOutput);
+        Assert.True(string.IsNullOrWhiteSpace(result.StandardError));
+    }
+
+    [Fact]
+    public void CreateProcessStartInfo_PinsDefaultGitToAbsoluteExecutablePath()
+    {
+        var runner = new GitProcessRunner();
+
+        var startInfo = runner.CreateProcessStartInfo(
+            Directory.GetCurrentDirectory(),
+            ["--version"],
+            readOnly: true
+        );
+
+        Assert.True(
+            Path.IsPathFullyQualified(startInfo.FileName),
+            $"Default Git executable must be an absolute path, but was '{startInfo.FileName}'."
+        );
+
+        Assert.True(
+            File.Exists(startInfo.FileName),
+            $"Resolved Git executable does not exist: '{startInfo.FileName}'."
+        );
+    }
+
+    [Fact]
+    public void ResolveDefaultGitExecutable_IgnoresRelativePathEntries()
+    {
+        var trustedRunner = new GitProcessRunner();
+
+        var trustedStartInfo = trustedRunner.CreateProcessStartInfo(
+            Directory.GetCurrentDirectory(),
+            ["--version"],
+            readOnly: true
+        );
+
+        var trustedGitPath = trustedStartInfo.FileName;
+        var trustedGitDirectory = Path.GetDirectoryName(trustedGitPath);
+
+        Assert.False(string.IsNullOrWhiteSpace(trustedGitDirectory));
+
+        var untrustedDirectory = CreateTemporaryDirectory();
+
+        try
+        {
+            var fakeGitName = OperatingSystem.IsWindows() ? "git.exe" : "git";
+            var fakeGitPath = Path.Combine(untrustedDirectory, fakeGitName);
+
+            File.WriteAllText(fakeGitPath, "not really git");
+
+            var pathVariable = string.Join(
+                Path.PathSeparator,
+                ".",
+                "relative-tools",
+                trustedGitDirectory
+            );
+
+            var resolvedPath = GitProcessRunner.ResolveDefaultGitExecutable(
+                pathVariable,
+                untrustedDirectory
+            );
+
+            Assert.NotNull(resolvedPath);
+
+            Assert.Equal(Path.GetFullPath(trustedGitPath), Path.GetFullPath(resolvedPath));
+
+            Assert.NotEqual(Path.GetFullPath(fakeGitPath), Path.GetFullPath(resolvedPath));
+        }
+        finally
+        {
+            Directory.Delete(untrustedDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ResolveDefaultGitExecutable_IgnoresCurrentDirectoryDescendantPathEntries()
+    {
+        var trustedRunner = new GitProcessRunner();
+
+        var trustedStartInfo = trustedRunner.CreateProcessStartInfo(
+            Directory.GetCurrentDirectory(),
+            ["--version"],
+            readOnly: true
+        );
+
+        var trustedGitPath = trustedStartInfo.FileName;
+        var trustedGitDirectory = Path.GetDirectoryName(trustedGitPath);
+
+        Assert.False(string.IsNullOrWhiteSpace(trustedGitDirectory));
+
+        var untrustedDirectory = CreateTemporaryDirectory();
+
+        try
+        {
+            // The start directory is the root of an untrusted worktree.
+            Directory.CreateDirectory(Path.Combine(untrustedDirectory, ".git"));
+
+            var projectBinDirectory = Path.Combine(untrustedDirectory, "bin");
+            Directory.CreateDirectory(projectBinDirectory);
+
+            var fakeGitName = OperatingSystem.IsWindows() ? "git.exe" : "git";
+            var fakeGitPath = Path.Combine(projectBinDirectory, fakeGitName);
+
+            File.WriteAllText(fakeGitPath, "not really git");
+
+            var pathVariable = string.Join(
+                Path.PathSeparator,
+                projectBinDirectory,
+                trustedGitDirectory
+            );
+
+            var resolvedPath = GitProcessRunner.ResolveDefaultGitExecutable(
+                pathVariable,
+                untrustedDirectory
+            );
+
+            Assert.NotNull(resolvedPath);
+
+            Assert.Equal(Path.GetFullPath(trustedGitPath), Path.GetFullPath(resolvedPath));
+
+            Assert.NotEqual(Path.GetFullPath(fakeGitPath), Path.GetFullPath(resolvedPath));
+        }
+        finally
+        {
+            Directory.Delete(untrustedDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ResolveDefaultGitExecutable_IgnoresWorktreePathEntriesWhenStartedFromSubdirectory()
+    {
+        var trustedRunner = new GitProcessRunner();
+
+        var trustedStartInfo = trustedRunner.CreateProcessStartInfo(
+            Directory.GetCurrentDirectory(),
+            ["--version"],
+            readOnly: true
+        );
+
+        var trustedGitPath = trustedStartInfo.FileName;
+        var trustedGitDirectory = Path.GetDirectoryName(trustedGitPath);
+
+        Assert.False(string.IsNullOrWhiteSpace(trustedGitDirectory));
+
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(repositoryPath, ".git"));
+
+            var startDirectory = Path.Combine(repositoryPath, "src", "nested");
+            Directory.CreateDirectory(startDirectory);
+
+            var projectBinDirectory = Path.Combine(repositoryPath, "bin");
+            Directory.CreateDirectory(projectBinDirectory);
+
+            var fakeGitName = OperatingSystem.IsWindows() ? "git.exe" : "git";
+            var fakeGitPath = Path.Combine(projectBinDirectory, fakeGitName);
+
+            File.WriteAllText(fakeGitPath, "not really git");
+
+            var pathVariable = string.Join(
+                Path.PathSeparator,
+                projectBinDirectory,
+                trustedGitDirectory
+            );
+
+            var resolvedPath = GitProcessRunner.ResolveDefaultGitExecutable(
+                pathVariable,
+                startDirectory
+            );
+
+            Assert.NotNull(resolvedPath);
+
+            Assert.Equal(Path.GetFullPath(trustedGitPath), Path.GetFullPath(resolvedPath));
+
+            Assert.NotEqual(Path.GetFullPath(fakeGitPath), Path.GetFullPath(resolvedPath));
+        }
+        finally
+        {
+            Directory.Delete(repositoryPath, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task RunAsync_ReturnsLaunchFailureWhenDefaultGitCannotBeResolved()
+    {
+        var runner = new GitProcessRunner(string.Empty, Directory.GetCurrentDirectory());
+
+        var result = await runner.RunAsync(Directory.GetCurrentDirectory(), ["--version"]);
+
+        Assert.False(result.Started);
+        Assert.False(result.Succeeded);
+        Assert.Null(result.ExitCode);
+        Assert.Equal(GitCommandFailureKind.LaunchFailure, result.FailureKind);
+
+        Assert.Contains(
+            "Unable to locate Git executable",
+            result.StandardError,
+            StringComparison.Ordinal
+        );
+    }
+
+    [Fact]
+    public async Task RunAsync_UsesRequestedWorkingDirectory()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            var initResult = await runner.RunAsync(repositoryPath, ["init"]);
+
+            Assert.True(initResult.Succeeded);
+
+            var nestedPath = Path.Combine(repositoryPath, "directory with spaces");
+
+            Directory.CreateDirectory(nestedPath);
+
+            var result = await runner.RunAsync(nestedPath, ["rev-parse", "--show-prefix"]);
+
+            Assert.True(result.Succeeded);
+
+            var actualPrefix = result.StandardOutput.Trim().Replace('\\', '/');
+
+            Assert.Equal("directory with spaces/", actualPrefix);
+        }
+        finally
+        {
+            Directory.Delete(repositoryPath, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CreateProcessStartInfo_PinsRedirectedGitOutputToUtf8()
+    {
+        var runner = new GitProcessRunner();
+
+        var startInfo = runner.CreateProcessStartInfo(
+            Environment.CurrentDirectory,
+            ["status", "--short"],
+            readOnly: true
+        );
+
+        Assert.All(
+            new[] { startInfo.StandardOutputEncoding, startInfo.StandardErrorEncoding },
+            encoding => Assert.Equal(System.Text.Encoding.UTF8.CodePage, encoding?.CodePage)
+        );
+    }
+
+    [Fact]
+    public void CreateProcessStartInfo_DisablesInteractiveInput()
+    {
+        var runner = new GitProcessRunner();
+
+        var startInfo = runner.CreateProcessStartInfo(
+            Environment.CurrentDirectory,
+            ["status", "--short"],
+            readOnly: true
+        );
+
+        Assert.True(startInfo.RedirectStandardInput);
+
+        Assert.Equal("0", startInfo.Environment["GIT_TERMINAL_PROMPT"]);
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_ClosesStandardInput()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var helperPath = GetProcessTestHelperPath();
+
+        Assert.True(File.Exists(helperPath), $"Process test helper not found: {helperPath}");
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            [helperPath, "read-stdin"],
+            TimeSpan.FromSeconds(5)
+        );
+
+        Assert.True(result.Succeeded, result.StandardError);
+
+        Assert.Equal("EOF", result.StandardOutput);
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_DisablesTerminalPrompt()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var helperPath = GetProcessTestHelperPath();
+
+        Assert.True(File.Exists(helperPath), $"Process test helper not found: {helperPath}");
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            [helperPath, "print-env", "GIT_TERMINAL_PROMPT"],
+            TimeSpan.FromSeconds(5)
+        );
+
+        Assert.True(result.Succeeded, result.StandardError);
+
+        Assert.Equal("0", result.StandardOutput);
+    }
+
+    [Fact]
+    public async Task RunAsync_PreservesArgumentContainingSpaces()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            var initResult = await runner.RunAsync(repositoryPath, ["init"]);
+
+            Assert.True(initResult.Succeeded);
+
+            var setResult = await runner.RunAsync(
+                repositoryPath,
+                ["config", "--local", "codelaxy.test", "value with spaces"]
+            );
+
+            Assert.True(setResult.Succeeded);
+
+            var getResult = await runner.RunAsync(
+                repositoryPath,
+                ["config", "--local", "--get", "codelaxy.test"]
+            );
+
+            Assert.True(getResult.Succeeded);
+
+            Assert.Equal("value with spaces", getResult.StandardOutput.Trim());
+        }
+        finally
+        {
+            Directory.Delete(repositoryPath, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task RunAsync_ReturnsFailureWithoutThrowing()
+    {
+        var runner = new GitProcessRunner();
+
+        var result = await runner.RunAsync(
+            Directory.GetCurrentDirectory(),
+            ["codelaxy-command-that-does-not-exist"]
+        );
+
+        Assert.False(result.Succeeded);
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.False(string.IsNullOrWhiteSpace(result.StandardError));
+    }
+
+    [Fact]
+    public async Task RunAsync_ReturnsLaunchFailureWhenGitCannotBeStarted()
+    {
+        var runner = new GitProcessRunner("codelaxy-git-executable-that-does-not-exist");
+
+        var result = await runner.RunAsync(Directory.GetCurrentDirectory(), ["--version"]);
+
+        Assert.False(result.Started);
+        Assert.Null(result.ExitCode);
+        Assert.Equal(GitCommandFailureKind.LaunchFailure, result.FailureKind);
+        Assert.False(result.Succeeded);
+    }
+
+    [Fact]
+    public async Task RunAsync_DoesNotStartProcessWhenAlreadyCancelled()
+    {
+        var runner = new GitProcessRunner("codelaxy-git-executable-that-does-not-exist");
+
+        using var cancellation = new CancellationTokenSource();
+
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            runner.RunAsync(Directory.GetCurrentDirectory(), ["--version"], cancellation.Token)
+        );
+    }
+
+    [Fact]
+    public async Task RunAsync_KillsStartedProcessWhenCancelled()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var helperPath = GetProcessTestHelperPath();
+
+        Assert.True(File.Exists(helperPath), $"Process test helper not found: {helperPath}");
+
+        var pidFile = Path.Combine(Path.GetTempPath(), $"Codelaxy Process {Guid.NewGuid():N}.pid");
+
+        using var cancellation = new CancellationTokenSource();
+
+        Process? helperProcess = null;
+
+        try
+        {
+            var runTask = runner.RunAsync(
+                Directory.GetCurrentDirectory(),
+                [helperPath, pidFile],
+                cancellation.Token
+            );
+
+            using var startTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+            while (!File.Exists(pidFile))
+            {
+                await Task.Delay(20, startTimeout.Token);
+            }
+
+            var processId = int.Parse(
+                await File.ReadAllTextAsync(pidFile, startTimeout.Token),
+                CultureInfo.InvariantCulture
+            );
+
+            helperProcess = Process.GetProcessById(processId);
+
+            // Open the process handle early to reduce PID reuse risks.
+            _ = helperProcess.Handle;
+
+            // Bound the wait for cancellation callbacks.
+            await cancellation
+                .CancelAsync()
+                .WaitAsync(TimeSpan.FromSeconds(5), CancellationToken.None);
+
+            // The runner must complete after cancellation.
+            // Do not use cancellation.Token: it is already cancelled.
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+                runTask.WaitAsync(TimeSpan.FromSeconds(10), CancellationToken.None)
+            );
+
+            // Verify that the actual process has terminated.
+            // This deadline is independent of the cancelled test token.
+            using var exitDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+
+            await helperProcess.WaitForExitAsync(exitDeadline.Token);
+
+            Assert.True(helperProcess.HasExited);
+        }
+        finally
+        {
+            await CleanupHelperProcessAsync(cancellation, helperProcess, pidFile);
+        }
+    }
+
+    [Fact]
+    public async Task RunAsync_ReportsTimeoutAndKillsProcess()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var helperPath = GetProcessTestHelperPath();
+
+        Assert.True(File.Exists(helperPath), $"Process test helper not found: {helperPath}");
+
+        var pidFile = Path.Combine(Path.GetTempPath(), $"Codelaxy Timeout {Guid.NewGuid():N}.pid");
+
+        Process? helperProcess = null;
+
+        try
+        {
+            var runTask = runner.RunAsync(
+                Directory.GetCurrentDirectory(),
+                [helperPath, pidFile],
+                TimeSpan.FromSeconds(2)
+            );
+
+            using var startTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+            var processId = await WaitForProcessIdAsync(pidFile, startTimeout.Token);
+
+            try
+            {
+                helperProcess = Process.GetProcessById(processId);
+
+                // Open the process handle early to reduce PID reuse risks.
+                _ = helperProcess.Handle;
+            }
+            catch (ArgumentException)
+            {
+                // The process may already have exited.
+            }
+
+            var result = await runTask.WaitAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
+
+            Assert.Equal(GitCommandFailureKind.Timeout, result.FailureKind);
+
+            if (helperProcess is not null)
+            {
+                using var exitDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+                await helperProcess.WaitForExitAsync(exitDeadline.Token);
+
+                Assert.True(helperProcess.HasExited);
+            }
+        }
+        finally
+        {
+            await CleanupTimedOutHelperProcessAsync(helperProcess, pidFile);
+        }
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_ReportsTimeoutAndKillsProcess()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var helperPath = GetProcessTestHelperPath();
+
+        Assert.True(File.Exists(helperPath), $"Process test helper not found: {helperPath}");
+
+        var pidFile = Path.Combine(
+            Path.GetTempPath(),
+            $"Codelaxy ReadOnly Timeout {Guid.NewGuid():N}.pid"
+        );
+
+        Process? helperProcess = null;
+
+        try
+        {
+            var runTask = runner.RunReadOnlyAsync(
+                Directory.GetCurrentDirectory(),
+                [helperPath, pidFile],
+                TimeSpan.FromSeconds(2)
+            );
+
+            using var startTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+            var processId = await WaitForProcessIdAsync(pidFile, startTimeout.Token);
+
+            try
+            {
+                helperProcess = Process.GetProcessById(processId);
+
+                // Open the process handle early to reduce PID reuse risks.
+                _ = helperProcess.Handle;
+            }
+            catch (ArgumentException)
+            {
+                // The process may already have exited.
+            }
+
+            var result = await runTask.WaitAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
+
+            Assert.Equal(GitCommandFailureKind.Timeout, result.FailureKind);
+
+            if (helperProcess is not null)
+            {
+                using var exitDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+                await helperProcess.WaitForExitAsync(exitDeadline.Token);
+
+                Assert.True(helperProcess.HasExited);
+            }
+        }
+        finally
+        {
+            await CleanupTimedOutHelperProcessAsync(helperProcess, pidFile);
+        }
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_WritesStandardInputPayloadAndClosesInput()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            var initResult = await runner.RunAsync(
+                repositoryPath,
+                ["init", "--object-format=sha1"]
+            );
+
+            Assert.True(initResult.Succeeded, initResult.StandardError);
+
+            var result = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["hash-object", "--stdin"],
+                TimeSpan.FromSeconds(30),
+                Encoding.UTF8.GetBytes("codelaxy stdin payload\n")
+            );
+
+            Assert.True(result.Succeeded, result.StandardError);
+
+            Assert.Equal("a2e78ef8f87fd57cbb1064b20dbad30499be7d00", result.StandardOutput.Trim());
+        }
+        finally
+        {
+            Directory.Delete(repositoryPath, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void RunReadOnlyAsync_RequiresTimeout()
+    {
+        var methods = typeof(GitProcessRunner)
+            .GetMethods()
+            .Where(method => method.Name == nameof(GitProcessRunner.RunReadOnlyAsync))
+            .ToArray();
+
+        Assert.NotEmpty(methods);
+
+        foreach (var method in methods)
+        {
+            var parameters = method.GetParameters();
+
+            var timeoutParameter = Assert.Single(
+                parameters,
+                parameter => parameter.ParameterType == typeof(TimeSpan)
+            );
+
+            Assert.False(timeoutParameter.HasDefaultValue);
+        }
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_CanExecuteGit()
+    {
+        var runner = new GitProcessRunner();
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            ["--version"],
+            GitCommandTimeout
+        );
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(0, result.ExitCode);
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_DisablesOptionalGitLocks()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var helperPath = GetProcessTestHelperPath();
+
+        Assert.True(File.Exists(helperPath), $"Process test helper not found: {helperPath}");
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            [helperPath, "print-env", "GIT_OPTIONAL_LOCKS"],
+            GitCommandTimeout
+        );
+
+        Assert.True(result.Succeeded, result.StandardError);
+
+        Assert.Equal("0", result.StandardOutput);
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_ReportsInvalidOutputForNonUtf8StandardOutput()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            ["exec", GetProcessTestHelperPath(), "emit-stdout-hex", "61FF62"],
+            GitCommandTimeout
+        );
+
+        Assert.True(result.Started);
+        Assert.Equal(0, result.ExitCode);
+        Assert.False(result.Succeeded);
+        Assert.NotEqual(GitCommandFailureKind.None, result.FailureKind);
+
+        Assert.Contains("not valid UTF-8", result.StandardError, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_DrainsLargeInvalidOutputWithoutTimeout()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            ["exec", GetProcessTestHelperPath(), "emit-large-invalid-stdout"],
+            TimeSpan.FromSeconds(15)
+        );
+
+        Assert.True(result.Started);
+        Assert.Equal(0, result.ExitCode);
+
+        Assert.NotEqual(GitCommandFailureKind.Timeout, result.FailureKind);
+        Assert.False(result.Succeeded);
+        Assert.NotEqual(GitCommandFailureKind.None, result.FailureKind);
+
+        Assert.Contains("not valid UTF-8", result.StandardError, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_KeepsLeadingByteOrderMarkInStandardOutput()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            ["exec", GetProcessTestHelperPath(), "emit-stdout-hex", "EFBBBF78"],
+            GitCommandTimeout
+        );
+
+        Assert.True(result.Succeeded, result.StandardError);
+        Assert.Equal("\uFEFFx", result.StandardOutput);
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_KeepsDiagnosticForNonUtf8StandardError()
+    {
+        var runner = new GitProcessRunner("dotnet");
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            ["exec", GetProcessTestHelperPath(), "emit-stderr-hex", "FF"],
+            GitCommandTimeout
+        );
+
+        Assert.True(result.Started);
+        Assert.Equal(1, result.ExitCode);
+        Assert.False(result.Succeeded);
+        Assert.Equal(GitCommandFailureKind.None, result.FailureKind);
+
+        Assert.Contains('\uFFFD', result.StandardError);
+    }
+
+    private static async Task CleanupHelperProcessAsync(
+        CancellationTokenSource cancellation,
+        Process? process,
+        string pidFile
+    )
+    {
+        try
+        {
+            try
+            {
+                await cancellation
+                    .CancelAsync()
+                    .WaitAsync(TimeSpan.FromSeconds(5), CancellationToken.None);
+            }
+            finally
+            {
+                await StopHelperProcessAsync(process);
+            }
+        }
+        finally
+        {
+            try
+            {
+                process?.Dispose();
+            }
+            finally
+            {
+                File.Delete(pidFile);
+            }
+        }
+    }
+
+    private static async Task CleanupTimedOutHelperProcessAsync(Process? process, string pidFile)
+    {
+        try
+        {
+            await StopHelperProcessAsync(process);
+        }
+        finally
+        {
+            try
+            {
+                process?.Dispose();
+            }
+            finally
+            {
+                File.Delete(pidFile);
+            }
+        }
+    }
+
+    private static async Task StopHelperProcessAsync(Process? process)
+    {
+        if (process is null || process.HasExited)
+        {
+            return;
+        }
+
+        try
+        {
+            process.Kill(entireProcessTree: true);
+        }
+        catch (InvalidOperationException) when (process.HasExited)
+        {
+            // Process exited between HasExited and Kill.
+        }
+
+        using var cleanupDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+        await process.WaitForExitAsync(cleanupDeadline.Token);
+    }
+
+    private static string GetProcessTestHelperPath()
+    {
+        var testOutputDirectory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        var targetFramework = testOutputDirectory.Name;
+
+        var configurationDirectory = testOutputDirectory.Parent!;
+
+        var hostDirectory = configurationDirectory.Parent!;
+
+        var binDirectory = hostDirectory.Parent!;
+
+        var testsProjectDirectory = binDirectory.Parent!;
+
+        var testsDirectory = testsProjectDirectory.Parent!;
+
+        return Path.Combine(
+            testsDirectory.FullName,
+            "Codelaxy.ProcessTestHelper",
+            "bin",
+            hostDirectory.Name,
+            configurationDirectory.Name,
+            targetFramework,
+            "Codelaxy.ProcessTestHelper.dll"
+        );
+    }
+
+    private static async Task<int> WaitForProcessIdAsync(
+        string pidFile,
+        CancellationToken cancellationToken
+    )
+    {
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (File.Exists(pidFile))
+            {
+                try
+                {
+                    var contents = await File.ReadAllTextAsync(pidFile, cancellationToken);
+
+                    return int.Parse(contents, CultureInfo.InvariantCulture);
+                }
+                catch (IOException)
+                {
+                    // The helper has published the PID file,
+                    // but Windows may still briefly hold it.
+                }
+            }
+
+            await Task.Delay(20, cancellationToken);
+        }
+    }
+
+    private static string CreateTemporaryDirectory()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"Codelaxy Git Tests {Guid.NewGuid():N}");
+
+        Directory.CreateDirectory(path);
+
+        return path;
+    }
+}

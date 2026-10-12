@@ -1,4 +1,4 @@
-﻿namespace Codelaxy.Tests;
+namespace Codelaxy.Tests;
 
 public class SolutionSmokeTests
 {

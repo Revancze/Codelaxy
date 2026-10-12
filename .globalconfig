@@ -1,0 +1,281 @@
+# ============================================================
+#  Codelaxy – Roslyn global analyzer config
+#  Platí pro celý projekt bez ohledu na cestu k souboru.
+#  SDK ho najde sám (.globalconfig v kořeni repa).
+#  Pravidla v .editorconfig (sekce podle cest) mají přednost,
+#  takže výjimky pro testy zůstávají v .editorconfig.
+#
+#  Zásada: každou věc hlídá právě jedno pravidlo. Duplicitní
+#  pravidla ostatních analyzérů jsou níže vypnutá s odkazem
+#  na pravidlo, které je „vlastní“.
+# ============================================================
+is_global = true
+global_level = 100
+
+# ============================================================
+#  S – Single Responsibility
+#  (prahy CA15xx jsou v CodeMetricsConfig.txt)
+# ============================================================
+# moc hluboká dědičnost
+dotnet_diagnostic.CA1501.severity = warning
+# cyklomatická složitost (vlastník)
+dotnet_diagnostic.CA1502.severity = warning
+# nízký index udržovatelnosti
+dotnet_diagnostic.CA1505.severity = warning
+# provázanost tříd – coupling (vlastník)
+dotnet_diagnostic.CA1506.severity = warning
+# název typu koliduje s namespace
+dotnet_diagnostic.CA1724.severity = warning
+# kognitivní složitost
+dotnet_diagnostic.S3776.severity = warning
+# třída má moc metod
+dotnet_diagnostic.S1448.severity = warning
+# soubor má moc řádků
+dotnet_diagnostic.S104.severity = warning
+# moc parametrů (často = víc odpovědností)
+dotnet_diagnostic.S107.severity = warning
+# moc hluboké vnoření if/for/...
+dotnet_diagnostic.S134.severity = warning
+MA0051.maximum_lines_per_method = 60
+MA0051.maximum_statements_per_method = 40
+# metoda moc dlouhá (vlastník)
+dotnet_diagnostic.MA0051.severity = warning
+# název souboru = název typu (jeden typ na soubor)
+dotnet_diagnostic.MA0048.severity = warning
+
+# ============================================================
+#  O – Open/Closed
+# ============================================================
+# zapečeť interní typy, které nikdo nedědí (vlastník)
+dotnet_diagnostic.CA1852.severity = warning
+# čistě statické třídy mají být static (vlastník)
+dotnet_diagnostic.CA1052.severity = warning
+# žádná viditelná instanční pole
+dotnet_diagnostic.CA1051.severity = warning
+# žádná ne-konstantní statická pole
+dotnet_diagnostic.CA2211.severity = warning
+# abstraktní třída bez abstraktních členů → rozhraní
+dotnet_diagnostic.S1694.severity = warning
+# abstraktní třída s public konstruktorem
+dotnet_diagnostic.S3442.severity = warning
+
+# ============================================================
+#  L – Liskov Substitution
+# ============================================================
+# virtuální volání v konstruktoru (vlastník)
+dotnet_diagnostic.CA2214.severity = warning
+# neschovávej metody předka
+dotnet_diagnostic.CA1061.severity = warning
+# metody rozhraní dostupné i potomkům
+dotnet_diagnostic.CA1033.severity = warning
+# Equals + GetHashCode spolu (vlastník)
+dotnet_diagnostic.CA2218.severity = warning
+# nevyhazuj výjimky z nečekaných míst
+dotnet_diagnostic.CA1065.severity = warning
+# IEquatable<T> v nezapečetěné třídě
+dotnet_diagnostic.S4035.severity = warning
+
+# ============================================================
+#  I – Interface Segregation
+# ============================================================
+# prázdná (marker) rozhraní
+dotnet_diagnostic.CA1040.severity = warning
+# kolekce mají implementovat generické rozhraní
+dotnet_diagnostic.CA1010.severity = warning
+# nepoužité generické parametry
+dotnet_diagnostic.S2326.severity = warning
+# moc generických parametrů
+dotnet_diagnostic.S2436.severity = warning
+# rozhraní IJmeno, generika TJmeno (vlastník)
+dotnet_diagnostic.CA1715.severity = warning
+
+# ============================================================
+#  D – Dependency Inversion
+# ============================================================
+# radí nahradit rozhraní konkrétním typem = proti DIP
+dotnet_diagnostic.CA1859.severity = none
+# validuj argumenty veřejných metod
+dotnet_diagnostic.CA1062.severity = warning
+# třídy vytvářené přes DI by hlásil falešně
+dotnet_diagnostic.CA1812.severity = none
+# veřejné API vrací abstrakci, ne List<T>
+dotnet_diagnostic.MA0016.severity = warning
+
+# ============================================================
+#  Správnost, zdroje, kultura
+# ============================================================
+# vlastníš IDisposable → buď IDisposable
+dotnet_diagnostic.CA1001.severity = warning
+# dispose před ztrátou reference
+dotnet_diagnostic.CA2000.severity = warning
+# nechytej obecnou Exception (vlastník)
+dotnet_diagnostic.CA1031.severity = warning
+# IFormatProvider (vlastník)
+dotnet_diagnostic.CA1305.severity = warning
+# StringComparison (vlastník)
+dotnet_diagnostic.CA1307.severity = warning
+# člen může být static (vlastník)
+dotnet_diagnostic.CA1822.severity = warning
+# předávej CancellationToken, existuje-li overload (vlastník)
+dotnet_diagnostic.MA0040.severity = warning
+# synchronní blokování v async metodě (vlastník)
+dotnet_diagnostic.CA1849.severity = warning
+# kulturně závislý ToString v interpolaci (INV-3)
+dotnet_diagnostic.MA0076.severity = warning
+# raw string s implicitním koncem řádku (LF vs CRLF)
+dotnet_diagnostic.MA0136.severity = warning
+# zbytečný interpolovaný řetězec (vlastník)
+dotnet_diagnostic.RCS1214.severity = warning
+# await using pro IAsyncDisposable
+dotnet_diagnostic.RCS1261.severity = warning
+# Contracts je veřejné API, nechceme vše internal
+dotnet_diagnostic.CA1515.severity = none
+# ConfigureAwait – zbytečný šum v CLI aplikaci
+dotnet_diagnostic.CA2007.severity = none
+# LoggerMessage delegáti
+dotnet_diagnostic.CA1848.severity = suggestion
+# explicitní comparer u string kolekcí (identita cest!)
+dotnet_diagnostic.MA0002.severity = warning
+# regex bez timeoutu (ReDoS)
+dotnet_diagnostic.MA0009.severity = warning
+# TODO komentáře (vlastník)
+dotnet_diagnostic.MA0026.severity = suggestion
+# zakomentovaný kód
+dotnet_diagnostic.S125.severity = warning
+# read-only auto vlastnost
+dotnet_diagnostic.RCS1170.severity = warning
+# vracet Task, ne null
+dotnet_diagnostic.RCS1210.severity = warning
+
+# ============================================================
+#  Bezpečnost
+#  CA bezpečnostní pravidla zapíná AnalysisLevel=latest-all.
+#  Sonar hotspoty nejsou ve výchozím profilu, zapínáme je ručně.
+# ============================================================
+# zakázané API z BannedSymbols.txt
+dotnet_diagnostic.RS0030.severity = warning
+# spuštění procesu přes PATH (podvržený git)
+dotnet_diagnostic.S4036.severity = warning
+# příliš volná práva souborů
+dotnet_diagnostic.S2612.severity = warning
+# veřejně zapisovatelný adresář (/tmp)
+dotnet_diagnostic.S5443.severity = warning
+# nebezpečný dočasný soubor (GetTempFileName)
+dotnet_diagnostic.S5445.severity = warning
+# rozbalování archivů (zip bomb)
+dotnet_diagnostic.S5042.severity = warning
+# hesla v kódu
+dotnet_diagnostic.S2068.severity = warning
+# tajemství v kódu
+dotnet_diagnostic.S6418.severity = warning
+# natvrdo IP adresa
+dotnet_diagnostic.S1313.severity = warning
+# nešifrovaný protokol (http, ftp)
+dotnet_diagnostic.S5332.severity = warning
+# ladicí funkce v produkci
+dotnet_diagnostic.S4507.severity = warning
+# slabý TLS
+dotnet_diagnostic.S4423.severity = warning
+# vypnutá validace certifikátu
+dotnet_diagnostic.S4830.severity = warning
+# neomezená deserializace typů
+dotnet_diagnostic.S5773.severity = warning
+
+# ---------- Nullable (Directory.Build.props je navíc povyšuje na chyby) ----------
+dotnet_diagnostic.CS8600.severity = warning
+dotnet_diagnostic.CS8602.severity = warning
+dotnet_diagnostic.CS8603.severity = warning
+dotnet_diagnostic.CS8604.severity = warning
+dotnet_diagnostic.CS8618.severity = warning
+
+# ============================================================
+#  Vypnuté duplicity – vlastník je uveden za šipkou
+# ============================================================
+# cyklomatická složitost → CA1502
+dotnet_diagnostic.S1541.severity = none
+# coupling → CA1506
+dotnet_diagnostic.S1200.severity = none
+# délka metody → MA0051
+dotnet_diagnostic.S138.severity = none
+# zapečetění → CA1852
+dotnet_diagnostic.MA0053.severity = none
+# statická třída → CA1052
+dotnet_diagnostic.RCS1102.severity = none
+# virtuální volání v konstruktoru → CA2214
+dotnet_diagnostic.S1699.severity = none
+# Equals/GetHashCode → CA2218, CS0659
+dotnet_diagnostic.S1206.severity = none
+# nepoužitý privátní člen → IDE0051/IDE0052
+dotnet_diagnostic.S1144.severity = none
+# nepoužitý člen → IDE0051/IDE0052
+dotnet_diagnostic.RCS1213.severity = none
+# nepoužitý parametr → IDE0060
+dotnet_diagnostic.S1172.severity = none
+# nepoužitý parametr → IDE0060
+dotnet_diagnostic.RCS1163.severity = none
+# readonly pole → IDE0044
+dotnet_diagnostic.RCS1169.severity = none
+# může být static → CA1822
+dotnet_diagnostic.S2325.severity = none
+# prázdný catch na Exception → CA1031 + S108
+dotnet_diagnostic.RCS1075.severity = none
+# spolknutá výjimka → CA1031 + S108
+dotnet_diagnostic.S2486.severity = none
+# nepřiřazené pole → CS0649
+dotnet_diagnostic.S3459.severity = none
+# StringComparison → CA1307
+dotnet_diagnostic.RCS1155.severity = none
+# StringComparison → CA1307
+dotnet_diagnostic.MA0074.severity = none
+# IFormatProvider → CA1305
+dotnet_diagnostic.MA0011.severity = none
+# CancellationToken → MA0040
+dotnet_diagnostic.S8949.severity = none
+# CancellationToken → MA0040
+dotnet_diagnostic.CA2016.severity = none
+# synchronní blokování → CA1849
+dotnet_diagnostic.S6966.severity = none
+# synchronní blokování → CA1849
+dotnet_diagnostic.MA0042.severity = none
+# zbytečná interpolace → RCS1214
+dotnet_diagnostic.MA0184.severity = none
+# StringComparison → CA1307
+dotnet_diagnostic.MA0001.severity = none
+# může být static → CA1822
+dotnet_diagnostic.MA0038.severity = none
+# List<T> ve veřejném API → MA0016
+dotnet_diagnostic.CA1002.severity = none
+# regex timeout → MA0009
+dotnet_diagnostic.S6444.severity = none
+# slabý hash → CA5350/CA5351
+dotnet_diagnostic.S4790.severity = none
+# nekryptografický Random → CA5394
+dotnet_diagnostic.S2245.severity = none
+# ToLower/ToUpper bez kultury → CA1304
+dotnet_diagnostic.CA1311.severity = none
+# TODO → MA0026
+dotnet_diagnostic.S1135.severity = none
+# pojmenování typů → IDE1006 + CA1715
+dotnet_diagnostic.S101.severity = none
+# ConfigureAwait – stejně jako CA2007
+dotnet_diagnostic.MA0004.severity = none
+# ConfigureAwait – stejně jako CA2007
+dotnet_diagnostic.RCS1090.severity = none
+# Async suffix → naming rule v .editorconfig
+dotnet_diagnostic.RCS1046.severity = none
+# == mezi stringy je v C# vždy ordinální; pro identitu cest je to správně a čitelné.
+dotnet_diagnostic.MA0006.severity = none
+
+# ============================================================
+#  Šum z AnalysisLevel=latest-all
+# ============================================================
+# lokalizace literálů – CLI se nelokalizuje
+dotnet_diagnostic.CA1303.severity = none
+# ToUpperInvariant místo Lower – hex otisky jsou záměrně malými písmeny
+dotnet_diagnostic.CA1308.severity = none
+
+# ============================================================
+#  Roslynator – volby (platí jen pro pravidla, která jsou zapnutá)
+# ============================================================
+roslynator_accessibility_modifiers = explicit
+roslynator_use_var = when_type_is_obvious

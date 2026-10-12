@@ -1,0 +1,79 @@
+<Project>
+  <!-- ==========================================================================
+       Výstupy podle hostitelského OS: Windows a WSL/Linux nad stejným stromem
+       si nepřepisují bin/ a obj/.
+       ========================================================================== -->
+  <PropertyGroup>
+    <CodelaxyHost Condition="'$(OS)' == 'Windows_NT'">windows</CodelaxyHost>
+    <CodelaxyHost Condition="'$(OS)' != 'Windows_NT'">linux</CodelaxyHost>
+
+    <BaseIntermediateOutputPath>obj/$(CodelaxyHost)/</BaseIntermediateOutputPath>
+    <BaseOutputPath>bin/$(CodelaxyHost)/</BaseOutputPath>
+
+    <DefaultItemExcludesInProjectFolder>
+      $(DefaultItemExcludesInProjectFolder);obj/**;bin/**
+    </DefaultItemExcludesInProjectFolder>
+  </PropertyGroup>
+
+  <!-- ==========================================================================
+       Kompilátor a analýza kódu.
+       Závažnosti pravidel: .globalconfig (celé repo), výjimky podle cest a
+       styl/pojmenování: .editorconfig. Prahy metrik: CodeMetricsConfig.txt.
+       Zakázaná API: BannedSymbols.txt.
+       ========================================================================== -->
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <!-- Nullable varování jsou chyby (repo je na nich dnes čisté). -->
+    <WarningsAsErrors>$(WarningsAsErrors);nullable</WarningsAsErrors>
+
+    <!-- Přetečení v aritmetice vyhodí výjimku místo tichého přetočení (délkové prefixy, offsety). -->
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <!-- Přísnější kontroly kompilátoru, které výchozí režim kvůli kompatibilitě nehlásí. -->
+    <Features>$(Features);strict</Features>
+
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <!-- Všechna CA pravidla; šumivá jsou vypnutá v .globalconfig. -->
+    <AnalysisLevel>latest-all</AnalysisLevel>
+    <!-- Aby se IDE* pravidla z .editorconfig hlásila i při dotnet build -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- Nutné pro IDE0005 (nepoužité usingy) v buildu -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <!-- Až budeš chtít tvrdý režim: -->
+    <!-- <TreatWarningsAsErrors>true</TreatWarningsAsErrors> -->
+  </PropertyGroup>
+
+  <!-- ==========================================================================
+       Dodavatelský řetězec (NuGet).
+       ========================================================================== -->
+  <PropertyGroup>
+    <!-- Audit zranitelností i tranzitivních balíčků; high/critical shodí build. -->
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>low</NuGetAuditLevel>
+    <WarningsAsErrors>$(WarningsAsErrors);NU1903;NU1904</WarningsAsErrors>
+    <!-- packages.lock.json: přesné verze a hashe balíčků (soubory se commitují). -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <!-- CI (GitHub Actions nastavuje CI=true). -->
+  <PropertyGroup Condition="'$(CI)' == 'true'">
+    <!-- Restore se nesmí odchýlit od lock souborů. -->
+    <RestoreLockedMode>true</RestoreLockedMode>
+    <!-- Deterministické cesty v PDB. -->
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)CodeMetricsConfig.txt" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)BannedSymbols.txt" />
+  </ItemGroup>
+
+  <!-- Analyzéry konfigurované v .globalconfig. Jen build-time, nešíří se dál. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" PrivateAssets="all" />
+    <PackageReference Include="Meziantou.Analyzer" Version="3.0.296" PrivateAssets="all" />
+    <PackageReference Include="Roslynator.Analyzers" Version="5.0.1" PrivateAssets="all" />
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.35.0.4138" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

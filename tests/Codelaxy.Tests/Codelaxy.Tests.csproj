@@ -19,9 +19,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Codelaxy.Contracts\Codelaxy.Contracts.csproj" />
-    <ProjectReference Include="..\..\src\Codelaxy.Core\Codelaxy.Core.csproj" />
-    <ProjectReference Include="..\..\src\Codelaxy.Git\Codelaxy.Git.csproj" />
+ <ProjectReference Include="..\..\src\Codelaxy.Contracts\Codelaxy.Contracts.csproj" />
+  <ProjectReference Include="..\..\src\Codelaxy.Core\Codelaxy.Core.csproj" />
+  <ProjectReference Include="..\..\src\Codelaxy.Git\Codelaxy.Git.csproj" />
+
+  <ProjectReference
+      Include="..\Codelaxy.ProcessTestHelper\Codelaxy.ProcessTestHelper.csproj"
+      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>
