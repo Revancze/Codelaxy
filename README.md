@@ -209,9 +209,13 @@ Snapshot, Evidence, Provider, and Verdict contracts are established.
 Development currently requires:
 
 ```text
-Git
+Git 2.31 or newer
 .NET 10 SDK
 ```
+
+Codelaxy requires Git 2.31 or newer because it uses
+`git rev-parse --path-format=absolute`. Compatibility with Git 2.31 itself is
+not yet verified by the test suite, which currently runs on newer Git versions.
 
 The repository pins the .NET SDK feature band through `global.json`.
 

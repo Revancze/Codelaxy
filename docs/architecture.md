@@ -118,7 +118,15 @@ Before every Git invocation, the inherited environment is stripped of the
 variables that would redirect it at another repository — at minimum `GIT_DIR`,
 `GIT_WORK_TREE`, and `GIT_INDEX_FILE`.
 
-This is enforced by a test that deliberately poisons all three.
+This is enforced by tests in `Invariants/GitEnvironmentInvariantTests`.
+`RepositoryLocalEnvironmentVariables_CoverGitReportedVariables` poisons, at
+once, every variable Git itself reports as repository-local
+(`git rev-parse --local-env-vars`, which includes all three) and checks that
+none of the inherited poisoned values survives in the environment prepared
+for Git.
+
+The `RunAsync_IgnoresInherited…` tests run Git with one poisoned variable each
+and check that Git succeeds and its answer does not contain the poisoned value.
 
 ### I6 — Processes are started directly
 
