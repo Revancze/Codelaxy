@@ -128,3 +128,25 @@ Every scenario must have an explicit disposition:
 A scenario is complete only when its required behavior
 is supported by applicable evidence or an explicitly
 documented scope decision.
+
+---
+
+## 7. Independent Golden reference tests
+
+Golden tests compare snapshot fingerprints against fixed values
+calculated independently of Codelaxy.
+
+| Fingerprint | Golden coverage | Evidence |
+|---|---|---|
+| H — HEAD | ✅ Windows | HsGolden001_ProducesIndependentExpectedFingerprints |
+| I — Index | ✅ | INDEX-GOLDEN-001 and INDEX-GOLDEN-UNICODE-001 |
+| S — Staged | ✅ Windows | HsGolden001_ProducesIndependentExpectedFingerprints |
+| W — WorkingTree | ❓ | Independent Golden reference pending |
+
+H/S Golden fixture:
+- fixed SHA-1 HEAD commit;
+- empty index and one staged regular file;
+- independently calculated SHA-256 reference values;
+- H stays equal while I and S change.
+
+Cross-platform H/S verification on Linux is pending CI.
