@@ -12,3 +12,6 @@ artifacts/
 
 .DS_Store
 Thumbs.db
+
+# Python bytecode cache
+__pycache__/
