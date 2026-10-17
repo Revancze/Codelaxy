@@ -36,6 +36,11 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
       - name: Restore tools
         run: dotnet tool restore
 
@@ -45,5 +50,11 @@ jobs:
       - name: Check formatting
         run: dotnet csharpier check .
 
+      - name: Warning gate self-tests
+        run: python -B tools/ci/test_warning_gate.py
+
+      - name: F3 warning gate (Debug)
+        run: python tools/ci/warning_gate.py collect-and-check --repo-root . --baseline tools/ci/warning-baseline.json
+
       - name: Test
-        run: dotnet test --no-restore
+        run: dotnet test --configuration Debug --no-build --no-restore

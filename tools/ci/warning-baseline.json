@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "projects": [
+    "Codelaxy.Contracts",
+    "Codelaxy.Core",
+    "Codelaxy.Git",
+    "Codelaxy.Cli",
+    "Codelaxy.ProcessTestHelper",
+    "Codelaxy.Tests"
+  ],
+  "warnings": [
+    {
+      "project": "Codelaxy.Git",
+      "path": "src/Codelaxy.Git/GitProcessRunner.cs",
+      "id": "MA0051",
+      "count": 2
+    },
+    {
+      "project": "Codelaxy.Git",
+      "path": "src/Codelaxy.Git/GitProcessRunner.cs",
+      "id": "S3267",
+      "count": 1
+    },
+    {
+      "project": "Codelaxy.Git",
+      "path": "src/Codelaxy.Git/GitProcessRunner.cs",
+      "id": "S3776",
+      "count": 1
+    },
+    {
+      "project": "Codelaxy.Git",
+      "path": "src/Codelaxy.Git/GitSnapshotBuilder.cs",
+      "id": "CA1502",
+      "count": 1
+    },
+    {
+      "project": "Codelaxy.Git",
+      "path": "src/Codelaxy.Git/GitSnapshotBuilder.cs",
+      "id": "CA1505",
+      "count": 1
+    },
+    {
+      "project": "Codelaxy.Git",
+      "path": "src/Codelaxy.Git/GitSnapshotBuilder.cs",
+      "id": "MA0051",
+      "count": 1
+    },
+    {
+      "project": "Codelaxy.Git",
+      "path": "src/Codelaxy.Git/GitSnapshotBuilder.cs",
+      "id": "S3776",
+      "count": 1
+    },
+    {
+      "project": "Codelaxy.Tests",
+      "path": "tests/Codelaxy.Tests/GitSnapshotBuilderTests.cs",
+      "id": "S104",
+      "count": 1
+    },
+    {
+      "project": "Codelaxy.Tests",
+      "path": "tests/Codelaxy.Tests/GitSnapshotIndexGoldenTests.cs",
+      "id": "CA2025",
+      "count": 1
+    }
+  ]
+}
