@@ -221,6 +221,67 @@ public class GitSnapshotInvalidUtf8Tests
         }
     }
 
+    [Fact]
+    public void DeleteDirectoryNatively_DoesNotFollowWindowsJunction()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var sandbox = Path.Combine(Path.GetTempPath(), $"Codelaxy G2 Junction {Guid.NewGuid():N}");
+        var repository = Path.Combine(sandbox, "repository");
+        var outside = Path.Combine(sandbox, "outside");
+        var junction = Path.Combine(repository, "junction");
+        var sentinel = Path.Combine(outside, "sentinel.txt");
+
+        Directory.CreateDirectory(repository);
+        Directory.CreateDirectory(outside);
+        File.WriteAllText(sentinel, "external");
+        File.SetAttributes(sentinel, File.GetAttributes(sentinel) | FileAttributes.ReadOnly);
+
+        try
+        {
+            using var process = Process.Start(
+                new ProcessStartInfo("cmd.exe", ["/c", "mklink", "/J", junction, outside])
+                {
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                }
+            )!;
+
+            process.WaitForExit();
+            Assert.Equal(0, process.ExitCode);
+            Assert.NotNull(new DirectoryInfo(junction).LinkTarget);
+
+            DeleteDirectoryNatively(repository);
+
+            Assert.False(Directory.Exists(repository));
+            Assert.True(File.Exists(sentinel), "Cleanup followed an external junction");
+            Assert.True(
+                (File.GetAttributes(sentinel) & FileAttributes.ReadOnly) != FileAttributes.None
+            );
+        }
+        finally
+        {
+            if (Directory.Exists(junction))
+            {
+                Directory.Delete(junction);
+            }
+
+            if (File.Exists(sentinel))
+            {
+                File.SetAttributes(sentinel, FileAttributes.Normal);
+            }
+
+            if (Directory.Exists(sandbox))
+            {
+                Directory.Delete(sandbox, recursive: true);
+            }
+        }
+    }
+
     // Every refusal carries the expected diagnostic and no snapshot; every success
     // carries a snapshot; two successes must not share a working-tree identity.
     private static void AssertRefusedOrDistinct(
@@ -336,9 +397,53 @@ public class GitSnapshotInvalidUtf8Tests
         return path;
     }
 
+    // Remove Windows test fixtures without following junctions or symlinks.
+    private static void DeleteWindowsDirectoryTree(string directory)
+    {
+        foreach (var entry in new DirectoryInfo(directory).EnumerateFileSystemInfos())
+        {
+            var attributes = entry.Attributes;
+            var isDirectory = (attributes & FileAttributes.Directory) != FileAttributes.None;
+            var isReparsePoint = (attributes & FileAttributes.ReparsePoint) != FileAttributes.None;
+
+            if (isDirectory)
+            {
+                if (isReparsePoint)
+                {
+                    // Delete the link itself, never recurse into its target.
+                    Directory.Delete(entry.FullName);
+                }
+                else
+                {
+                    DeleteWindowsDirectoryTree(entry.FullName);
+                }
+            }
+            else
+            {
+                if (
+                    !isReparsePoint
+                    && (attributes & FileAttributes.ReadOnly) != FileAttributes.None
+                )
+                {
+                    File.SetAttributes(entry.FullName, attributes & ~FileAttributes.ReadOnly);
+                }
+
+                File.Delete(entry.FullName);
+            }
+        }
+
+        Directory.Delete(directory);
+    }
+
     // .NET cannot delete a name it decodes to U+FFFD; remove the tree natively.
     private static void DeleteDirectoryNatively(string path)
     {
+        if (OperatingSystem.IsWindows())
+        {
+            DeleteWindowsDirectoryTree(path);
+            return;
+        }
+
         using var process = Process.Start("rm", ["-rf", "--", path]);
 
         process.WaitForExit();
