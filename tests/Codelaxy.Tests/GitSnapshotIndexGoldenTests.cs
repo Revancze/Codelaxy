@@ -410,27 +410,7 @@ public class GitSnapshotIndexGoldenTests
         string repositoryPath
     )
     {
-        // git init can execute reference-transaction hooks before local config exists.
-        // Override inherited hooksPath for init itself, then persist it locally.
-        var emptyHooksDirectory = Path.Combine(repositoryPath, ".git", "codelaxy-empty-hooks");
-
-        await RunGitAsync(
-            runner,
-            repositoryPath,
-            "-c",
-            $"core.hooksPath={emptyHooksDirectory}",
-            "init",
-            "-q",
-            "--object-format=sha1",
-            "-b",
-            "main"
-        );
-
-        Directory.CreateDirectory(emptyHooksDirectory);
-
-        await RunGitAsync(runner, repositoryPath, "config", "core.hooksPath", emptyHooksDirectory);
-
-        await RunGitAsync(runner, repositoryPath, "config", "core.autocrlf", "false");
+        await GoldenGitFixture.InitializeSha1Async(runner, repositoryPath);
 
         Assert.Equal(
             "sha1",
