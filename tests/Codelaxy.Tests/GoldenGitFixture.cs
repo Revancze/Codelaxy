@@ -87,6 +87,19 @@ internal static class GoldenGitFixture
             "false"
         );
 
+        // Do not inherit branch-specific merge behavior.
+        await RunGitAsync(
+            runner,
+            repositoryPath,
+            "config",
+            "--local",
+            "branch.main.mergeOptions",
+            ""
+        );
+
+        // Do not mark checked-out files assume-unchanged.
+        await RunGitAsync(runner, repositoryPath, "config", "--local", "core.ignoreStat", "false");
+
         await RunGitAsync(runner, repositoryPath, "config", "--local", "core.autocrlf", "false");
     }
 

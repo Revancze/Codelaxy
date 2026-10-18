@@ -24,6 +24,8 @@ CASES = (
     "autocrlf",
     "merge_ff",
     "merge_signatures",
+    "branch_merge_options",
+    "ignore_stat",
     "fsmonitor",
 )
 
@@ -153,9 +155,33 @@ def positive_control(name, directory, config, env):
         set_global(config, "core.hooksPath", hooks, directory, env)
 
         control.mkdir()
-        result = git(["init", "-q", "-b", "main"], control, env, check=False)
 
-        require(result.returncode != 0, "Hostile hook did not block init")
+        safe_hooks = directory / "safe-hooks"
+        safe_hooks.mkdir()
+
+        git(
+            [
+                "-c", f"core.hooksPath={safe_hooks}",
+                "init", "-q", "-b", "main",
+            ],
+            control,
+            env,
+        )
+
+        # A commit updates refs/heads/main on both older and newer Git.
+        result = git(
+            [
+                "-c", "user.name=Codelaxy Probe",
+                "-c", "user.email=probe@example.invalid",
+                "-c", "commit.gpgsign=false",
+                "commit", "--allow-empty", "-qm", "hook probe",
+            ],
+            control,
+            env,
+            check=False,
+        )
+
+        require(result.returncode != 0, "Hostile hook did not block commit")
         require(marker.exists(), "Hostile hook was not executed")
         markers.append(marker)
 
@@ -275,6 +301,75 @@ def positive_control(name, directory, config, env):
             f"{key}: missing MERGE_HEAD",
         )
 
+    elif name == "branch_merge_options":
+        set_global(
+            config,
+            "branch.main.mergeOptions",
+            "-s ours",
+            directory,
+            env,
+        )
+
+        create_conflict(control, env)
+
+        result = git(
+            ["merge", "--no-edit", "theirs"],
+            control,
+            env,
+            check=False,
+        )
+
+        require(
+            result.returncode == 0,
+            "Hostile branch mergeOptions did not suppress conflict",
+        )
+        require(
+            not (control / ".git" / "MERGE_HEAD").exists(),
+            "Hostile merge unexpectedly left MERGE_HEAD",
+        )
+
+    elif name == "ignore_stat":
+        set_global(
+            config,
+            "core.ignoreStat",
+            "true",
+            directory,
+            env,
+        )
+
+        init_repo(control, env)
+
+        tracked = control / "tracked.txt"
+        tracked.write_text("original\\n", encoding="utf-8")
+
+        git(["add", "--", "tracked.txt"], control, env)
+        commit(control, env, "initial")
+
+        flags = git(
+            ["ls-files", "-v", "--", "tracked.txt"],
+            control,
+            env,
+        ).stdout
+
+        require(
+            flags.startswith("h "),
+            "Hostile ignoreStat did not set assume-unchanged",
+        )
+
+        tracked.write_text("modified\\n", encoding="utf-8")
+        git(["add", "--", "tracked.txt"], control, env)
+
+        staged = git(
+            ["diff", "--cached", "--name-only"],
+            control,
+            env,
+        ).stdout
+
+        require(
+            not staged.strip(),
+            "Hostile ignoreStat did not suppress the change",
+        )
+
     elif name == "fsmonitor":
         script = directory / "monitor.py"
         marker = directory / "monitor.called"
@@ -371,7 +466,7 @@ def main():
 
             print(f"{name}: ISOLATION PASS", flush=True)
 
-    print("\nALL EIGHT CONFIGURATION CASES: PASS", flush=True)
+    print("\nALL TEN CONFIGURATION CASES: PASS", flush=True)
 
 
 if __name__ == "__main__":
