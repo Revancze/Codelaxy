@@ -58,3 +58,6 @@ jobs:
 
       - name: Test
         run: dotnet test --configuration Debug --no-build --no-restore
+
+      - name: Golden Git configuration isolation
+        run: python -B tests/verify_golden_git_config.py
