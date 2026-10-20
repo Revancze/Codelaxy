@@ -432,12 +432,12 @@ def run_golden_tests(name, directory, env):
     failed = int(counters.get("failed", "-1"))
 
     require(
-        (total, passed, failed) == (6, 6, 0),
+        (total, passed, failed) == (7, 7, 0),
         f"{name}: unexpected test counts: "
         f"total={total}, passed={passed}, failed={failed}",
     )
 
-    print(f"{name}: GOLDEN 6/6 PASS", flush=True)
+    print(f"{name}: GOLDEN 7/7 PASS", flush=True)
 
 
 def main():
