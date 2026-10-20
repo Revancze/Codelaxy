@@ -45,52 +45,7 @@ public sealed class GitSnapshotHeadStagedGoldenTests
 
         try
         {
-            await GoldenGitFixture.InitializeSha1Async(runner, root);
-
-            var gitDirectory = Path.Combine(root, ".git");
-
-            await File.WriteAllBytesAsync(
-                Path.Combine(gitDirectory, "empty-tree.bin"),
-                Array.Empty<byte>()
-            );
-
-            Assert.Equal(
-                EmptyTreeOid,
-                await GitAsync(
-                    runner,
-                    root,
-                    "hash-object",
-                    "-w",
-                    "-t",
-                    "tree",
-                    "--",
-                    ".git/empty-tree.bin"
-                )
-            );
-
-            await File.WriteAllTextAsync(
-                Path.Combine(gitDirectory, "golden-commit.txt"),
-                CommitText,
-                Encoding.ASCII
-            );
-
-            Assert.Equal(
-                CommitOid,
-                await GitAsync(
-                    runner,
-                    root,
-                    "hash-object",
-                    "-w",
-                    "-t",
-                    "commit",
-                    "--",
-                    ".git/golden-commit.txt"
-                )
-            );
-
-            await GitAsync(runner, root, "update-ref", "refs/heads/main", CommitOid);
-
-            Assert.Equal(CommitOid, await GitAsync(runner, root, "rev-parse", "--verify", "HEAD"));
+            await InitializeBaselineAsync(runner, root);
 
             var builder = new GitSnapshotBuilder(runner);
             var empty = await builder.BuildAsync(root);
@@ -141,6 +96,146 @@ public sealed class GitSnapshotHeadStagedGoldenTests
 
             Directory.Delete(root, recursive: true);
         }
+    }
+
+    // WORKTREE-GOLDEN-001: values derived by tests/golden_worktree_reference.py.
+    // Only the worktree bytes change; HEAD and the staged index stay fixed.
+    [Fact]
+    public async Task WorktreeGolden001_ProducesIndependentExpectedFingerprints()
+    {
+        const string looseBlobOid = "b6586661e7ec0a4c9389276355d01e145861eb0c";
+        const string changedBlobOid = "5ea2ed416fbd4a4cbe227b75fe255dd7fa6bd4d6";
+        const string expectedInitialW =
+            "sha256:880b5e1e7a55858c34a38bc049ce11a084852c7c457ad4ff59ef80201479089d";
+        const string expectedChangedW =
+            "sha256:05fff775479c003c230c208b60fa6b465e411a7f8e7027dcf18874a072a19b8c";
+
+        var runner = new GitProcessRunner();
+        var root = Path.Combine(Path.GetTempPath(), $"Codelaxy Worktree Golden {Guid.NewGuid():N}");
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            await InitializeBaselineAsync(runner, root);
+            await File.WriteAllTextAsync(
+                Path.Combine(root, "staged.txt"),
+                "staged\n",
+                new UTF8Encoding(false)
+            );
+            await GitAsync(runner, root, "add", "--", "staged.txt");
+            await File.WriteAllTextAsync(
+                Path.Combine(root, "loose.txt"),
+                "loose\n",
+                new UTF8Encoding(false)
+            );
+
+            Assert.Equal(
+                StagedBlobOid,
+                await GitAsync(runner, root, "hash-object", "--no-filters", "--", "staged.txt")
+            );
+            Assert.Equal(
+                looseBlobOid,
+                await GitAsync(runner, root, "hash-object", "--no-filters", "--", "loose.txt")
+            );
+            var expectedIndex = $"100644 {StagedBlobOid} 0\tstaged.txt";
+            Assert.Equal(expectedIndex, await GitAsync(runner, root, "ls-files", "--stage"));
+            Assert.Equal(
+                "loose.txt\0",
+                await GitAsync(runner, root, "ls-files", "--others", "--exclude-standard", "-z")
+            );
+
+            var builder = new GitSnapshotBuilder(runner);
+            var initial = await builder.BuildAsync(root);
+            Assert.True(initial.Succeeded, initial.Diagnostic);
+            Assert.NotNull(initial.Snapshot);
+            Assert.Equal(ExpectedH, initial.Snapshot.HeadFingerprint);
+            Assert.Equal(ExpectedStagedI, initial.Snapshot.IndexFingerprint);
+            Assert.Equal(ExpectedStagedS, initial.Snapshot.StagedFingerprint);
+            Assert.Equal(expectedInitialW, initial.Snapshot.WorkingTreeFingerprint);
+
+            await File.WriteAllTextAsync(
+                Path.Combine(root, "staged.txt"),
+                "changed\n",
+                new UTF8Encoding(false)
+            );
+            Assert.Equal(
+                changedBlobOid,
+                await GitAsync(runner, root, "hash-object", "--no-filters", "--", "staged.txt")
+            );
+            Assert.Equal(expectedIndex, await GitAsync(runner, root, "ls-files", "--stage"));
+            Assert.Equal(CommitOid, await GitAsync(runner, root, "rev-parse", "--verify", "HEAD"));
+
+            var changed = await builder.BuildAsync(root);
+            Assert.True(changed.Succeeded, changed.Diagnostic);
+            Assert.NotNull(changed.Snapshot);
+            Assert.Equal(ExpectedH, changed.Snapshot.HeadFingerprint);
+            Assert.Equal(ExpectedStagedI, changed.Snapshot.IndexFingerprint);
+            Assert.Equal(ExpectedStagedS, changed.Snapshot.StagedFingerprint);
+            Assert.Equal(expectedChangedW, changed.Snapshot.WorkingTreeFingerprint);
+            Assert.NotEqual(
+                initial.Snapshot.WorkingTreeFingerprint,
+                changed.Snapshot.WorkingTreeFingerprint
+            );
+        }
+        finally
+        {
+            foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+            }
+
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    private static async Task InitializeBaselineAsync(GitProcessRunner runner, string root)
+    {
+        await GoldenGitFixture.InitializeSha1Async(runner, root);
+
+        var gitDirectory = Path.Combine(root, ".git");
+
+        await File.WriteAllBytesAsync(
+            Path.Combine(gitDirectory, "empty-tree.bin"),
+            Array.Empty<byte>()
+        );
+
+        Assert.Equal(
+            EmptyTreeOid,
+            await GitAsync(
+                runner,
+                root,
+                "hash-object",
+                "-w",
+                "-t",
+                "tree",
+                "--",
+                ".git/empty-tree.bin"
+            )
+        );
+
+        await File.WriteAllTextAsync(
+            Path.Combine(gitDirectory, "golden-commit.txt"),
+            CommitText,
+            Encoding.ASCII
+        );
+
+        Assert.Equal(
+            CommitOid,
+            await GitAsync(
+                runner,
+                root,
+                "hash-object",
+                "-w",
+                "-t",
+                "commit",
+                "--",
+                ".git/golden-commit.txt"
+            )
+        );
+
+        await GitAsync(runner, root, "update-ref", "refs/heads/main", CommitOid);
+
+        Assert.Equal(CommitOid, await GitAsync(runner, root, "rev-parse", "--verify", "HEAD"));
     }
 
     private static async Task<string> GitAsync(
