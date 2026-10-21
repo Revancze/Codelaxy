@@ -106,8 +106,11 @@ Two clarifications that are easy to get wrong:
 
 - **Default path:** promote the idea to a **clean working branch created from
   the current `main`** (`dev/*`, `fix/*` or `test/*`). Take the solution
-  selectively, write targeted tests, and keep a **reference to the originating
-  experiment** (branch or `archive/` tag) in the PR description.
+  selectively, write targeted tests, and identify the originating experiment's
+  commit in the PR together with a **durable, auditor-accessible reference**
+  (such as an authorised remote tag or an archived Git bundle). A local branch
+  name alone is insufficient. Retain the reference before deleting the branch;
+  publishing any branch, tag or artifact needs separate approval (§5.1).
 - **Direct PR from `exp/*` is allowed only** when the branch has a **clean,
   auditable history** and then meets **all the same** requirements for diff,
   review, CI and evidence as any other change into `main`. "Clean auditable
@@ -235,6 +238,9 @@ being merged**:
 | Merge commit as the only method | repository settings | |
 | Review in proportion to risk, absence declared | | yes |
 | Evidence tied to a named identity (PR head, test merge) | | yes |
+| Risk classification and its justification | | yes |
+| Independent audit for R3/R4 | | yes (not a GitHub-required approval) |
+| Explicit maintainer approval for merge | | yes (separate human authorisation) |
 | Merged branches deleted | | yes (`delete_branch_on_merge = false`) |
 
 ### 5.1 Roles in a review (D6)
@@ -359,7 +365,15 @@ actual impact of the change (§6.1).
 | R1 | Cosmetic changes to tests, fixtures or Golden files that do not affect what a test asserts or how it behaves (formatting, renames, comments) | CI green on both operating systems; the review confirms from the diff that the change has no behavioural effect. |
 | R2 | Production code outside the identity path; **a new, isolated, independent Golden test** | Tests for the changed behaviour; F3 warning gate shows no regression; both OS in CI. For a new Golden test: it proves a named Test Matrix invariant; its reference is computed independently of Codelaxy output and never rewritten to match it; mutation check where meaningful; run on **both** Windows and Linux, and a platform difference is explained, not hidden. |
 | R3 | Snapshot identity path: `GitSnapshotBuilder`, index canonicalisation, fingerprint domains and `SchemaVersion`; a change of meaning or expected values of an **existing** Golden reference; a shared fixture such as `GoldenGitFixture` where it affects the trustworthiness of tests | Applicable verification requirements from R1 and R2 (both OS checks, factual review and tests for the affected behaviour; R1's cosmetic/no-behavioural-effect condition does not apply), plus: Test Matrix reviewed for applicability in every R3 PR and updated in that PR only if relevant invariants, coverage or evidence status change (otherwise record why no update is needed), an independent Golden or invariant test for the changed path, mutation evidence, a Linux run (not Windows only), and an explicit note on whether any fingerprint domain/version changes. |
-| R4 | **High potential impact on evidence and on the things evidence depends on**: CI and workflow files, the mechanism that decides the trustworthiness of evidence across the project (for example the warning gate and the Golden isolation check), tooling, security boundaries (`GitProcessRunner`, executable resolution), and **inputs shared by all builds** — `global.json`, `packages.lock.json`, `Directory.Build.props`, `.globalconfig`, `.editorconfig`, `CodeMetricsConfig.txt`, `BannedSymbols.txt` | A written **impact assessment**: which existing evidence depends on the changed input. See the R4 rule below. A short threat/rollback note for CI and security boundaries. Proof that a changed gate still fails when it should. |
+| R4 | **High potential impact on evidence and on the things evidence depends on**: CI and workflow files, the mechanism that decides the trustworthiness of evidence across the project (for example the warning gate and the Golden isolation check), tooling, security boundaries (`GitProcessRunner`, executable resolution), and **shared build/gate inputs** — `global.json`, `Directory.Build.props`, `.globalconfig`, `.editorconfig`, `CodeMetricsConfig.txt`, `BannedSymbols.txt` — plus project-scoped NuGet lockfiles (`src/*/packages.lock.json`, `tests/*/packages.lock.json`) | Applicable R2/R3 evidence for affected behavior (not unrelated proof obligations); targeted positive and negative tests for changed tooling/security behavior; a written **impact assessment** identifying dependent evidence. See the R4 rule below. A short threat/rollback note for CI and security boundaries. Proof that a changed gate still fails when it should. |
+
+**Project-scoped NuGet lockfiles.** Six `packages.lock.json` files are located
+under `src/Codelaxy.Cli/`, `src/Codelaxy.Contracts/`, `src/Codelaxy.Core/`,
+`src/Codelaxy.Git/`, `tests/Codelaxy.ProcessTestHelper/` and
+`tests/Codelaxy.Tests/`; none is at the repository root. Changes to each of
+these lockfiles default to R4 because dependency resolution can affect evidence
+for that project and its dependents. Assess the actual dependency reach; a
+lower classification needs demonstrably reduced risk under §6.1.
 
 **R4 rule (D3).** R4 expresses *potential impact*, not an instruction to run
 everything. A change to, say, `Directory.Build.props` means the evidence that
@@ -464,6 +478,9 @@ Rules that apply to every class:
 
 - A temporary branch is deleted after its merge (locally and, if the owner
   agrees, on the remote). Nothing is deleted automatically.
+- An experimental branch cited by a promotion PR is not deleted until its
+  originating commit and durable, auditor-accessible reference are retained
+  (§3.1). A local-only branch name does not meet that requirement.
 - Only `main` is exempt from cleanup by age. All other branches are
   candidates.
 - Age thresholds are advisory: a branch with no activity for 60 days gets a
@@ -558,8 +575,9 @@ that run; this observation does not claim an observed rerun.
 
 - Read: `.github/workflows/ci.yml`, `docs/roadmap.md` (freeze exception and
   working rules), `docs/snapshot-test-matrix.md` (§7), the remote branch list
-  of `origin`, the history of PRs #6–#11, and that the build-input files named
-  in §6 exist at the repository root.
+  of `origin`, the history of PRs #6–#11, that the root-level build/gate inputs
+  named in §6 exist at the repository root, and that the six NuGet lockfiles
+  are project-scoped under `src/` and `tests/`.
 - Ran (read-only): `gh run view 39633138383 --log` (CI checkout of the test
   merge), `gh repo view`, `gh api …/branches/main/protection` (answer:
   not a classic branch protection), `gh api …/rulesets` including the ruleset
