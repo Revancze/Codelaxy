@@ -1,11 +1,10 @@
 # Codelaxy — Branching & Verification Policy v1
 
-> Status: **DRAFT, decisions D1–D12 taken, awaiting independent review of the
-> final wording.** Not ratified. Not part of any approved document; nothing
-> here has been written into the Git code of conduct or into `docs/`.
+> Status: **Proposed in PR #13; binding only after its maintainer-approved
+> merge into `main`.** Decisions D1–D12 are recorded in §10.
 >
-> Once approved, the policy lives **exclusively** in `docs/branching.md` as the
-> single binding source (D5). Until then this file is a proposal.
+> Upon that merge, `docs/branching.md` is the **single binding source**
+> for this policy (D5). Before the merge, it remains a proposal.
 >
 > Decision it implements: the user's working architectural choice of 2026-10-21,
 > "namespaces, not permanent branches" (agreed in discussion by the user, GPT
@@ -142,7 +141,7 @@ the namespace changed a real decision. If it did not, retire it.
 
 ## 4. Integration branches
 
-This section is part of the policy upon ratification, under the same draft status as the rest of this document. Integration branches are allowed only when a real need exists, never by default:
+Integration branches are allowed only when a real need exists, never by default:
 
 - named `<level>/integration-<topic>` (never plain `dev/integration`, which
   would block `dev/integration/…`);
@@ -472,7 +471,7 @@ Rules that apply to every class:
   `gitradar.sh` uses 14 days (active) and 60 days (stale) as tool defaults;
   those defaults are not policy.
 
-## 9. What this draft deliberately does not do
+## 9. Scope and non-goals
 
 - Does not create or delete any branch, tag or rule on GitHub, and does not
   change the existing ruleset or the repository settings (D12).
@@ -504,11 +503,11 @@ Rules that apply to every class:
 | D11 | How does this text become `docs/branching.md`? | Only after the final draft is approved, through a separate documentation branch and PR, each step separately approved. |
 | D12 | Change the GitHub configuration? | No. Merge commit is allowed; squash and rebase are already disabled by the repository settings. The ruleset's own list of methods is left as it is. |
 
-## 11. Remaining open points
+## 11. Ratification
 
 No decision D1–D12 is reopened. The review findings in §12 have been addressed
-in the text. Independent verification of the final delta and the maintainer's
-ratification remain pending.
+in the text. This policy becomes binding only upon maintainer-approved merge
+of PR #13 into `main`, after the required CI checks and review.
 
 ## 12. Independent review, round 1 (2026-10-21)
 
@@ -555,7 +554,7 @@ checks, GitHub can offer an update even when this setting is false.
 Whether CI actually reran on a particular new test merge must be verified from
 that run; this observation does not claim an observed rerun.
 
-## 13. How this draft was checked
+## 13. Verification record
 
 - Read: `.github/workflows/ci.yml`, `docs/roadmap.md` (freeze exception and
   working rules), `docs/snapshot-test-matrix.md` (§7), the remote branch list
