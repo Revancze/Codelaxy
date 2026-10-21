@@ -138,10 +138,10 @@ calculated independently of Codelaxy.
 
 | Fingerprint | Golden coverage | Evidence |
 |---|---|---|
-| H — HEAD | ✅ Windows | HsGolden001_ProducesIndependentExpectedFingerprints |
+| H — HEAD | ✅ Windows + Ubuntu | HsGolden001_ProducesIndependentExpectedFingerprints |
 | I — Index | ✅ | INDEX-GOLDEN-001 and INDEX-GOLDEN-UNICODE-001 |
-| S — Staged | ✅ Windows | HsGolden001_ProducesIndependentExpectedFingerprints |
-| W — WorkingTree | ❓ | Independent Golden reference pending |
+| S — Staged | ✅ Windows + Ubuntu | HsGolden001_ProducesIndependentExpectedFingerprints |
+| W — WorkingTree | ✅ Windows + Ubuntu | WORKTREE-GOLDEN-001; WorktreeGolden001_ProducesIndependentExpectedFingerprints |
 
 H/S Golden fixture:
 - fixed SHA-1 HEAD commit;
@@ -149,4 +149,16 @@ H/S Golden fixture:
 - independently calculated SHA-256 reference values;
 - H stays equal while I and S change.
 
-Cross-platform H/S verification on Linux is pending CI.
+W Golden fixture:
+- fixed SHA-1 HEAD commit;
+- staged regular file and untracked regular file;
+- H, I and S remain unchanged;
+- unstaged content edit produces two independently pinned W values;
+- reference calculated by tests/golden_worktree_reference.py.
+
+Cross-platform evidence:
+- GitHub Actions run 39478019502;
+- windows-latest: SUCCESS;
+- ubuntu-24.04: SUCCESS;
+- Golden Git configuration isolation: SUCCESS on both;
+- verified PR HEAD: 7d9d84a.
