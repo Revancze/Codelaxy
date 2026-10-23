@@ -1,10 +1,29 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Codelaxy.Git;
 
 namespace Codelaxy.Tests;
 
 // G2: Linux file names that are not valid UTF-8 decode to U+FFFD in .NET, so
 // distinct names (and symlink targets) can collapse into one string.
+
+// T1 verification obligations — Linux native test-fixture cleanup.
+//
+// T1-C1: Cleanup must not invoke external rm from PATH.
+// Evidence: poisoned-PATH probe with the invalid UTF-8 test.
+//
+// T1-C2: Cleanup must preserve raw filesystem name bytes.
+// Test: LinuxNativeCleanup_RemovesInvalidUtf8Directory.
+//
+// T1-C3: Cleanup must not follow symlinks outside its root.
+// Test: LinuxNativeCleanup_DoesNotFollowDirectorySymlink.
+//
+// T1-C4: A missing root is a no-op; remove failures must propagate.
+// Tests: LinuxNativeCleanup_MissingRootIsNoOp
+//        LinuxNativeCleanup_PropagatesRemoveFailure.
+//
+// Scope: isolated test directories, not hostile concurrent trees.
+
 public class GitSnapshotInvalidUtf8Tests
 {
     private const string InvalidByteName = "$(printf '\\377')";
@@ -282,6 +301,176 @@ public class GitSnapshotInvalidUtf8Tests
         }
     }
 
+    [Fact]
+    public void LinuxNativeCleanup_DoesNotFollowDirectorySymlink()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var sandbox = Path.Combine(Path.GetTempPath(), $"codelaxy-cleanup-{Guid.NewGuid():N}");
+
+        var root = Path.Combine(sandbox, "root");
+        var outside = Path.Combine(sandbox, "outside");
+        var sentinel = Path.Combine(outside, "sentinel.txt");
+        var link = Path.Combine(root, "escape");
+
+        Directory.CreateDirectory(root);
+        Directory.CreateDirectory(outside);
+
+        try
+        {
+            File.WriteAllText(sentinel, "KEEP");
+            Directory.CreateSymbolicLink(link, outside);
+
+            Assert.True(File.Exists(sentinel));
+
+            LinuxNativeDirectoryCleanup.Delete(root);
+
+            Assert.False(Path.Exists(root));
+            Assert.True(Directory.Exists(outside));
+            Assert.Equal("KEEP", File.ReadAllText(sentinel));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                LinuxNativeDirectoryCleanup.Delete(root);
+            }
+
+            if (Directory.Exists(outside))
+            {
+                Directory.Delete(outside, recursive: true);
+            }
+
+            if (Directory.Exists(sandbox))
+            {
+                Directory.Delete(sandbox);
+            }
+        }
+    }
+
+    [Fact]
+    public void LinuxNativeCleanup_MissingRootIsNoOp()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var sandbox = Path.Combine(Path.GetTempPath(), $"codelaxy-missing-root-{Guid.NewGuid():N}");
+
+        Directory.CreateDirectory(sandbox);
+
+        try
+        {
+            var missingRoot = Path.Combine(sandbox, "missing");
+
+            Assert.False(Path.Exists(missingRoot));
+
+            LinuxNativeDirectoryCleanup.Delete(missingRoot);
+
+            Assert.False(Path.Exists(missingRoot));
+        }
+        finally
+        {
+            Directory.Delete(sandbox);
+        }
+    }
+
+    [Fact]
+    public void LinuxNativeCleanup_RemovesInvalidUtf8Directory()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var root = Path.Combine(Path.GetTempPath(), $"codelaxy-native-cleanup-{Guid.NewGuid():N}");
+
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            var prefix = System.Text.Encoding.UTF8.GetBytes(Path.Combine(root, "invalid-"));
+
+            var bytes = new byte[prefix.Length + 2];
+            prefix.CopyTo(bytes, 0);
+
+            bytes[^2] = 0xFF;
+            bytes[^1] = 0;
+
+            var nativePath = Marshal.AllocHGlobal(bytes.Length);
+
+            try
+            {
+                Marshal.Copy(bytes, 0, nativePath, bytes.Length);
+
+                Assert.Equal(0, NativeMkdirForCleanupTest(nativePath, 448));
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(nativePath);
+            }
+
+            LinuxNativeDirectoryCleanup.Delete(root);
+
+            Assert.False(Directory.Exists(root));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                LinuxNativeDirectoryCleanup.Delete(root);
+            }
+        }
+    }
+
+    [Fact]
+    public void LinuxNativeCleanup_PropagatesRemoveFailure()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var root = Path.Combine(Path.GetTempPath(), $"codelaxy-remove-failure-{Guid.NewGuid():N}");
+
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            var exception = Assert.Throws<IOException>(() =>
+                LinuxNativeDirectoryCleanup.Delete(
+                    root,
+                    _ =>
+                    {
+                        Marshal.SetLastPInvokeError(13);
+                        return -1;
+                    }
+                )
+            );
+
+            Assert.Contains("errno 13", exception.Message, StringComparison.Ordinal);
+
+            Assert.True(Directory.Exists(root));
+        }
+        finally
+        {
+            LinuxNativeDirectoryCleanup.Delete(root);
+        }
+    }
+
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    [DllImport(
+        "libc",
+        EntryPoint = "mkdir",
+        CallingConvention = CallingConvention.Cdecl,
+        SetLastError = true
+    )]
+    private static extern int NativeMkdirForCleanupTest(nint path, int mode);
+
     // Every refusal carries the expected diagnostic and no snapshot; every success
     // carries a snapshot; two successes must not share a working-tree identity.
     private static void AssertRefusedOrDistinct(
@@ -436,6 +625,7 @@ public class GitSnapshotInvalidUtf8Tests
     }
 
     // .NET cannot delete a name it decodes to U+FFFD; remove the tree natively.
+
     private static void DeleteDirectoryNatively(string path)
     {
         if (OperatingSystem.IsWindows())
@@ -444,8 +634,16 @@ public class GitSnapshotInvalidUtf8Tests
             return;
         }
 
+        if (OperatingSystem.IsLinux())
+        {
+            LinuxNativeDirectoryCleanup.Delete(path);
+            return;
+        }
+
+        // Preserve the original cleanup behavior on other platforms.
         using var process = Process.Start("rm", ["-rf", "--", path]);
 
+        Assert.NotNull(process);
         process.WaitForExit();
         Assert.Equal(0, process.ExitCode);
     }
