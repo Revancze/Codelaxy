@@ -288,15 +288,11 @@ public class GitProcessRunnerTests
     [Fact]
     public async Task RunReadOnlyAsync_ClosesStandardInput()
     {
-        var runner = new GitProcessRunner("dotnet");
-
-        var helperPath = GetProcessTestHelperPath();
-
-        Assert.True(File.Exists(helperPath), $"Process test helper not found: {helperPath}");
+        var runner = CreateProcessTestHelperRunner();
 
         var result = await runner.RunReadOnlyAsync(
             Directory.GetCurrentDirectory(),
-            [helperPath, "read-stdin"],
+            ["read-stdin"],
             TimeSpan.FromSeconds(5)
         );
 
@@ -308,15 +304,11 @@ public class GitProcessRunnerTests
     [Fact]
     public async Task RunReadOnlyAsync_DisablesTerminalPrompt()
     {
-        var runner = new GitProcessRunner("dotnet");
-
-        var helperPath = GetProcessTestHelperPath();
-
-        Assert.True(File.Exists(helperPath), $"Process test helper not found: {helperPath}");
+        var runner = CreateProcessTestHelperRunner();
 
         var result = await runner.RunReadOnlyAsync(
             Directory.GetCurrentDirectory(),
-            [helperPath, "print-env", "GIT_TERMINAL_PROMPT"],
+            ["print-env", "GIT_TERMINAL_PROMPT"],
             TimeSpan.FromSeconds(5)
         );
 
@@ -404,11 +396,7 @@ public class GitProcessRunnerTests
     [Fact]
     public async Task RunAsync_KillsStartedProcessWhenCancelled()
     {
-        var runner = new GitProcessRunner("dotnet");
-
-        var helperPath = GetProcessTestHelperPath();
-
-        Assert.True(File.Exists(helperPath), $"Process test helper not found: {helperPath}");
+        var runner = CreateProcessTestHelperRunner();
 
         var pidFile = Path.Combine(Path.GetTempPath(), $"Codelaxy Process {Guid.NewGuid():N}.pid");
 
@@ -420,7 +408,7 @@ public class GitProcessRunnerTests
         {
             var runTask = runner.RunAsync(
                 Directory.GetCurrentDirectory(),
-                [helperPath, pidFile],
+                [pidFile],
                 cancellation.Token
             );
 
@@ -469,11 +457,7 @@ public class GitProcessRunnerTests
     [Fact]
     public async Task RunAsync_ReportsTimeoutAndKillsProcess()
     {
-        var runner = new GitProcessRunner("dotnet");
-
-        var helperPath = GetProcessTestHelperPath();
-
-        Assert.True(File.Exists(helperPath), $"Process test helper not found: {helperPath}");
+        var runner = CreateProcessTestHelperRunner();
 
         var pidFile = Path.Combine(Path.GetTempPath(), $"Codelaxy Timeout {Guid.NewGuid():N}.pid");
 
@@ -483,7 +467,7 @@ public class GitProcessRunnerTests
         {
             var runTask = runner.RunAsync(
                 Directory.GetCurrentDirectory(),
-                [helperPath, pidFile],
+                [pidFile],
                 TimeSpan.FromSeconds(2)
             );
 
@@ -525,11 +509,7 @@ public class GitProcessRunnerTests
     [Fact]
     public async Task RunReadOnlyAsync_ReportsTimeoutAndKillsProcess()
     {
-        var runner = new GitProcessRunner("dotnet");
-
-        var helperPath = GetProcessTestHelperPath();
-
-        Assert.True(File.Exists(helperPath), $"Process test helper not found: {helperPath}");
+        var runner = CreateProcessTestHelperRunner();
 
         var pidFile = Path.Combine(
             Path.GetTempPath(),
@@ -542,7 +522,7 @@ public class GitProcessRunnerTests
         {
             var runTask = runner.RunReadOnlyAsync(
                 Directory.GetCurrentDirectory(),
-                [helperPath, pidFile],
+                [pidFile],
                 TimeSpan.FromSeconds(2)
             );
 
@@ -654,15 +634,11 @@ public class GitProcessRunnerTests
     [Fact]
     public async Task RunReadOnlyAsync_DisablesOptionalGitLocks()
     {
-        var runner = new GitProcessRunner("dotnet");
-
-        var helperPath = GetProcessTestHelperPath();
-
-        Assert.True(File.Exists(helperPath), $"Process test helper not found: {helperPath}");
+        var runner = CreateProcessTestHelperRunner();
 
         var result = await runner.RunReadOnlyAsync(
             Directory.GetCurrentDirectory(),
-            [helperPath, "print-env", "GIT_OPTIONAL_LOCKS"],
+            ["print-env", "GIT_OPTIONAL_LOCKS"],
             GitCommandTimeout
         );
 
@@ -674,11 +650,11 @@ public class GitProcessRunnerTests
     [Fact]
     public async Task RunReadOnlyAsync_ReportsInvalidOutputForNonUtf8StandardOutput()
     {
-        var runner = new GitProcessRunner("dotnet");
+        var runner = CreateProcessTestHelperRunner();
 
         var result = await runner.RunReadOnlyAsync(
             Directory.GetCurrentDirectory(),
-            ["exec", GetProcessTestHelperPath(), "emit-stdout-hex", "61FF62"],
+            ["emit-stdout-hex", "61FF62"],
             GitCommandTimeout
         );
 
@@ -693,11 +669,11 @@ public class GitProcessRunnerTests
     [Fact]
     public async Task RunReadOnlyAsync_DrainsLargeInvalidOutputWithoutTimeout()
     {
-        var runner = new GitProcessRunner("dotnet");
+        var runner = CreateProcessTestHelperRunner();
 
         var result = await runner.RunReadOnlyAsync(
             Directory.GetCurrentDirectory(),
-            ["exec", GetProcessTestHelperPath(), "emit-large-invalid-stdout"],
+            ["emit-large-invalid-stdout"],
             TimeSpan.FromSeconds(15)
         );
 
@@ -714,11 +690,11 @@ public class GitProcessRunnerTests
     [Fact]
     public async Task RunReadOnlyAsync_KeepsLeadingByteOrderMarkInStandardOutput()
     {
-        var runner = new GitProcessRunner("dotnet");
+        var runner = CreateProcessTestHelperRunner();
 
         var result = await runner.RunReadOnlyAsync(
             Directory.GetCurrentDirectory(),
-            ["exec", GetProcessTestHelperPath(), "emit-stdout-hex", "EFBBBF78"],
+            ["emit-stdout-hex", "EFBBBF78"],
             GitCommandTimeout
         );
 
@@ -729,11 +705,11 @@ public class GitProcessRunnerTests
     [Fact]
     public async Task RunReadOnlyAsync_KeepsDiagnosticForNonUtf8StandardError()
     {
-        var runner = new GitProcessRunner("dotnet");
+        var runner = CreateProcessTestHelperRunner();
 
         var result = await runner.RunReadOnlyAsync(
             Directory.GetCurrentDirectory(),
-            ["exec", GetProcessTestHelperPath(), "emit-stderr-hex", "FF"],
+            ["emit-stderr-hex", "FF"],
             GitCommandTimeout
         );
 
@@ -743,6 +719,40 @@ public class GitProcessRunnerTests
         Assert.Equal(GitCommandFailureKind.None, result.FailureKind);
 
         Assert.Contains('\uFFFD', result.StandardError);
+    }
+
+    [Fact]
+    public async Task ProcessTestHelper_RunsWithoutDotnetOnPath()
+    {
+        var runner = CreateProcessTestHelperRunner();
+
+        var startInfo = runner.CreateProcessStartInfo(
+            Directory.GetCurrentDirectory(),
+            ["emit-stdout-hex", "5432"],
+            readOnly: true
+        );
+
+        Assert.True(
+            Path.IsPathFullyQualified(startInfo.FileName),
+            $"Expected absolute apphost path, got '{startInfo.FileName}'."
+        );
+
+        Assert.True(File.Exists(startInfo.FileName));
+
+        // Only the child process has its PATH changed.
+        startInfo.Environment["PATH"] = string.Empty;
+
+        using var process = Process.Start(startInfo);
+        Assert.NotNull(process);
+
+        var stdout = await process.StandardOutput.ReadToEndAsync();
+        var stderr = await process.StandardError.ReadToEndAsync();
+
+        await process.WaitForExitAsync();
+
+        Assert.Equal(0, process.ExitCode);
+        Assert.Equal("T2", stdout);
+        Assert.Equal(string.Empty, stderr);
     }
 
     private static async Task CleanupHelperProcessAsync(
@@ -815,6 +825,23 @@ public class GitProcessRunnerTests
         using var cleanupDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
         await process.WaitForExitAsync(cleanupDeadline.Token);
+    }
+
+    private static GitProcessRunner CreateProcessTestHelperRunner()
+    {
+        var helperDllPath = GetProcessTestHelperPath();
+
+        var apphostPath = Path.ChangeExtension(
+            helperDllPath,
+            OperatingSystem.IsWindows() ? ".exe" : null
+        );
+
+        Assert.True(
+            File.Exists(apphostPath),
+            $"Process test helper apphost not found: {apphostPath}"
+        );
+
+        return new GitProcessRunner(apphostPath);
     }
 
     private static string GetProcessTestHelperPath()
