@@ -393,9 +393,9 @@ Inferred dependency: <span class="np" translate="no">OPEN-10</span>.</td></tr><t
   }
   function hasLetters(s) { return /[^\W\d_]/.test(s); }
 
-  function translateWhole(ex) {
+  function translateWhole(ex, tr) {
     var text = ex.parts.map(function (x) { return x.p != null ? OPEN + x.p + CLOSE : x.t; }).join('');
-    return state.translator.translate(text).then(function (out) {
+    return tr.translate(text).then(function (out) {
       var seen = {}, ok = true;
       out.replace(/⟦(\d+)⟧/g, function (m, i) { seen[i] = (seen[i] || 0) + 1; return m; });
       ex.tokens.forEach(function (_, i) { if (seen[i] !== 1) ok = false; });
@@ -404,19 +404,21 @@ Inferred dependency: <span class="np" translate="no">OPEN-10</span>.</td></tr><t
       return out.replace(/⟦(\d+)⟧/g, function (m, i) { return ex.tokens[Number(i)]; });
     });
   }
-  function translateByParts(ex) {
+  function translateByParts(ex, tr) {
     return Promise.all(ex.parts.map(function (x) {
       if (x.p != null) return Promise.resolve(ex.tokens[x.p]);
-      return hasLetters(x.t) ? state.translator.translate(x.t) : Promise.resolve(x.t);
+      return hasLetters(x.t) ? tr.translate(x.t) : Promise.resolve(x.t);
     })).then(function (xs) { return xs.join(''); });
   }
   function translateCell(td) {
-    var key = td.getAttribute('data-k');
-    if (state.cache[state.lang + '|' + key]) return Promise.resolve(state.cache[state.lang + '|' + key]);
+    // The language and translator are fixed when the request starts: a language switch
+    // while it is pending must not store the result under the newly chosen language.
+    var lang = state.lang, tr = state.translator, key = td.getAttribute('data-k');
+    if (state.cache[lang + '|' + key]) return Promise.resolve(state.cache[lang + '|' + key]);
     var ex = extract(td);
-    return withTimeout(translateWhole(ex).catch(function () { return translateByParts(ex); }), 30000).then(function (text) {
+    return withTimeout(translateWhole(ex, tr).catch(function () { return translateByParts(ex, tr); }), 30000).then(function (text) {
       var res = { kind: 'api', text: text };
-      state.cache[state.lang + '|' + key] = res;
+      state.cache[lang + '|' + key] = res;
       return res;
     });
   }
@@ -603,7 +605,8 @@ Inferred dependency: <span class="np" translate="no">OPEN-10</span>.</td></tr><t
 
   window.__rv = { state: state, cfg: cfg, setLang: setLang, tipContent: tipContent, showSheet: showSheet, ready: ready };
   if (h.selftest === '1') {
-    ready.then(function () {
+    /* a test may run a scenario (for example a language switch while a translation is pending) before the result is read */
+    ready.then(function () { return window.__rvSelftestHook ? window.__rvSelftestHook(window.__rv) : null; }).then(function () {
       var out = { lang: state.lang, mode: state.mode, translatable: cells.length, hasTranslator: typeof Translator !== 'undefined' };
       var first = cells[0];
       /* diagnostic: the page's Content-Security-Policy must refuse a network request (".invalid" never resolves anyway) */
@@ -615,6 +618,7 @@ Inferred dependency: <span class="np" translate="no">OPEN-10</span>.</td></tr><t
       }).then(function (r) {
         out.cspBlocksNetwork = violated;
         out.firstKind = r ? r.kind : null; out.firstText = r && r.text ? r.text.slice(0, 80) : null;
+        out.cache = Object.keys(state.cache).map(function (k) { return k + '=' + state.cache[k].text; });
         out.tabindexCells = document.querySelectorAll('td.tr[tabindex]').length;
         out.activeSheet = (document.querySelector('.tab[aria-selected=true]') || {}).textContent;
         out.hash = location.hash;
