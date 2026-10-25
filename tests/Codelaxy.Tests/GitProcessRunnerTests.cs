@@ -561,6 +561,123 @@ public class GitProcessRunnerTests
         }
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(17)]
+    public async Task RunReadOnlyAsync_ClosedStdinWithLargePayload_NeverSucceeds(int exitCode)
+    {
+        var runner = CreateProcessTestHelperRunner();
+        var payload = new byte[16 * 1024 * 1024];
+
+        var result = await runner.RunReadOnlyAsync(
+            Directory.GetCurrentDirectory(),
+            ["exit-before-stdin", exitCode.ToString(CultureInfo.InvariantCulture)],
+            TimeSpan.FromSeconds(15),
+            payload
+        );
+
+        Assert.True(result.Started);
+        Assert.Equal(exitCode, result.ExitCode);
+        Assert.Contains(
+            "M2a helper: stdin deliberately ignored",
+            result.StandardError,
+            StringComparison.Ordinal
+        );
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(GitCommandFailureKind.InputFailure, result.FailureKind);
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_CancelsBlockedStandardInput()
+    {
+        var runner = CreateProcessTestHelperRunner();
+        var pidFile = Path.Combine(
+            Path.GetTempPath(),
+            $"Codelaxy M2a Cancel {Guid.NewGuid():N}.pid"
+        );
+
+        Process? helperProcess = null;
+        using var cancellation = new CancellationTokenSource();
+
+        try
+        {
+            var runTask = runner.RunReadOnlyAsync(
+                Directory.GetCurrentDirectory(),
+                [pidFile],
+                TimeSpan.FromSeconds(30),
+                new byte[16 * 1024 * 1024],
+                cancellation.Token
+            );
+
+            using var startDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+            var pid = await WaitForProcessIdAsync(pidFile, startDeadline.Token);
+
+            helperProcess = Process.GetProcessById(pid);
+            _ = helperProcess.Handle;
+
+            await cancellation.CancelAsync();
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+            {
+                _ = await runTask.WaitAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
+            });
+
+            using var exitDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+            await helperProcess.WaitForExitAsync(exitDeadline.Token);
+            Assert.True(helperProcess.HasExited);
+        }
+        finally
+        {
+            await CleanupTimedOutHelperProcessAsync(helperProcess, pidFile);
+        }
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_TimesOutBlockedStandardInput()
+    {
+        var runner = CreateProcessTestHelperRunner();
+        var pidFile = Path.Combine(
+            Path.GetTempPath(),
+            $"Codelaxy M2a Timeout {Guid.NewGuid():N}.pid"
+        );
+
+        Process? helperProcess = null;
+
+        try
+        {
+            var runTask = runner.RunReadOnlyAsync(
+                Directory.GetCurrentDirectory(),
+                [pidFile],
+                TimeSpan.FromSeconds(4),
+                new byte[16 * 1024 * 1024]
+            );
+
+            using var startDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+            var pid = await WaitForProcessIdAsync(pidFile, startDeadline.Token);
+
+            helperProcess = Process.GetProcessById(pid);
+            _ = helperProcess.Handle;
+
+            var result = await runTask.WaitAsync(TimeSpan.FromSeconds(15), CancellationToken.None);
+
+            Assert.Equal(GitCommandFailureKind.Timeout, result.FailureKind);
+            Assert.False(result.Succeeded);
+
+            using var exitDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+            await helperProcess.WaitForExitAsync(exitDeadline.Token);
+            Assert.True(helperProcess.HasExited);
+        }
+        finally
+        {
+            await CleanupTimedOutHelperProcessAsync(helperProcess, pidFile);
+        }
+    }
+
     [Fact]
     public async Task RunReadOnlyAsync_WritesStandardInputPayloadAndClosesInput()
     {
@@ -586,6 +703,47 @@ public class GitProcessRunnerTests
             Assert.True(result.Succeeded, result.StandardError);
 
             Assert.Equal("a2e78ef8f87fd57cbb1064b20dbad30499be7d00", result.StandardOutput.Trim());
+        }
+        finally
+        {
+            Directory.Delete(repositoryPath, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task RunReadOnlyAsync_PreservesRealGitDiagnosticForMissingStdinPath()
+    {
+        var runner = new GitProcessRunner();
+        var repositoryPath = CreateTemporaryDirectory();
+
+        try
+        {
+            var initialization = await runner.RunAsync(
+                repositoryPath,
+                ["init", "--object-format=sha1"]
+            );
+
+            Assert.True(initialization.Succeeded, initialization.StandardError);
+
+            const string missingPath = "m2a-deliberately-missing-file.txt";
+
+            // Git encounters the missing first path before the large remaining input.
+            var payload = Encoding.UTF8.GetBytes(
+                missingPath + "\n" + new string('x', 16 * 1024 * 1024) + "\n"
+            );
+
+            var result = await runner.RunReadOnlyAsync(
+                repositoryPath,
+                ["hash-object", "--no-filters", "--stdin-paths"],
+                TimeSpan.FromSeconds(30),
+                payload
+            );
+
+            Assert.True(result.Started);
+            Assert.NotEqual(0, result.ExitCode);
+            Assert.False(result.Succeeded);
+
+            Assert.Contains(missingPath, result.StandardError, StringComparison.OrdinalIgnoreCase);
         }
         finally
         {
