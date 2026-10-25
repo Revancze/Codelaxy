@@ -1,0 +1,2406 @@
+{
+ "entries": {
+  "00199a073cfa4ed0": {
+   "cs": "Odvozeno recenzentem z pořadí nebo obsahu fází; není to rozhodnutí. Zobrazeno kurzívou na zabarveném pozadí. 'D+I' znamená, že buňka uvádí oba druhy, každý označený přímo v textu [D] nebo [I].",
+   "en": "Inferred by the reviewer from phase order or content; not a decision. Shown in italics on a tinted background. 'D+I' means a cell lists both kinds, each tagged inline with [D] or [I]."
+  },
+  "004db6d6856a5514": {
+   "cs": "Roadmapa neuvádí sekci výstupních kritérií; šest podmínek tvoří blok kódu pod P2.6.\nOdvozená závislost: OPEN-10.",
+   "en": "Roadmap lists no exit criteria section; the six conditions are the code block under P2.6.\nInferred dependency: OPEN-10."
+  },
+  "0057d727868ed66c": {
+   "cs": "AUDIT-B B-4 (protokoly ve workspace, ne v repozitáři). Přítomno jen v necommitnutém návrhu patche.",
+   "en": "AUDIT-B B-4 (workspace protocols, not in the repository). Present in the uncommitted draft patch only."
+  },
+  "007d5f41f3ebb59a": {
+   "cs": "PR #11 (880ba94, 7d9d84a)\nWorktreeGolden001_…:104\ngolden_worktree_reference.py\nPR #12 (c280e93): evidence v matici\nmatrix §7:144 W ✅",
+   "en": "PR #11 (880ba94, 7d9d84a)\nWorktreeGolden001_…:104\ngolden_worktree_reference.py\nPR #12 (c280e93): matrix evidence\nmatrix §7:144 W ✅"
+  },
+  "00e88aeb380b979e": {
+   "cs": "Test: druh repozitáře: shallow clone.",
+   "en": "Test: repository kind: shallow clone."
+  },
+  "010f6c1f70ba7c34": {
+   "cs": "P1.2-M2a sloučeno [D: decision MD10b] (stejná funkce RunCoreAsync)",
+   "en": "P1.2-M2a merged [D: decision MD10b] (same function RunCoreAsync)"
+  },
+  "02ede79b9d498072": {
+   "cs": "• tentýž druh požadavku splňují dva nezávislé providery přes shodné cesty v kódu jádra;\n• nevzniká žádný důkaz `BUILD`, přestože nástroj interně kompiluje (I14);\n• každá změna rozhraní je zaznamenána jako vada návrhu P1.4, nikdy jako zvláštní případ pro .NET.",
+   "en": "• the same requirement kind is satisfied by two unrelated providers through identical core code paths;\n• no `BUILD` evidence is produced, despite the tool compiling internally (I14);\n• every interface change is recorded as a defect of the P1.4 design, never as a special case for .NET."
+  },
+  "037a3bcbfc29fb50": {
+   "cs": "Obecné rozhraní zmrazí použití, ne návrh (I12).",
+   "en": "A generic interface is frozen by use, not by design (I12)."
+  },
+  "03867aea70acaf4c": {
+   "cs": "Důkazy",
+   "en": "Evidence"
+  },
+  "0481b3f7c565fe1e": {
+   "cs": "Původní větev dev/codelaxy/p12-snapshot-value-objects. Codelaxy.Git je anti-corruption vrstva; Contracts a schéma Snapshotu v1 se nemění.",
+   "en": "Original branch dev/codelaxy/p12-snapshot-value-objects. Codelaxy.Git is the anti-corruption layer; Contracts and Snapshot schema v1 do not change."
+  },
+  "0502c9716a2a790f": {
+   "cs": "Pro tuto fázi nejsou v roadmap.md uvedena žádná výstupní kritéria.",
+   "en": "No exit criteria are stated in roadmap.md for this phase."
+  },
+  "05102e9aba78168c": {
+   "cs": "MICROMAP.md revize 2, 'MO5'; proposals/audits",
+   "en": "MICROMAP.md revision 2, 'MO5'; proposals/audits"
+  },
+  "052d5d86c968c819": {
+   "cs": "Gate E1 (technická připravenost k prvnímu commitu, E1-1 … E1-8) a gate E2 (CI na hlavě PR, delta audit, schválení vlastníkem před merge); golden H/I/S/W bitově shodné; A-MUT-1/2/3 zabity; testy mnoha cest skutečně spuštěny na Windows i Linuxu; cesty s LF podporovány; matice aktualizována.",
+   "en": "Gate E1 (technical readiness for the first commit, E1-1 … E1-8) and gate E2 (CI on the PR head, delta audit, owner approval before merge); golden H/I/S/W bit-identical; A-MUT-1/2/3 killed; many-paths tests really executed on Windows and Linux; LF paths supported; matrix updated."
+  },
+  "05f40396d441fc14": {
+   "cs": "Codelaxy — Sešit roadmapy     |     revize R5",
+   "en": "Codelaxy — Roadmap Workbook     |     revision R5"
+  },
+  "067b06036c23e9cb": {
+   "cs": "Rozdělení observeru. Plánováno.",
+   "en": "Observer split. Planned."
+  },
+  "06e94d9aeee1a4c3": {
+   "cs": "Podpoložka kroku. EXTRA = dodáno nad rámec zdokumentovaného rozsahu kroku.",
+   "en": "A sub-item of a step. EXTRA = delivered beyond the documented scope of the step."
+  },
+  "07069aa3e4b044e3": {
+   "cs": "F12: žádný test nehlídá --no-filters u nesledovaných souborů (mutant na main přežije). Gate E1-3 kroku P1.2-M2.",
+   "en": "F12: no test guards --no-filters for untracked files (mutant survives on main). Gate E1-3 of P1.2-M2."
+  },
+  "074954ba547a36b4": {
+   "cs": "AUDIT-A, AUDIT-B, AUDIT-ADDENDUM-1.DRAFT",
+   "en": "AUDIT-A, AUDIT-B, AUDIT-ADDENDUM-1.DRAFT"
+  },
+  "082f439f393969a2": {
+   "cs": "Pořadí mezi otevřenými položkami M1 není zdokumentováno. Že M2 závisí na golden W, je odvozeno [I] (OPEN-07).",
+   "en": "No order among the open M1 items is documented. That M2 depends on golden W is inferred [I] (OPEN-07)."
+  },
+  "085e406407b0a380": {
+   "cs": "P1.2-M1 [D: order]\nP1.2-M1.4 golden W [I]",
+   "en": "P1.2-M1 [D: order]\nP1.2-M1.4 golden W [I]"
+  },
+  "087bd87aa7f9f9e0": {
+   "cs": "Provider dotnet test, zapojený explicitně",
+   "en": "dotnet test provider, wired explicitly"
+  },
+  "08dd65e90d5c7352": {
+   "cs": "Třída rizika R3. Velikost L. Původní větev dev/codelaxy/p12-snapshot-observers. Výchozí hodnoty (80a98a5): 654 řádků, cyklomatická složitost 59, index udržovatelnosti 13. Počty varování: OPEN-08.",
+   "en": "Risk class R3. Size L. Original branch dev/codelaxy/p12-snapshot-observers. Source figures (80a98a5): 654 lines, cyclomatic complexity 59, maintainability index 13. Warning counts: OPEN-08."
+  },
+  "093585c8144b46bb": {
+   "cs": "Dokumentace, mimo zdokumentovaný rozsah M1: OPEN-05.",
+   "en": "Documentation, outside the documented M1 scope: OPEN-05."
+  },
+  "09d2a3e08bc5093d": {
+   "cs": "Pouze dokumentace; samotná kompatibilita s Gitem 2.31 není testována (uvedeno jako neověřené v gate E1-8 kroku M2).",
+   "en": "Documentation only; compatibility with Git 2.31 itself is not tested (stated as unverified in gate E1-8 of M2)."
+  },
+  "09d7d5d484179546": {
+   "cs": "F8 (bool.Parse v GitRepositoryStateReader); rozdělit GitSnapshotBuilderTests (S104); CA2025; F13b: nahradit předčasné návraty v testech skutečnými skipy, s inventářem testů.",
+   "en": "F8 (bool.Parse in GitRepositoryStateReader); split GitSnapshotBuilderTests (S104); CA2025; F13b: replace the early returns in the tests by real skips, with a test inventory."
+  },
+  "0adfb932c0c3705c": {
+   "cs": "docs/roadmap.md revize 7 a docs/architecture.md revize 7 (obě 'ratified').",
+   "en": "docs/roadmap.md revision 7 and docs/architecture.md revision 7 (both 'ratified')."
+  },
+  "0c91e8e89f45137d": {
+   "cs": "PODMÍNKA ODMRAZENÍ: CPU Router se odmrazí, když externí Codelaxy dokáže vytvořit platný Verdict pro staged Snapshot CPU Router přes provider CMake/CTest.\nNic dalšího součástí podmínky není. Vyřazení legacy skriptů a ladění výkonu gate jsou cenné a mohou proběhnout poté, co bude router znovu otevřen. Jejich zahrnutí by znovu vytvořilo pohyblivý cíl, který má tento milník odstranit.",
+   "en": "UNFREEZE CONDITION: CPU Router unfreezes when external Codelaxy can produce a valid Verdict for a CPU Router staged Snapshot through the CMake/CTest provider.\nNothing else is part of the condition. Retiring legacy scripts and tuning gate performance are valuable and may happen after the router is open again. Folding them in would recreate the moving target this milestone exists to remove."
+  },
+  "0cbeedf079fc6422": {
+   "cs": "OTEVŘENÉ BLOKÁTORY",
+   "en": "OPEN BLOCKERS"
+  },
+  "0dbe7019aabdc8be": {
+   "cs": "Sada pro ověření shody s cizími repozitáři",
+   "en": "Foreign-repository conformance suite"
+  },
+  "0e55d75ca7138b44": {
+   "cs": "Původní větev fix/codelaxy/p12-hash-object-stdin. Windows: asi 21 200 znaků cest projde, asi 42 400 selže; Linux ARG_MAX neměřeno (matrix). Závislost na golden W: OPEN-07.",
+   "en": "Original branch fix/codelaxy/p12-hash-object-stdin. Windows: about 21 200 characters of paths succeed, about 42 400 fail; Linux ARG_MAX not measured (matrix). Dependency on golden W: OPEN-07."
+  },
+  "0e570ca6fabe24f9": {
+   "cs": "Zdroj",
+   "en": "Source"
+  },
+  "0e5ded88881c1c43": {
+   "cs": "Test: změna bez obsahu: obnovení stat indexu.",
+   "en": "Test: change without content: index stat refresh."
+  },
+  "0e93f2c45339e9ac": {
+   "cs": "Distribuční model pro koncové uživatele",
+   "en": "Distribution model for end users"
+  },
+  "0eb16438456e2474": {
+   "cs": "Schválené pořadí",
+   "en": "Approved order"
+  },
+  "0ef8885854978c5e": {
+   "cs": "Runner bezpečně zavírá rouru stdin (F9, třída R4). Plánováno; zahájení schváleno 2026-10-25.",
+   "en": "Runner closes the stdin pipe safely (F9, class R4). Planned; approved to start on 2026-10-25."
+  },
+  "0f4bd42bad324e28": {
+   "cs": "• běžné projekty dospějí k verdiktu bez změny Codelaxy;\n• nerozpoznaný projekt zamítne, jasně a bez hádání;\n• nepřátelský projekt nespustí nic;\n• každý předpoklad zděděný z CPU Router byl nalezen a odstraněn.",
+   "en": "• the normal projects reach a verdict with no change to Codelaxy;\n• the unrecognized project denies, clearly and without guessing;\n• the hostile project executes nothing;\n• every assumption inherited from CPU Router has been found and removed."
+  },
+  "0f512a9d9695db8b": {
+   "cs": "Úklid resolveru",
+   "en": "Resolver cleanup"
+  },
+  "0fddf7d75871da88": {
+   "cs": "Stabilní rozhraní provideru",
+   "en": "A stable provider interface"
+  },
+  "10fda3456ad0d9ef": {
+   "cs": "Na listu RULES je uvedeno 21 bodů; 19 jich je stále otevřeno.",
+   "en": "21 points are listed on the RULES sheet; 19 are still open."
+  },
+  "114d49cb70e6f08a": {
+   "cs": "Ratifikace musí být popsatelná bez pojmenování typu .NET; providery mimo proces zůstávají otevřeným rozhodnutím 5.",
+   "en": "Ratification must be describable without naming a .NET type; out-of-process providers stay open decision 5."
+  },
+  "11914548bb0e84ab": {
+   "cs": "Synchronizace dokumentace s důkazy z auditu: F4 minimální verze Gitu v README, F5 zastaralá matice testů snapshotu, F6 věta pojmenovávající testy, které vynucují I5.",
+   "en": "Documentation sync with audit evidence: F4 minimum Git version in README, F5 stale snapshot test matrix, F6 sentence naming the tests that enforce I5."
+  },
+  "11a95be9344e1b17": {
+   "cs": "F1: RED test nad 32 767 znaků cest; GitObjectHasher používající git hash-object --stdin-paths (cesty s LF podporovány, rozhodnutí MD2); validovat Object ID; F11, F12, F14; testy mnoha cest se na Linuxu skutečně spouštějí (F13a).",
+   "en": "F1: RED test above 32 767 characters of paths; GitObjectHasher using git hash-object --stdin-paths (paths with LF supported, decision MD2); validate Object IDs; F11, F12, F14; the many-paths tests really run on Linux (F13a)."
+  },
+  "12647e6a8fcbc1fb": {
+   "cs": "Sada zelená z prostředí PowerShell i z UCRT64, každé potvrzené přijatým GATE-RECORD.",
+   "en": "Suite green from PowerShell and from UCRT64, each proven by an accepted GATE-RECORD."
+  },
+  "129ba26dfa63b291": {
+   "cs": "Revize 2, ratifikovaná vlastníkem 2026-10-25 pouze jako pracovní dokument (SHA-256 textu 8178ab3c…). Je zdrojem změn v revizi R5 tohoto sešitu. Externí zdroj: není commitnut v repozitáři.",
+   "en": "Revision 2, ratified by the owner on 2026-10-25 as a working document only (text SHA-256 8178ab3c…). It is the source of the changes in revision R5 of this workbook. External source: not committed to the repository."
+  },
+  "12dbcdb8d6242f36": {
+   "cs": "Původní plán",
+   "en": "Original plan"
+  },
+  "1382eaa1babe6c1e": {
+   "cs": "• rozhraní je zdokumentováno natolik, že podle něj samotného lze napsat adapter;\n• kontrola hranice selže, když se do jádra přidá volání nástroje;\n• provider, který nedokáže nahlásit všechny tři identity, nelze zaregistrovat;\n• výsledek pro nedeklarovaný druh požadavku je odmítnut (I14);\n• veřejný kontrakt provideru lze popsat bez odkazu na typ .NET assembly nebo transport specifický pro .NET;\n• rozhraní je označeno jako prozatímní, nikoli stabilní.",
+   "en": "• the interface is documented well enough to write an adapter from it alone;\n• the boundary check fails when a tool invocation is added to the core;\n• a provider that cannot report all three identities cannot be registered;\n• a result for an undeclared requirement kind is rejected (I14);\n• the public provider contract can be described without reference to a .NET assembly type or .NET-specific transport;\n• the interface is marked provisional, not stable."
+  },
+  "13d35575b7c9dae4": {
+   "cs": "Pojmenování kroků a schéma ID. Kroky mikromapy se v P12-MIKROMAPA-PC.md jmenují M0–M5. roadmap.md (hlavička, řádky 5-6) prohlašuje dřívější roadmapu M0–M6 projektu my-cpu-router za nahrazenou, takže holý štítek koliduje. Tento sešit píše P1.2-M0…P1.2-M5 a zavádí ID podpoložek (P1.2-M1.1…, P1.2-X1…, P1.2-F1…, P1.2-M4.D1/T01…, CAP-n, OD-n, DIR-n). Pracovní MICROMAP revize 2 přidává krok P1.2-M2a a nálezy F9–F14 a přejmenovává mezery v testech resolveru R1–R3 na RT1–RT3, protože kolidovaly s třídami rizika R0–R4 z docs/branching.md §6; tento sešit tato jména přebírá. ID pravidel R1–R3 na tomto listu (RELATION TO RATIFIED DOCS) mají stejnou kolizi a zde se nepřejmenovávají (pravidlo E8: ID jsou stabilní).",
+   "en": "Step naming and ID scheme. The micromap steps are called M0–M5 in P12-MIKROMAPA-PC.md. roadmap.md (header, lines 5-6) declares the earlier M0–M6 roadmap of my-cpu-router superseded, so the bare label collides with it. This workbook writes P1.2-M0…P1.2-M5 and introduces sub-item IDs (P1.2-M1.1…, P1.2-X1…, P1.2-F1…, P1.2-M4.D1/T01…, CAP-n, OD-n, DIR-n). The working MICROMAP revision 2 adds the step P1.2-M2a and the findings F9–F14, and renames the resolver test gaps R1–R3 to RT1–RT3 because they collided with the risk classes R0–R4 of docs/branching.md §6; this workbook follows those names. The rule IDs R1–R3 on this sheet (RELATION TO RATIFIED DOCS) have the same clash and are not renamed here (rule E8: IDs are stable)."
+  },
+  "13d6ff07b8a5d792": {
+   "cs": "Repozitář",
+   "en": "Repository"
+  },
+  "13db966d90ff2053": {
+   "cs": "Gate: sada testů projde z UCRT64.",
+   "en": "Gate: the suite passes from UCRT64."
+  },
+  "13e8bb3d0a366e63": {
+   "cs": "Perzistence důkazů a bezpečné opětovné použití",
+   "en": "Evidence persistence and safe reuse"
+  },
+  "1403733b81b276fd": {
+   "cs": "Stále přítomno na referenčním commitu.",
+   "en": "Still present at the reference commit."
+  },
+  "1438aca70dbdf277": {
+   "cs": "roadmap.md:321-348\nŽádná implementace na referenčním commitu.",
+   "en": "roadmap.md:321-348\nNo implementation at the reference commit."
+  },
+  "15133907259330da": {
+   "cs": "Neověřeno",
+   "en": "Not verified"
+  },
+  "15300faa3bdb559b": {
+   "cs": "Který dokument je závazný. Stejný plán nyní existuje jako P12-MIKROMAPA-PC.md, koncepty MICROMAP.md a LONGTERMMAP.md a tento sešit. Soubor ODS je binární a nemá smysluplný git diff.",
+   "en": "Which document is authoritative. The same plan now exists as P12-MIKROMAPA-PC.md, the drafts MICROMAP.md and LONGTERMMAP.md, and this workbook. An ODS file is binary and has no meaningful git diff."
+  },
+  "157d8c6eedbd3449": {
+   "cs": "F9: GitProcessRunner bezpečně zvládá uzavřenou rouru stdin (třída rizika R4); scénáře RUN-1…RUN-5; vlastní regresní testy; vlastní nezávislý audit.",
+   "en": "F9: GitProcessRunner handles a closed stdin pipe safely (risk class R4); scenarios RUN-1…RUN-5; own regression tests; own independent audit."
+  },
+  "15c3fcd33e8a6c21": {
+   "cs": "Původní text: sandbox, čeká na přenos (OPEN-04).",
+   "en": "Original text: sandbox, awaiting transfer (OPEN-04)."
+  },
+  "1609e087792fdbb6": {
+   "cs": "z 23 fází P0.0 … P2.6 (počty se řídí sloupcem Stav na listu LONGTERMMAP)",
+   "en": "of 23 phases P0.0 … P2.6 (counts follow the Status column of LONGTERMMAP)"
+  },
+  "169af523f48d2657": {
+   "cs": "Golden fingerprinty beze změny; varování v Codelaxy.Git klesnou na 0.",
+   "en": "Golden fingerprints unchanged; warnings in Codelaxy.Git reach 0."
+  },
+  "16b153573a5a160e": {
+   "cs": "Seznam scénářů M4 versus řádky matice. Plán počítá 26 scénářů (8 rozhodnutí a 18 testů). Matice na referenčním commitu má 19 řádků označených ❓, 8 řádků označených 📝 a 1 řádek označený ❌ (řádky mohou nést více značek; ❌ je F1, patří M2). Obě čísla nejsou přímo srovnatelná. Revize 2 pracovního MICROMAP přidává do M4 prokázanou závadu F10 jako samostatný řádek; není to dispozice.",
+   "en": "M4 scenario list versus matrix rows. The plan counts 26 scenarios (8 decisions and 18 tests). The matrix at the reference commit has 19 rows marked ❓, 8 rows marked 📝 and 1 row marked ❌ (rows can carry several marks; ❌ is F1, owned by M2). The two counts are not directly comparable. Revision 2 of the working MICROMAP adds the proven defect F10 to M4 as a separate row; it is not a disposition."
+  },
+  "16b54babb7e083df": {
+   "cs": "F8, rozdělení testů, CA2025, F13b. Plánováno.",
+   "en": "F8, test split, CA2025, F13b. Planned."
+  },
+  "16d6ffc5f0e3cd10": {
+   "cs": "Pojmenování kroků a schéma ID. Kroky mikromapy se v P12-MIKROMAPA-PC.md jmenují M0–M5. roadmap.md (hlavička, řádky 5-6) prohlašuje dřívější roadmapu M0–M6 z my-cpu-router za překonanou, takže holé označení s ní koliduje. Tento sešit píše P1.2-M0…P1.2-M5 a zavádí ID podpoložek (P1.2-M1.1…, P1.2-X1…, P1.2-F1…, P1.2-M4.D1/T01…, CAP-n, OD-n, DIR-n).",
+   "en": "Step naming and ID scheme. The micromap steps are called M0–M5 in P12-MIKROMAPA-PC.md. roadmap.md (header, lines 5-6) declares the earlier M0–M6 roadmap of my-cpu-router superseded, so the bare label collides with it. This workbook writes P1.2-M0…P1.2-M5 and introduces sub-item IDs (P1.2-M1.1…, P1.2-X1…, P1.2-F1…, P1.2-M4.D1/T01…, CAP-n, OD-n, DIR-n)."
+  },
+  "170635154b720d7b": {
+   "cs": "Práce dodaná nad rámec zdokumentovaného rozsahu M1. Zdokumentovaný rozsah M1 je F3, T1/T2 a golden fingerprinty H/I/S/W. Navíc byly dodány PR #7 (úklid dočasných repozitářů odolný vůči junctions na Windows) a PR #9 (sdílená hermetická fixture a regresní test 10 nepřátelských konfigurací zapojený do CI) a také dokumentační PRs #12 (doklady golden testů pro více platforem v matici) a #13 (pravidla větvení a ověřování).",
+   "en": "Work delivered beyond the documented M1 scope. The documented M1 scope is F3, T1/T2 and golden fingerprints H/I/S/W. PR #7 (junction-safe cleanup of temporary repositories on Windows) and PR #9 (shared hermetic fixture and a 10-case adversarial configuration regression wired into CI) were delivered in addition, as were the documentation PRs #12 (cross-platform golden evidence in the matrix) and #13 (branching and verification policy)."
+  },
+  "173828122274d161": {
+   "cs": "F1: limit příkazové řádky Windows, když se všechny cesty předají jednomu git hash-object (asi 21 200 znaků projde, asi 42 400 selže s 'Unable to hash tracked working-tree files').",
+   "en": "F1: Windows command-line limit when all paths are passed to one git hash-object (about 21 200 characters succeed, about 42 400 fail with 'Unable to hash tracked working-tree files')."
+  },
+  "1788ce435929e612": {
+   "cs": "Providery mimo proces: podporovat, či ne, a přes jaký transport",
+   "en": "Out-of-process providers: supported or not, and over what transport"
+  },
+  "17950e233918ba68": {
+   "cs": "Doklady golden testů pro více platforem v matici; pravidla větvení a ověřování.",
+   "en": "Cross-platform golden evidence in the matrix; branching and verification policy."
+  },
+  "17d8c65432a920cb": {
+   "cs": "Znění roadmapy IN PROGRESS, mapováno na PARTIAL (OPEN-16). Kroky a blokátory: MICROMAP. OPEN-02.\nOdvozená závislost: OPEN-10.",
+   "en": "Roadmap wording IN PROGRESS, mapped to PARTIAL (OPEN-16). Steps and blockers: MICROMAP. OPEN-02.\nInferred dependency: OPEN-10."
+  },
+  "183c5ae9a1a8c0c4": {
+   "cs": "roadmap.md:301-317\nŽádná implementace na referenčním commitu.",
+   "en": "roadmap.md:301-317\nNo implementation at the reference commit."
+  },
+  "18558d75e4593f61": {
+   "cs": "Legenda, pravidla aktualizace, vztah k ratifikovaným dokumentům a 17 otevřených bodů.",
+   "en": "Legend, update rules, relation to ratified documents, and 17 open points."
+  },
+  "185b06aadca2a817": {
+   "cs": "AUDIT-A A-5 (protokoly ve workspace, ne v repozitáři).",
+   "en": "AUDIT-A A-5 (workspace protocols, not in the repository)."
+  },
+  "18bf0fbdaad93806": {
+   "cs": "• každá použitelná buňka tabulky pokrytí má adapter a každá nepoužitelná buňka má písemnou politiku NOT_REQUIRED\n• konfigurace, detekce, důvěra\n• skutečné opětovné použití důkazů alespoň pro jeden druh požadavku\n• sada pro ověření shody zelená\n• instalace jedním příkazem\n• zdokumentované, verzované rozhraní adapterů",
+   "en": "• every applicable cell of the coverage table has an adapter, and every non-applicable cell has a written NOT_REQUIRED policy\n• configuration, detection, trust\n• real evidence reuse for at least one requirement kind\n• conformance suite green\n• one-command install\n• documented, versioned adapter interface"
+  },
+  "18eb2af3ac749c09": {
+   "cs": "Závažnost MEDIUM. Gate E1-2 kroku M2: nejméně tři sledované a tři nesledované soubory s různým obsahem, očekávané hodnoty vypočtené nezávisle, oba mutanty zabity.",
+   "en": "Severity MEDIUM. Gate E1-2 of M2: at least three tracked and three untracked files of different content, expected values computed independently, both mutants killed."
+  },
+  "18fc453c997b9d5b": {
+   "cs": "žádná (nečeká na přijetí M1) [D: decision MD10a]",
+   "en": "none (does not wait for the M1 acceptance) [D: decision MD10a]"
+  },
+  "195cbe66fa7f8a78": {
+   "cs": "Slovník Snapshot / Requirement / Evidence / Verdict / Provider",
+   "en": "Snapshot / Requirement / Evidence / Verdict / Provider vocabulary"
+  },
+  "19ade43343a590f7": {
+   "cs": "Trvalý odkaz na audity (MO5). Pracovní MICROMAP navrhuje samostatný pull request jen s dokumentací, který přidá AUDIT-A, AUDIT-B, dodatek a manifest SHA-256 do docs/audits/. Dodatek je stále DRAFT. Do té doby jsou audity z 2026-10-24 dokumenty ve workspace bez přenosného odkazu.",
+   "en": "Durable reference for the audits (MO5). The working MICROMAP proposes a separate documentation-only pull request that adds AUDIT-A, AUDIT-B, the addendum and a SHA-256 manifest under docs/audits/. The addendum is still a DRAFT. Until then the audits of 2026-10-24 are workspace documents without a portable link."
+  },
+  "19f4658896cb6376": {
+   "cs": "Jazyk započtený jako podporovaný",
+   "en": "A language counted as supported"
+  },
+  "1a6a9ed2b9da8aa1": {
+   "cs": "Položky P1.2-M1.1 … M1.10 níže.\nPR #6, PR #7, PR #8, PR #9, PR #11, PR #14, PR #15 sloučeny; doplňky PR #12, PR #13.\nČásti brány přijal vlastník 2026-10-25 (viz P1.2-M1.7).",
+   "en": "Items P1.2-M1.1 … M1.10 below.\nPR #6, PR #7, PR #8, PR #9, PR #11, PR #14, PR #15 merged; extras PR #12, PR #13.\nGate legs accepted by the owner on 2026-10-25 (see P1.2-M1.7)."
+  },
+  "1a95c7b2c24d62d8": {
+   "cs": "Závěrečná revize: výstupní kritéria a kontrolní bod MO3, F1, F9–F14, přijetí M1-GA/GB, dispozice MSYS2-COMPAT, matice, baseline varování, auditní mutanty A-MUT-1/2/3 na finální hlavě; nezávislý audit; P1.2 DONE.",
+   "en": "Exit review: the exit criteria and the MO3 checkpoint, F1, F9–F14, acceptance of M1-GA/GB, disposition of MSYS2-COMPAT, matrix, warning baseline, audit mutants A-MUT-1/2/3 on the final head; independent audit; P1.2 DONE."
+  },
+  "1b00d5419d94df02": {
+   "cs": "Kroky PARTIAL",
+   "en": "Steps PARTIAL"
+  },
+  "1bd2a287d8dbeba8": {
+   "cs": "PR #6 (ad8e4dc)\ntools/ci/warning_gate.py, warning-baseline.json\nself-testy test_f3_01…15:58-140 (vč. test_f3_02 nová diagnostika selže)\nci.yml:53 self-testy, ci.yml:56 gate",
+   "en": "PR #6 (ad8e4dc)\ntools/ci/warning_gate.py, warning-baseline.json\nself-tests test_f3_01…15:58-140 (incl. test_f3_02 new diagnostic fails)\nci.yml:53 self-tests, ci.yml:56 gate"
+  },
+  "1c0508f942f04c71": {
+   "cs": "Opětovné použití důkazů",
+   "en": "Reuse of evidence"
+  },
+  "1c8c982a55e5d39c": {
+   "cs": "V docs/snapshot-test-matrix.md nezůstane žádné ❓ ani 📝; F10 uzavřeno sloučeným kódem a sloučeným testem.",
+   "en": "No ❓ or 📝 remains in docs/snapshot-test-matrix.md; F10 closed by merged code and a merged test."
+  },
+  "1e2f393796d5d93c": {
+   "cs": "F6: věta o I5 (pojmenovává testy, které jej vynucují).",
+   "en": "F6: sentence on I5 (names the tests that enforce it)."
+  },
+  "1e5184410a65b0d3": {
+   "cs": "ab71863 — main = origin/main; pracovní strom byl při inventuře čistý.",
+   "en": "ab71863 — main = origin/main; working tree clean at the time of the inventory."
+  },
+  "1e6148dd5f9231f3": {
+   "cs": "Identita indexu",
+   "en": "Index identity"
+  },
+  "1e931fc3d4e6a22d": {
+   "cs": "roadmap.md:378-423\nŽádná implementace na referenčním commitu.",
+   "en": "roadmap.md:378-423\nNo implementation at the reference commit."
+  },
+  "1ff57a29d7c9d11b": {
+   "cs": "Další",
+   "en": "Next"
+  },
+  "20b3762d704c6045": {
+   "cs": "Podpora MSYS2 Git není doložena. Neblokuje uzavření P1.2; blokuje jakékoli tvrzení o podpoře MSYS2 (OPEN-18).",
+   "en": "MSYS2 Git support is not evidenced. Does not block closing P1.2; blocks any claim of MSYS2 support (OPEN-18)."
+  },
+  "20e0bb1fdc27cf61": {
+   "cs": "Bezpečnostní testy beze změny; R1–R3 zabity.",
+   "en": "Security tests unchanged; R1–R3 killed."
+  },
+  "211c27e8f148d957": {
+   "cs": "Pohled na důkazy StatusMan",
+   "en": "StatusMan evidence view"
+  },
+  "21256c1d5fa61bba": {
+   "cs": "Integrace CPU Router — ROUTER SE ODMRAZUJE\nRozsah (roadmapa): (1) na integrační větvi: přijetí CMake, Ninja a ccache, což je zároveň oprava gate, který dělal commity nesnesitelnými (I11) (2) CPU Router deklaruje své požadavky a providery externímu Codelaxy (3) vytvoření verdiktu pro staged snapshot CPU Router od začátku do konce.",
+   "en": "CPU Router integration — ROUTER UNFREEZES\nScope (roadmap): (1) on the integration branch: CMake, Ninja, and ccache adopted, which is also the fix for the gate that made commits unbearable (I11) (2) CPU Router declares its requirements and providers to external Codelaxy (3) a verdict for a staged CPU Router snapshot produced end to end."
+  },
+  "21b95aeac6386259": {
+   "cs": "Původní text jej uvádí jako otevřený: OPEN-04.",
+   "en": "Original text lists it as open: OPEN-04."
+  },
+  "22bfcb0b99f949a2": {
+   "cs": "Není součástí ratifikované roadmapy, proto ho sešit neuvádí jako výstupní kritérium. Potřebuje vlastní rozhodnutí, aby vstoupilo do roadmap.md.",
+   "en": "Not part of the ratified roadmap, so the workbook does not list it as an exit criterion. Needs its own decision to enter roadmap.md."
+  },
+  "22c236f59b5bfabe": {
+   "cs": "AUDIT-A A-2, AUDIT-B B-2 (protokoly ve workspace, ne v repozitáři). Samotný kód je správný; golden W má jeden soubor od každého druhu.",
+   "en": "AUDIT-A A-2, AUDIT-B B-2 (workspace protocols, not in the repository). The code itself is correct; the golden W has one file of each kind."
+  },
+  "23382637201dfeec": {
+   "cs": "S2: veřejnému GitProcessRunner(string) důvěřuje volající (bez ověření umístění).",
+   "en": "S2: the public GitProcessRunner(string) is trusted by the caller (no location verification)."
+  },
+  "23c8e30fd197e4f0": {
+   "cs": "Uzavřít dispozice matice: 8 rozhodnutí a 18 testů (řádky P1.2-M4.D1–D8 a P1.2-M4.T01–T18 níže); F10: test a oprava závady zmizelého souboru.",
+   "en": "Close the matrix dispositions: 8 decisions and 18 tests (rows P1.2-M4.D1–D8 and P1.2-M4.T01–T18 below); F10: test and fix of the vanished-file defect."
+  },
+  "24373f5effa3452f": {
+   "cs": "PR #9 (4dda376, 0200f16)\nGoldenGitFixture.cs\nverify_golden_git_config.py CASES\nci.yml:62\nCI na referenčním commitu: zelené na obou operačních systémech",
+   "en": "PR #9 (4dda376, 0200f16)\nGoldenGitFixture.cs\nverify_golden_git_config.py CASES\nci.yml:62\nCI at reference commit: green on both operating systems"
+  },
+  "249d728394bc0f89": {
+   "cs": "Fáze PLANNED",
+   "en": "Phases PLANNED"
+  },
+  "24a206c27ec6df57": {
+   "cs": "Baseline varování kompilátoru: 10 varování v 9 záznamech; sníží se v P1.2-M3b a P1.2-M3d (gate: varování v Codelaxy.Git klesnou na 0).",
+   "en": "Compiler-warning baseline: 10 warnings in 9 entries; to be reduced in P1.2-M3b and P1.2-M3d (gate: warnings in Codelaxy.Git reach 0)."
+  },
+  "24f7aad8a4255685": {
+   "cs": "Zde nesladěno. Znovu změřit u gate M3b a M3d.",
+   "en": "Not reconciled here. Re-measure at the M3b and M3d gates."
+  },
+  "256b5dd17fe56d3a": {
+   "cs": "Jediná autorita MrProper",
+   "en": "Single MrProper authority"
+  },
+  "2571bd2ca48e2f8a": {
+   "cs": "Potřebuje vlastní rozhodnutí a vlastní schválený postup: ratifikace pracovního MICROMAP architecture.md nemění.",
+   "en": "Needs its own decision and its own approved procedure: the ratification of the working MICROMAP does not change architecture.md."
+  },
+  "2621ff5068b052ad": {
+   "cs": "17 otevřených bodů je uvedeno na listu RULES.",
+   "en": "17 open points are listed on the RULES sheet."
+  },
+  "27bcd8d697ab008e": {
+   "cs": "T3 a RT1–RT3: metriky resolveru a mezery v testech.",
+   "en": "T3 and RT1–RT3: resolver metrics and test gaps."
+  },
+  "283a26b9d84783f9": {
+   "cs": "Uvedeno v roadmap.md nebo architecture.md revize 7.",
+   "en": "Stated in roadmap.md or architecture.md revision 7."
+  },
+  "285b17e55fc2d86c": {
+   "cs": "M2 závisí na golden W (odvozeno). P12-MIKROMAPA-PC.md uvádí pořadí 'M0 and M1, then M2'. Že M2 (F1) závisí na golden W, se odvozuje ze železného pravidla, protože F1 mění způsob výpočtu W. Golden W je nyní DONE (PR #11), takže odvozená závislost je splněna. Pracovní MICROMAP přidává jinou závislost: M2 následuje po M2a (jeho rozhodnutí MD1).",
+   "en": "M2 depends on golden W (inferred). P12-MIKROMAPA-PC.md states the order 'M0 and M1, then M2'. That M2 (F1) depends on the golden W is inferred from the iron rule, because F1 changes how W is computed. The golden W is now DONE (PR #11), so the inferred dependency is satisfied. The working MICROMAP adds a different dependency: M2 follows M2a (its decision MD1)."
+  },
+  "288d537b72073f9d": {
+   "cs": "Rozhodnutí zaznamenaná do",
+   "en": "Decisions recorded until"
+  },
+  "28e658304fbcbaaf": {
+   "cs": "Osm scénářů vyžaduje výslovné rozhodnutí správce, než lze napsat test (matice 📝).",
+   "en": "Eight scenarios need an explicit maintainer decision before a test can be written (matrix 📝)."
+  },
+  "28eb661ace9ad81e": {
+   "cs": "Velikost L. Původní větev dev/codelaxy/p12-snapshot-observers. Výchozí hodnoty (80a98a5): 654 řádků, cyklomatická složitost 59, index udržovatelnosti 13. Počty varování: OPEN-08.",
+   "en": "Size L. Original branch dev/codelaxy/p12-snapshot-observers. Source figures (80a98a5): 654 lines, cyclomatic complexity 59, maintainability index 13. Warning counts: OPEN-08."
+  },
+  "28ebf6f7d2f3e8a1": {
+   "cs": "roadmap.md:579-599\nŽádná implementace na referenčním commitu.",
+   "en": "roadmap.md:579-599\nNo implementation at the reference commit."
+  },
+  "2949aa265da35b1a": {
+   "cs": "Implementováno a ověřeno (pozorovaný výstup nebo CI), nikoli pouze přítomno jako kód.",
+   "en": "Implemented and verified (observed output or CI), not merely present as code."
+  },
+  "29a47d4a50d183a9": {
+   "cs": "roadmap.md Výslovně po verzi 1.0",
+   "en": "roadmap.md Explicitly after 1.0"
+  },
+  "29f1e9ea4f1fb28e": {
+   "cs": "T3 (vyčlenit kontrolu kandidáta, S3267, délka RunCoreAsync); testy resolveru RT1–RT3.",
+   "en": "T3 (extract candidate check, S3267, RunCoreAsync length); resolver tests RT1–RT3."
+  },
+  "2a351722244aebc6": {
+   "cs": "CI zelené.",
+   "en": "CI green."
+  },
+  "2a520e7df0619e49": {
+   "cs": "MAPA SEŠITU",
+   "en": "WORKBOOK MAP"
+  },
+  "2b09f4b5a5d13161": {
+   "cs": "Žádné (plánováno). Matice nyní: 21 řádků ❓, 9 řádků 📝, 2 řádky ❌.",
+   "en": "None (planned). Matrix now: 21 rows ❓, 9 rows 📝, 2 rows ❌."
+  },
+  "2b171325b9d25bf3": {
+   "cs": "roadmap.md:248-268\nŽádná implementace na referenčním commitu.",
+   "en": "roadmap.md:248-268\nNo implementation at the reference commit."
+  },
+  "2b4c2367a8f6cc6d": {
+   "cs": "Závažnost LOW. Uzavřeno v M3c s inventářem testů, ne porovnáním součtů PASS+SKIP.",
+   "en": "Severity LOW. Closed in M3c with a test inventory, not by comparing PASS+SKIP totals."
+  },
+  "2b7814d3fca2e99e": {
+   "cs": "README",
+   "en": "README"
+  },
+  "2b9415ace2189c60": {
+   "cs": "Nevymýšlejí se žádná procenta ani data. Roadmapa žádná nestanoví.",
+   "en": "No percentages and no dates are invented. The roadmap sets none."
+  },
+  "2c47b9d7886a871a": {
+   "cs": "T3 (vyčlenit kontrolu kandidáta, S3267, délka RunCoreAsync); testy R1–R3 pro resolver.",
+   "en": "T3 (extract candidate check, S3267, RunCoreAsync length); tests R1–R3 for the resolver."
+  },
+  "2d69a8339ebabe19": {
+   "cs": "Barvy stavů jsou podmíněné formátování LibreOffice vázané na text buňky (sloupce Stav, Postavení, Rozhodnutí a Zdroj). Změňte text a barva ho následuje; tyto buňky nikdy nebarvěte ručně. Editor bez podpory podmíněného formátování zobrazí buňky bez barvy; slovo stavu zůstává závazné. Pokud přidaný řádek nemá barvu, rozšiřte rozsah pravidla (Format > Conditional > Manage) nebo na něj zkopírujte existující buňku stavu.",
+   "en": "Status colours are LibreOffice conditional formatting bound to the cell text (Status, Standing, Decision and Source columns). Change the text and the colour follows; never paint these cells by hand. An editor without conditional-format support shows the cells uncoloured; the status word stays authoritative. If a row you add has no colour, extend the rule range (Format > Conditional > Manage) or copy an existing status cell onto it."
+  },
+  "2df38f209b761ee7": {
+   "cs": "Odvozený výklad roadmap.md a architecture.md; žádný nový milník.",
+   "en": "Derived reading of roadmap.md and architecture.md; no new milestone."
+  },
+  "2e407c6da0ffa5e8": {
+   "cs": "PR #14 (b3993e6): nativní úklid fixture G2 na Linuxu\nZbytek: GitSnapshotInvalidUtf8Tests.cs:644 stále volá rm (Process.Start(\"rm\", …)) na jiných platformách než Windows a Linux",
+   "en": "PR #14 (b3993e6): native cleanup of the Linux G2 fixture\nResidual: GitSnapshotInvalidUtf8Tests.cs:644 still calls rm (Process.Start(\"rm\", …)) on platforms other than Windows and Linux"
+  },
+  "2e516d68f42f3e35": {
+   "cs": "Revize",
+   "en": "Revision"
+  },
+  "2e61d09b996c47be": {
+   "cs": "Sešit propojuje každou položku M4 s řádkem matice, který má podle očekávání uzavřít. Sladěte seznam s maticí na začátku M4.",
+   "en": "Workbook links each M4 item to the matrix row it expects to close. Reconcile the list against the matrix at the start of M4."
+  },
+  "2e8d5f22bd63f1ff": {
+   "cs": "Původní větev dev/codelaxy/p12-resolver-cleanup.",
+   "en": "Original branch dev/codelaxy/p12-resolver-cleanup."
+  },
+  "2eb0fe505871e79a": {
+   "cs": "Závažnost LOW (AUDIT-A A-6). Uzavřeno v M2 a M3a.",
+   "en": "Severity LOW (AUDIT-A A-6). Closed in M2 and M3a."
+  },
+  "2fcafeeb349e9bce": {
+   "cs": "Koncept LONGTERMMAP",
+   "en": "LONGTERMMAP draft"
+  },
+  "2feab4bb1fa182f2": {
+   "cs": "Audity",
+   "en": "Audits"
+  },
+  "2ff430d6970b2ecd": {
+   "cs": "Závěrečná revize: čtyři výstupní kritéria P1.2, F1, matice, baseline varování; nezávislý audit; P1.2 DONE.",
+   "en": "Exit review: the four P1.2 exit criteria, F1, matrix, warning baseline; independent audit; P1.2 DONE."
+  },
+  "309dfdd2e3371f9f": {
+   "cs": "Tento sešit upravujte pouze v LibreOffice Calc. Rozšíření VS Code Spreadsheet Studio (SheetJS) při uložení přepíše celý soubor a zahodí vzorce, hypertextové odkazy, barvy, podmíněné formáty, filtry, ukotvené panely a nastavení tisku. Používejte ho jen k prohlížení, nikdy k ukládání.",
+   "en": "Edit this workbook in LibreOffice Calc only. The VS Code extension Spreadsheet Studio (SheetJS) rewrites the whole file on save and drops formulas, hyperlinks, colours, conditional formats, filters, frozen panes and print setup. Use it to look, never to save."
+  },
+  "30a0faa813e7a757": {
+   "cs": "CI, distribuce, dokumentace",
+   "en": "CI, distribution, documentation"
+  },
+  "30dc7d7f2805035f": {
+   "cs": "Samostatný repozitář + .NET solution",
+   "en": "Standalone repository + .NET solution"
+  },
+  "3168c172f7088444": {
+   "cs": "Řádek matice 'file changes during snapshot' říká, že drift vrací diagnostiku; platí to pro změnu obsahu, ne pro zmizelý soubor.",
+   "en": "The matrix row 'file changes during snapshot' says drift returns a diagnostic; that holds for a content change, not for a vanished file."
+  },
+  "31e787fb2d071723": {
+   "cs": "roadmap.md:174-210\nsrc/Codelaxy.Core obsahuje na referenčním commitu jen svůj .csproj (žádné zdrojové soubory).",
+   "en": "roadmap.md:174-210\nsrc/Codelaxy.Core contains only its .csproj at the reference commit (no source files)."
+  },
+  "3215523e8b98dffe": {
+   "cs": "roadmap.md:427-446\nŽádná implementace na referenčním commitu.",
+   "en": "roadmap.md:427-446\nNo implementation at the reference commit."
+  },
+  "324fd99f52cd6715": {
+   "cs": "Původní větev fix/codelaxy/p12-docs-audit-sync byla použita podle plánu. F4 dokumentuje pouze minimální verzi; kompatibilita s Gitem 2.31 není testována (README.md). Pojmenování větví: OPEN-17.",
+   "en": "Original branch fix/codelaxy/p12-docs-audit-sync was used as planned. F4 documents the minimum version only; compatibility with Git 2.31 is not tested (README.md). Branch naming: OPEN-17."
+  },
+  "32d2039297364a04": {
+   "cs": "Žádný z nich neblokuje současnou práci. Všechny blokují první vydání.",
+   "en": "None of these block current work. All of them block the first release."
+  },
+  "3388405aea281f76": {
+   "cs": "Zdokumentováno: závislost je uvedena v textu roadmap.md nebo architecture.md. Citovaná fráze je uvedena v buňce Závisí na.",
+   "en": "Documented: the dependency is stated in text in roadmap.md or architecture.md. The quoted phrase is given in the Depends on cell."
+  },
+  "33eb1f8b0e3392e9": {
+   "cs": "Stav v sešitu UNKNOWN. Ratifikujte, zda gate zůstane a co se počítá jako důkaz (job v CI nebo zaznamenaný ruční běh).",
+   "en": "Workbook status UNKNOWN. Ratify whether the gate stays and what counts as evidence (CI job or a recorded manual run)."
+  },
+  "34adca41a6a275ae": {
+   "cs": "Fáze P0.0 … P2.6 z roadmap.md.",
+   "en": "A phase P0.0 … P2.6 of roadmap.md."
+  },
+  "34e7ea4d05d99453": {
+   "cs": "P12-MIKROMAPA-PC.md, železné pravidlo a pořadí",
+   "en": "P12-MIKROMAPA-PC.md, iron rule and order"
+  },
+  "351f7a72208f7b1a": {
+   "cs": "Baseline: 10 varování v 9 záznamech. OPEN-08.",
+   "en": "Baseline: 10 warnings in 9 entries. OPEN-08."
+  },
+  "37ea6a1f45ca362b": {
+   "cs": "architecture.md §10 lekce 18",
+   "en": "architecture.md §10 lesson 18"
+  },
+  "37fa1c853cef3346": {
+   "cs": "Runner stdin (F9)",
+   "en": "Runner stdin (F9)"
+  },
+  "3843971dcfdee508": {
+   "cs": "ID",
+   "en": "ID"
+  },
+  "3a56d7728c798532": {
+   "cs": "Sloučený pull request není dokončený milník: P1.2-M1 zůstal PARTIAL i po sloučení všech svých pull requestů, dokud vlastník 2026-10-25 nepřijal záznamy brány.",
+   "en": "A merged pull request is not a completed milestone: P1.2-M1 stayed PARTIAL after all its pull requests were merged, until the owner accepted the gate records on 2026-10-25."
+  },
+  "3a835aa2025b0f01": {
+   "cs": "P1.2-M2a [D: decision MD1]\nP1.2-M1.4 golden W [I] (DONE)",
+   "en": "P1.2-M2a [D: decision MD1]\nP1.2-M1.4 golden W [I] (DONE)"
+  },
+  "3aadf10ec8cf8977": {
+   "cs": "Pravidla větvení",
+   "en": "Branching policy"
+  },
+  "3acc31bf39004e9f": {
+   "cs": "DALŠÍ KROK (SCHVÁLENÉ POŘADÍ)",
+   "en": "NEXT STEP (APPROVED ORDER)"
+  },
+  "3ad551cd866856ee": {
+   "cs": "Žádné (plánováno).",
+   "en": "None (planned)."
+  },
+  "3aee05b08fd1ed38": {
+   "cs": "Body, které stále vyžadují rozhodnutí (uvedeny v RULES).",
+   "en": "Points that still need a decision (listed on RULES)."
+  },
+  "3af7f2f25c11e023": {
+   "cs": "Rozsah je pouze TEST; dotnet build a dotnet format přijdou v P2.1.",
+   "en": "Scope is TEST only; dotnet build and dotnet format arrive in P2.1."
+  },
+  "3b3bb83b05887f3e": {
+   "cs": "Testuje, zda je NOT_REQUIRED poctivé.",
+   "en": "Tests whether NOT_REQUIRED is honest."
+  },
+  "3b3d1c54c4ca7dd7": {
+   "cs": "Položky indexu a ID objektů se kontrolují. Kontrola výstupu hash-object přijde s M2; serializér stále přijímá duplicitní klíče, neznámé vlastnosti a libovolný text jako fingerprint (sonda P10 z AUDIT-A; protokoly ve workspace, ne v repozitáři).",
+   "en": "Index entries and object ids are checked. The check of the hash-object output arrives with M2; the serializer still accepts duplicate keys, unknown properties and any text as a fingerprint (AUDIT-A probe P10; workspace protocols, not in the repository)."
+  },
+  "3b71dd76e09fe6cd": {
+   "cs": "Providery pro dokončení C++ a C#",
+   "en": "C++ and C# completion providers"
+  },
+  "3c391a818478071b": {
+   "cs": "Seznam scénářů M4 versus řádky matice. Plán počítá 26 scénářů (8 rozhodnutí a 18 testů). Matice na referenčním commitu má 21 řádků označených ❓, 9 řádků označených 📝 a 2 řádky označené ❌ (řádky mohou nést několik značek; ❌ je F1, vlastněné M2). Oba počty nejsou přímo srovnatelné.",
+   "en": "M4 scenario list versus matrix rows. The plan counts 26 scenarios (8 decisions and 18 tests). The matrix at the reference commit has 21 rows marked ❓, 9 rows marked 📝 and 2 rows marked ❌ (rows can carry several marks; ❌ is F1, owned by M2). The two counts are not directly comparable."
+  },
+  "3e1bf64b26a679a3": {
+   "cs": "MICROMAP — P1.2 Snapshot engine, taktická roadmapa     |     referenční commit b05f2d2 (2026-10-18)",
+   "en": "MICROMAP — P1.2 Snapshot engine, tactical roadmap     |     reference commit b05f2d2 (2026-10-18)"
+  },
+  "3e1f0d65ca799287": {
+   "cs": "POSTAVENÍ",
+   "en": "STANDING"
+  },
+  "3f4048dd0086a331": {
+   "cs": "196fc2f (bootstrap samostatné solution)\nroadmap.md status block:26-52",
+   "en": "196fc2f (bootstrap of the standalone solution)\nroadmap.md status block:26-52"
+  },
+  "3f77651dec22c43c": {
+   "cs": "Podpora TEST pro shell: bats jako provider, nebo výslovná politika NOT_REQUIRED",
+   "en": "Shell TEST support: bats as a provider, or an explicit NOT_REQUIRED policy"
+  },
+  "3fa96cf583f4e0c0": {
+   "cs": "Bezpečnostní testy beze změny; RT1–RT3 zabity.",
+   "en": "Security tests unchanged; RT1–RT3 killed."
+  },
+  "4049a180a4899685": {
+   "cs": "T3 a R1–R3: metriky resolveru a mezery v testech.",
+   "en": "T3 and R1–R3: resolver metrics and test gaps."
+  },
+  "40b2e1ac878f81c6": {
+   "cs": "Sešit označuje obě vazby [I]. Ratifikujte.",
+   "en": "Workbook marks both links [I]. Ratify."
+  },
+  "411f118bfc95c8a9": {
+   "cs": "Body, které vyžadují rozhodnutí (uvedeny v RULES).",
+   "en": "Points that need a decision (listed on RULES)."
+  },
+  "441387fbcb69d0c6": {
+   "cs": "Referenční commit",
+   "en": "Reference commit"
+  },
+  "444167321a1a819a": {
+   "cs": "všechny předchozí kroky [D: last]",
+   "en": "all previous steps [D: last]"
+  },
+  "45df634148681e12": {
+   "cs": "Důkaz BUILD pro C#",
+   "en": "C# BUILD evidence"
+  },
+  "46342ec1eec9d78d": {
+   "cs": "Fáze",
+   "en": "Phase"
+  },
+  "464343dbb56dafe0": {
+   "cs": "Ratifikujte, nebo požádejte o českou edici.",
+   "en": "Ratify or request a Czech edition."
+  },
+  "4651b146f38ff5ef": {
+   "cs": "Hashování cest (F1, F11, F12, F14). Plánováno; existuje necommitnutý návrh, audit NO-GO.",
+   "en": "Hashing of paths (F1, F11, F12, F14). Planned; an uncommitted draft exists, audit NO-GO."
+  },
+  "4658e2b454481ac5": {
+   "cs": "Potřebuje schválení dodatku vlastníkem a tohoto pull requestu; nyní se nic nekopíruje.",
+   "en": "Needs the owner's approval of the addendum and of that pull request; nothing is copied now."
+  },
+  "46e147a790bcd539": {
+   "cs": "Pracovní MICROMAP",
+   "en": "Working MICROMAP"
+  },
+  "478f4c234108ca2f": {
+   "cs": "Původní text: volitelné.",
+   "en": "Original text: optional."
+  },
+  "484a2c012973c4f3": {
+   "cs": "Otevřená položka M1.",
+   "en": "Open M1 item."
+  },
+  "48b412d76a64afc9": {
+   "cs": "omezuje P2.5",
+   "en": "constrains P2.5"
+  },
+  "490c1c2b8fb20fa7": {
+   "cs": "Pokrytí chování snapshotu; počty v tomto sešitu pocházejí z ní.",
+   "en": "Behaviour coverage of the snapshot; counts in this workbook come from it."
+  },
+  "4972b0fc7095d174": {
+   "cs": "Nic z konfigurace se nespouští před P1.9.\nOdvozená závislost: OPEN-10.",
+   "en": "Nothing from configuration is executed before P1.9.\nInferred dependency: OPEN-10."
+  },
+  "49802bf9cdfe9271": {
+   "cs": "Kde se zdroje rozcházejí, sešit jejich tvrzení tiše nesplétá. Rozpor je OPEN bodem níže a dotčený řádek na něj odkazuje.",
+   "en": "Where sources disagree, the workbook does not merge their claims silently. The disagreement is an OPEN point below, and the affected row points to it."
+  },
+  "49a8af394776205a": {
+   "cs": "roadmap.md:214-244\nCoreBoundaryInvariantTests:3 již zakazuje tokeny nástrojů v Core a Contracts (prázdné, dokud je Core prázdné).",
+   "en": "roadmap.md:214-244\nCoreBoundaryInvariantTests:3 already bans tool tokens in Core and Contracts (vacuous while Core is empty)."
+  },
+  "49d10c8740c01cc4": {
+   "cs": "F1: limit příkazové řádky, když se všechny cesty předají jednomu git hash-object. Windows: asi 21 200 znaků projde, asi 42 400 selže s 'Unable to hash tracked working-tree files' (matice). Linux (měření auditu, ARG_MAX 2 097 152): 20 000 souborů projde, 100 000 selže.",
+   "en": "F1: command-line limit when all paths are passed to one git hash-object. Windows: about 21 200 characters succeed, about 42 400 fail with 'Unable to hash tracked working-tree files' (matrix). Linux (audit measurement, ARG_MAX 2 097 152): 20 000 files succeed, 100 000 fail."
+  },
+  "4a412ff534f9777f": {
+   "cs": "Stavy popisují pouze referenční commit. Při aktualizaci: změnit referenční commit a datum, znovu ověřit každý řádek dotčený novými commity a zaznamenat změny do Poznámek.",
+   "en": "Statuses describe the reference commit only. On update: change the reference commit and date, re-verify every row touched by new commits, and record changes in the Notes."
+  },
+  "4a521d61cc26a3b1": {
+   "cs": "Test: cesta s úvodním '-'.",
+   "en": "Test: path with a leading '-'."
+  },
+  "4a9d73b6d4f29e2d": {
+   "cs": "Každá použitelná buňka pokrytí má adapter; každá další buňka písemnou politiku NOT_REQUIRED.",
+   "en": "Every applicable coverage cell has an adapter; every other cell a written NOT_REQUIRED policy."
+  },
+  "4aa5a4104dd10a7e": {
+   "cs": "P1.2-M3a [D: order]\nP1.2-M4 testy [D: before M3b; decision MD10c]",
+   "en": "P1.2-M3a [D: order]\nP1.2-M4 tests [D: before M3b; decision MD10c]"
+  },
+  "4abb6ad331f9d3c5": {
+   "cs": "roadmap.md:557-575\nŽádná implementace na referenčním commitu.",
+   "en": "roadmap.md:557-575\nNo implementation at the reference commit."
+  },
+  "4ae8e955591624d9": {
+   "cs": "PR #5: synchronizace matice, pojmenované testy I5, minimální verze Gitu\nCI na referenčním commitu: zelené na obou operačních systémech",
+   "en": "PR #5: matrix sync, I5 tests named, min Git version\nCI at reference commit: green on both operating systems"
+  },
+  "4b10b5ba71b7fe05": {
+   "cs": "koncepty docs/MICROMAP.md a docs/LONGTERMMAP.md (workspace)",
+   "en": "docs/MICROMAP.md and docs/LONGTERMMAP.md drafts (workspace)"
+  },
+  "4b81a70d9c7a5a03": {
+   "cs": "Test: druh repozitáře: core.untrackedCache.",
+   "en": "Test: repository kind: core.untrackedCache."
+  },
+  "4bf0cfe2ba664e0a": {
+   "cs": "Na stroji správce není nainstalován žádný MSYS2 Git; přijaté záznamy brány jsou Git for Windows. Stávající testy používají syntetické rozvržení MSYS2. architecture.md I4:72-113",
+   "en": "No MSYS2 Git is installed on the maintainer's machine; the accepted gate records are Git for Windows. The existing tests use a synthetic MSYS2 layout. architecture.md I4:72-113"
+  },
+  "4c49665d55bfc02b": {
+   "cs": "Závažnost MEDIUM. Uzavře se jen sloučeným kódem a sloučeným testem (M4); blokuje M5. Souvisí s navrhovaným výstupním kritériem (MO3).",
+   "en": "Severity MEDIUM. Closed only by merged code and a merged test (M4); it blocks M5. Linked to the proposed exit criterion (MO3)."
+  },
+  "4c9afaae082b47f7": {
+   "cs": "Přijato vlastníkem 2026-10-25. Git for Windows není MSYS2 Git, proto tyto záznamy nic neříkají o MSYS2-COMPAT (OPEN-18). Výstup 'UCRT64 330 of 330', který dříve zmínil GPT, nebyl nalezen a nepočítá se. OPEN-06.",
+   "en": "Accepted by the owner on 2026-10-25. Git for Windows is not MSYS2 Git, so these records say nothing about MSYS2-COMPAT (OPEN-18). The 'UCRT64 330 of 330' output mentioned earlier by GPT was not found and is not counted. OPEN-06."
+  },
+  "4cd17515febc77b0": {
+   "cs": "P12-MIKROMAPA-PC.md; řádky MICROMAP P1.2-X1…X4",
+   "en": "P12-MIKROMAPA-PC.md; MICROMAP rows P1.2-X1…X4"
+  },
+  "4d84847230ea008c": {
+   "cs": "Výstupní kritérium P1.2, citované doslova z roadmap.md.",
+   "en": "An exit criterion of P1.2, quoted verbatim from roadmap.md."
+  },
+  "4dd347a33201a51e": {
+   "cs": "Kontroly: běh 40066814847 (push do main) success; windows-latest 330 z 330 testů, ubuntu-24.04 330 z 330 testů; izolace konfigurace Gitu v Golden testech 10 z 10 případů na obou. Zdroj: výňatek z logu běhu uložený v evidenci workspace (metadata běhu uvádějí jen výsledek).",
+   "en": "Checks: run 40066814847 (push to main) success; windows-latest 330 of 330 tests, ubuntu-24.04 330 of 330 tests; Golden Git configuration isolation 10 of 10 cases on both. Source: the run log excerpt kept in the workspace evidence (the run metadata records the conclusion only)."
+  },
+  "4e67ce9c9829025e": {
+   "cs": "Milník je hotový, když jsou prokazatelně splněna jeho výstupní kritéria, nikoli když existuje kód (roadmap.md, Working rules).",
+   "en": "A milestone is done when its exit criteria are demonstrably met, not when the code exists (roadmap.md, Working rules)."
+  },
+  "4e77b42fd4228dae": {
+   "cs": "F9: GitProcessRunner vyhodí IOException, když Git skončí dřív, než přečte celý stdin (prokázáno; HIGH, jakmile přistane M2). Uzavře P1.2-M2a.",
+   "en": "F9: GitProcessRunner throws IOException when Git exits before reading all of stdin (proven; HIGH once M2 lands). Closed by P1.2-M2a."
+  },
+  "4f05a94671594ea5": {
+   "cs": "M2 závisí na golden W (odvozeno). P12-MIKROMAPA-PC.md uvádí pořadí 'M0 and M1, then M2'. Že M2 (F1) závisí na golden W, je odvozeno ze železného pravidla, protože F1 mění způsob výpočtu W.",
+   "en": "M2 depends on golden W (inferred). P12-MIKROMAPA-PC.md states the order 'M0 and M1, then M2'. That M2 (F1) depends on the golden W is inferred from the iron rule, because F1 changes how W is computed."
+  },
+  "4f7083b01b49cfde": {
+   "cs": "Závažnost LOW na main, HIGH, jakmile přistane M2. Selhání zápisu se nikdy nesmí hlásit jako úspěch, ani s kódem ukončení 0. Uzavřeno v M2a.",
+   "en": "Severity LOW on main, HIGH once M2 lands. A write failure must never be reported as success, even with exit code 0. Closed in M2a."
+  },
+  "50aa8cd9a422e9d8": {
+   "cs": "P0.0 – P1.1 DONE, jak uvádí roadmapa (OPEN-11).",
+   "en": "P0.0 – P1.1 DONE, as stated by the roadmap (OPEN-11)."
+  },
+  "516ba914bbb83127": {
+   "cs": "Pravidla větvení a ověřování (PR #13); třídy rizika R0–R4 a role auditu.",
+   "en": "Branching and verification policy (PR #13); risk classes R0–R4 and the audit roles."
+  },
+  "518302cdd6d2cfcb": {
+   "cs": "P12-MIKROMAPA-PC.md; warning-baseline.json; AUDIT-A",
+   "en": "P12-MIKROMAPA-PC.md; warning-baseline.json; AUDIT-A"
+  },
+  "51e92bdc2497a6c7": {
+   "cs": "MSYS2-COMPAT (GAP): kompatibilita s Gitem poskytovaným MSYS2 není doložena. Neblokuje uzavření P1.2; blokuje jakékoli tvrzení, že MSYS2 Git je podporován.",
+   "en": "MSYS2-COMPAT (GAP): compatibility with a Git provided by MSYS2 is not evidenced. It does not block the closure of P1.2; it blocks any claim that MSYS2 Git is supported."
+  },
+  "5212b24e1eb4907d": {
+   "cs": "Golden fingerprinty beze změny; test s mnoha soubory zelený na obou operačních systémech; mutanty.",
+   "en": "Golden fingerprints unchanged; many-files test green on both operating systems; mutants."
+  },
+  "521a07d1d46fc8b5": {
+   "cs": "žádná (D: 'at any time')",
+   "en": "none (D: 'at any time')"
+  },
+  "526e0087cc3f254d": {
+   "cs": "Popis",
+   "en": "Description"
+  },
+  "531142bb2f1d53e8": {
+   "cs": "Slovník stavů není v roadmap.md. roadmap.md používá DONE, IN PROGRESS a PLANNED. PARTIAL, BLOCKED a UNKNOWN pocházejí z inventury. Sešit mapuje IN PROGRESS na PARTIAL pro P1.2. Pracovní MICROMAP revize 2 přidává OPEN (prokázaná závada nebo mezera, kterou zatím nezavírá žádná sloučená změna); tento sešit ho používá také.",
+   "en": "Status vocabulary is not in roadmap.md. roadmap.md uses DONE, IN PROGRESS and PLANNED. PARTIAL, BLOCKED and UNKNOWN come from the inventory. The workbook maps IN PROGRESS to PARTIAL for P1.2. The working MICROMAP revision 2 adds OPEN (a proven defect or gap that no merged change closes yet); this workbook uses it too."
+  },
+  "53338de3ee12e1e8": {
+   "cs": "Synchronizace dokumentace",
+   "en": "Docs sync"
+  },
+  "53995badd33daf6a": {
+   "cs": "R5. Referenční commit posunut z b05f2d2 (2026-10-18) na ab71863 (2026-10-24), každý řádek dotčený šesti pull requesty od té doby znovu ověřen. Změny: M1 PARTIAL → DONE (přijetí vlastníkem 2026-10-25); položky M1.4, M1.5, M1.6, M1.7 uzavřeny (PR #11, #14, #15, záznamy brány); přidány krok M2a, nálezy F9–F14, MSYS2-COMPAT a položka M1.10; nálezy F1, F7, F8, T3 jsou nově OPEN (nový status); opraveny počty značek v matici (řádek legendy každé značky se počítal jako řádek dat); OPEN-06 a OPEN-07 rozhodnuty (vlastník, 2026-10-25), přidány OPEN-18…21. Zdroj: pracovní MICROMAP revize 2. Tento soubor je návrh ve workspace; kopie v repozitáři je beze změny.",
+   "en": "R5. Reference commit moved from b05f2d2 (2026-10-18) to ab71863 (2026-10-24), every row touched by the six pull requests since then re-verified. Changes: M1 PARTIAL → DONE (owner acceptance 2026-10-25); items M1.4, M1.5, M1.6, M1.7 closed (PR #11, #14, #15, gate records); step M2a, findings F9–F14, MSYS2-COMPAT and item M1.10 added; findings F1, F7, F8, T3 now OPEN (new status); matrix mark counts corrected (the legend line of each mark had been counted as a row); OPEN-06 and OPEN-07 decided (owner, 2026-10-25), OPEN-18…21 added. Source: working MICROMAP revision 2. This file is a proposal in the workspace; the repository copy is unchanged."
+  },
+  "5432ed5f748aaf17": {
+   "cs": "Závažnost MEDIUM. Gate E1-3 kroku M2: test s core.autocrlf=true a clean filtrem, který se nesmí spustit; A-MUT-3 zabit.",
+   "en": "Severity MEDIUM. Gate E1-3 of M2: test with core.autocrlf=true and a clean filter that must not run; A-MUT-3 killed."
+  },
+  "543840e32d4a5d8d": {
+   "cs": "Test: změna bez obsahu: commit se shodným stromem.",
+   "en": "Test: change without content: commit with identical tree."
+  },
+  "5506bc27321100c6": {
+   "cs": "Codelaxy_Assurance_Matrix-5.ods je podpůrný zdroj důkazů. Tento sešit z něj nikdy nekopíruje stav a nikdy ho nemění.",
+   "en": "Codelaxy_Assurance_Matrix-5.ods is a supporting source of evidence. This workbook never copies a status from it and never changes it."
+  },
+  "5566d09adffa8ae0": {
+   "cs": "Schválená varianta B z 2026-10-12. Externí zdroj: není commitnut v repozitáři, proto neexistuje přenosný odkaz.",
+   "en": "Approved variant B of 2026-10-12. External source: not committed to the repository, so there is no portable link."
+  },
+  "558d55c28949d3b9": {
+   "cs": "Omezení: golden fixture má jeden sledovaný a jeden nesledovaný soubor, takže nezachytí chybné přiřazení Object ID (F11). W se mezi Windows a Linuxem záměrně liší (nesledovaný příznak spustitelnosti; matrix:28).",
+   "en": "Limit: the golden fixture has one tracked and one untracked file, so it cannot detect a wrong Object ID attribution (F11). W differs between Windows and Linux by design (untracked executable bit; matrix:28)."
+  },
+  "55e136a33f25792d": {
+   "cs": "Zmrazení produktového kontraktu",
+   "en": "Product contract freeze"
+  },
+  "5665052c61b01a93": {
+   "cs": "Sešit uvádí P1.2-MSYS2-COMPAT jako UNKNOWN. Dispozice patří do M5: přijmout jako nepodporované a zdokumentovat, nebo doložit.",
+   "en": "Workbook shows P1.2-MSYS2-COMPAT as UNKNOWN. Disposition belongs to M5: accept it as unsupported and document that, or evidence it."
+  },
+  "56abd9b920fe2bbb": {
+   "cs": "Nejistota smí verifikaci pouze rozšířit (I2).",
+   "en": "Uncertainty may only expand verification (I2)."
+  },
+  "56b397efa5ff58da": {
+   "cs": "Kontroly: windows-latest success (6 min 42 s), ubuntu-24.04 success (2 min 19 s). Zdroj: GitHub check-runs API, staženo 2026-10-18.",
+   "en": "Checks: windows-latest success (6 min 42 s), ubuntu-24.04 success (2 min 19 s). Source: GitHub check-runs API, fetched 2026-10-18."
+  },
+  "5758b7627cef2d86": {
+   "cs": "Štítky závislostí D versus I. Koncept LONGTERMMAP.md označil některé vztahy jen podle pořadí jako D. Tento sešit označuje D pouze tam, kde roadmap.md nebo architecture.md vztah uvádějí v textu; vše ostatní je I. Odvozeno v tomto sešitu: P1.1←P1.0, P1.2←P1.1, P1.3←P1.2, P1.4←P1.3, P1.8←P1.7, P1.10←P1.3/P1.8/P1.9, P2.0←P1.3, P2.4←P2.1–P2.3 (a P1.5, P1.6), P2.6←P1.8/P1.9/P2.0/P2.4/P2.5.",
+   "en": "Dependency labels D versus I. The draft LONGTERMMAP.md labelled some order-only relations as D. This workbook marks D only where roadmap.md or architecture.md state the relation in text; everything else is I. Inferred in this workbook: P1.1←P1.0, P1.2←P1.1, P1.3←P1.2, P1.4←P1.3, P1.8←P1.7, P1.10←P1.3/P1.8/P1.9, P2.0←P1.3, P2.4←P2.1–P2.3 (and P1.5, P1.6), P2.6←P1.8/P1.9/P2.0/P2.4/P2.5."
+  },
+  "57e2cfc9838f1f5d": {
+   "cs": "MICROMAP.md revize 2, 'MO3'; architecture.md I13:216-228; roadmap.md P1.1",
+   "en": "MICROMAP.md revision 2, 'MO3'; architecture.md I13:216-228; roadmap.md P1.1"
+  },
+  "58ec8b87998ff7c6": {
+   "cs": "Baseline varování",
+   "en": "Warning baseline"
+  },
+  "593eec1dd5900d9f": {
+   "cs": "P1.2-M4 testy před P1.2-M3b [D]",
+   "en": "P1.2-M4 tests before P1.2-M3b [D]"
+  },
+  "59468dc332e939fa": {
+   "cs": "Nezávislý golden fingerprint W (pracovní strom).",
+   "en": "Independent golden fingerprint W (working tree)."
+  },
+  "5ac2c8ee3c7fa9a0": {
+   "cs": "Entitní model a graf dopadů",
+   "en": "Entity model and impact graph"
+  },
+  "5ae77ed96505ce70": {
+   "cs": "Rozdělení testů",
+   "en": "Tests split"
+  },
+  "5c147880ddb86cb2": {
+   "cs": "Test: sledovaný symlink s neplatným cílem v UTF-8.",
+   "en": "Test: tracked symlink with invalid UTF-8 target."
+  },
+  "5da1c57825585379": {
+   "cs": "• od instalace k prvnímu verdiktu za méně než pět minut na čistém stroji;\n• `main` nemá žádné selhávající kontroly;\n• třetí adapter je napsán jen podle veřejné dokumentace.",
+   "en": "• install to first verdict in under five minutes on a clean machine;\n• `main` has no failing checks;\n• a third adapter is written using only public documentation."
+  },
+  "5e02245ed4f23f80": {
+   "cs": "Krok mikromapy P1.2-M0 … P1.2-M5 (včetně M3a–M3d).",
+   "en": "A micromap step P1.2-M0 … P1.2-M5 (M3a–M3d included)."
+  },
+  "5e1e4efdad31ae81": {
+   "cs": "Pouze podpůrný důkaz; samostatný dokument, nesloučen, neupraven. Externí zdroj: není commitnut v repozitáři, proto neexistuje přenosný odkaz. Zastaralé vůči main (OPEN-13).",
+   "en": "Supporting evidence only; separate document, not merged, not modified. External source: not committed to the repository, so there is no portable link. Stale against main (OPEN-13)."
+  },
+  "5ee90648c3cc355d": {
+   "cs": "Test dokazuje chování; řádek matice již není ❓.",
+   "en": "A test proves the behaviour; matrix row no longer ❓."
+  },
+  "5f09ca0803d4b038": {
+   "cs": "1. P1.2-M0 a P1.2-M1 (dodáno; M1 přijato 2026-10-25).  2. P1.2-M2a (F9, třída R4, nezávislý audit).  3. P1.2-M2 (F1, F11, F12, F13a, F14; gate E1, poté gate E2).  4. Rozhodnutí M4 souběžně s M1–M2; testy M4 a F10 před M3b.  5. M3a → M3b → M3c; M3d kdykoli po M2a.  6. M5.  (pracovní MICROMAP revize 2, ratifikována 2026-10-25)",
+   "en": "1. P1.2-M0 and P1.2-M1 (delivered; M1 accepted on 2026-10-25).  2. P1.2-M2a (F9, class R4, independent audit).  3. P1.2-M2 (F1, F11, F12, F13a, F14; gate E1, then gate E2).  4. M4 decisions in parallel with M1–M2; M4 tests and F10 before M3b.  5. M3a → M3b → M3c; M3d any time after M2a.  6. M5.  (working MICROMAP revision 2, ratified 2026-10-25)"
+  },
+  "5f0caeb253e889ae": {
+   "cs": "Test: prázdný nesledovaný soubor.",
+   "en": "Test: empty untracked file."
+  },
+  "5f7953f7c9b6ba16": {
+   "cs": "Rodič",
+   "en": "Parent"
+  },
+  "601bd27fa11102c7": {
+   "cs": "Dokončit P1.2-M1: otevřené položky golden W (M1.4), T1 (M1.5), T2 (M1.6) a gate UCRT64 (M1.7). Poté P1.2-M2.",
+   "en": "Complete P1.2-M1: open items golden W (M1.4), T1 (M1.5), T2 (M1.6) and the UCRT64 gate (M1.7). Then P1.2-M2."
+  },
+  "609d271d34195433": {
+   "cs": "Sloučený pull request není dokončený milník: PR #9 je DONE, P1.2-M1 je PARTIAL.",
+   "en": "A merged pull request is not a completed milestone: PR #9 is DONE, P1.2-M1 is PARTIAL."
+  },
+  "613818fb9f83b50c": {
+   "cs": "Podklad roadmapy",
+   "en": "Roadmap basis"
+  },
+  "6215d8be79fee7cf": {
+   "cs": "TYPY ŘÁDKŮ",
+   "en": "ROW TYPES"
+  },
+  "628df725f3fcce71": {
+   "cs": "Část rozsahu je hotová; otevřené části jsou pojmenovány v Blokátor nebo Důkazy.",
+   "en": "Part of the scope is done; the open parts are named in Blocker or Evidence."
+  },
+  "6348a3384774d545": {
+   "cs": "F4: minimální podporovaná verze Gitu (2.31).",
+   "en": "F4: minimum supported Git version (2.31)."
+  },
+  "640ae4baf96061fe": {
+   "cs": "Rozhodnutí",
+   "en": "Decision"
+  },
+  "647b522b9891caec": {
+   "cs": "shodné stavy dávají shodné fingerprinty napříč běhy a stroji se stejnou verzí Gitu;",
+   "en": "identical states produce identical fingerprints across runs and machines with the same Git version;"
+  },
+  "651859ac8ec02b89": {
+   "cs": "Oprava plánována v P1.2-M2. Není výstupním kritériem v roadmap.md: OPEN-02.",
+   "en": "Fix planned in P1.2-M2. Not an exit criterion in roadmap.md: OPEN-02."
+  },
+  "654c0455beb0d46f": {
+   "cs": "Assurance Matrix",
+   "en": "Assurance Matrix"
+  },
+  "662df4253e5d9ec9": {
+   "cs": "Otevřeno: golden W (M1.4), T1 (M1.5), T2 (M1.6). Gate UCRT64 UNKNOWN (M1.7).",
+   "en": "Open: golden W (M1.4), T1 (M1.5), T2 (M1.6). UCRT64 gate UNKNOWN (M1.7)."
+  },
+  "66451a13e115e814": {
+   "cs": "Stále přítomno na referenčním commitu (ověřeno).",
+   "en": "Still present at the reference commit (verified)."
+  },
+  "66bd976cda1199e6": {
+   "cs": "Úklid resolveru (T3, RT1–RT3). Plánováno; až po sloučení M2a.",
+   "en": "Resolver cleanup (T3, RT1–RT3). Planned; after M2a is merged."
+  },
+  "67379539a79e9387": {
+   "cs": "T1: jeden test závisí na programu rm v PATH.",
+   "en": "T1: a test depends on rm on PATH."
+  },
+  "6754714dce3fca50": {
+   "cs": "z 9 kroků (M3a–M3d se počítají zvlášť)",
+   "en": "of 9 steps (M3a–M3d counted separately)"
+  },
+  "67a5ea5aa27ee47a": {
+   "cs": "Test: druh repozitáře: sparse checkout.",
+   "en": "Test: repository kind: sparse checkout."
+  },
+  "67cd2a6195f617bd": {
+   "cs": "Zahájení schválil vlastník 2026-10-25 (vlastní větev a vlastní worktree z main; každá operace Gitu vyžaduje samostatné schválení). Na referenčním commitu žádná práce nezačala. Rozhodnutí MD1, MD8, MD10. M2 následuje po M2a.",
+   "en": "Approved to start by the owner on 2026-10-25 (own branch and own worktree from main; every Git operation needs a separate approval). No work has started at the reference commit. Decisions MD1, MD8, MD10. M2 follows M2a."
+  },
+  "67da305be812dbda": {
+   "cs": "Porušuje I13 a záměr InfrastructureFailureInvariantTests.",
+   "en": "Violates I13 and the intent of InfrastructureFailureInvariantTests."
+  },
+  "685cdcbd32df2c37": {
+   "cs": "Uvedeno jako otevřené rozhodnutí v architecture.md §11.",
+   "en": "Listed as an open decision in architecture.md §11."
+  },
+  "6a4939020f36308b": {
+   "cs": "H, I, S, W: nezávislé golden testy v CI na Windows i Linuxu (HsGolden001, INDEX goldeny, WorktreeGolden001). Auditní sonda s 20 000 soubory dala shodné I a W na main (Linux), na návrhu M2 (Linux) i na návrhu M2 (Windows). W se mezi Windows a Linuxem záměrně liší. Golden W má jeden sledovaný a jeden nesledovaný soubor, takže nezachytí chybné přiřazení Object ID (F11).\nroadmap.md P1.2",
+   "en": "H, I, S, W: independent golden tests on Windows and Linux CI (HsGolden001, INDEX goldens, WorktreeGolden001). An audit probe with 20 000 files gave identical I and W on main (Linux), on the M2 draft (Linux) and on the M2 draft (Windows). W differs between Windows and Linux by design. The W golden has one tracked and one untracked file, so it cannot detect a wrong Object ID attribution (F11).\nroadmap.md P1.2"
+  },
+  "6aa17deae7dc336a": {
+   "cs": "AUDIT-A A-3, AUDIT-B B-2 (protokoly ve workspace, ne v repozitáři). Samotný kód je správný.",
+   "en": "AUDIT-A A-3, AUDIT-B B-2 (workspace protocols, not in the repository). The code itself is correct."
+  },
+  "6b01f8cb7868a5cf": {
+   "cs": "Hashování cest (F1). Plánováno.",
+   "en": "Hashing of paths (F1). Planned."
+  },
+  "6b82147bc143bd62": {
+   "cs": "Viz důkazy.",
+   "en": "See evidence."
+  },
+  "6b96339992734585": {
+   "cs": "Assurance Matrix je zastaralá vůči main. Codelaxy_Assurance_Matrix-5.ods (revize 10. října 2026, repozitář 2fb6b19) uvádí THR-014, THR-015, EVD-020 a EVD-021 jako PROPOSED, ačkoli testy neplatného UTF-8 existují na main od 2026-10-10 (f733b25, a0edde4). THR-010/EVD-009 jsou částečně pokryty IndexGoldenUnicode001. Její počet testů (147) je zastaralý.",
+   "en": "Assurance Matrix is stale against main. Codelaxy_Assurance_Matrix-5.ods (revision 10 Oct 2026, repository 2fb6b19) lists THR-014, THR-015, EVD-020 and EVD-021 as PROPOSED although the invalid-UTF-8 tests exist on main since 2026-10-10 (f733b25, a0edde4). THR-010/EVD-009 are partly covered by IndexGoldenUnicode001. Its test count (147) is outdated."
+  },
+  "6b9705f30db2ebeb": {
+   "cs": "Záchranná síť (safety net)",
+   "en": "Safety net"
+  },
+  "6bb096220c409bad": {
+   "cs": "Zapojeno explicitně v kódu a testech, nevybíráno konfigurací repozitáře (I10).",
+   "en": "Wired explicitly in code and tests, not selected by repository configuration (I10)."
+  },
+  "6bd1fef6352edecd": {
+   "cs": "Sešit ukazuje F1 jako blokátor (MICROMAP FINDING P1.2-F1). Ratifikujte, zda se F1 stane výstupním kritériem roadmapy.",
+   "en": "Workbook shows F1 as a blocker (MICROMAP FINDING P1.2-F1). Ratify whether F1 becomes a roadmap exit criterion."
+  },
+  "6c196ebefd237525": {
+   "cs": "MICROMAP — P1.2 Snapshot engine, taktická roadmapa     |     referenční commit ab71863 (2026-10-24)     |     revize R5",
+   "en": "MICROMAP — P1.2 Snapshot engine, tactical roadmap     |     reference commit ab71863 (2026-10-24)     |     revision R5"
+  },
+  "6c4f0972d8c09b1e": {
+   "cs": "P1.5, P1.6 [D: two materially different consumers], poté P1.7 [D]",
+   "en": "P1.5, P1.6 [D: two materially different consumers], then P1.7 [D]"
+  },
+  "6cd02bd179b35c2e": {
+   "cs": "žádný konzument nezpracovává výstup Gitu mimo `Codelaxy.Git`;",
+   "en": "no consumer parses Git output outside `Codelaxy.Git`;"
+  },
+  "6d0ea8aeec378255": {
+   "cs": "Nezdokumentováno",
+   "en": "Not documented"
+  },
+  "6d2f8063cd5c4862": {
+   "cs": "Gate M1 'suite passes from UCRT64': není zaznamenán žádný důkaz.",
+   "en": "M1 gate 'suite passes from UCRT64': no evidence recorded."
+  },
+  "6d71a64f3fd6b1e6": {
+   "cs": "Závěrečná revize a nezávislý audit. Plánováno.",
+   "en": "Exit review and independent audit. Planned."
+  },
+  "6dd8a726da7dbb9d": {
+   "cs": "F7: validace vstupu (parser indexu, výstup git hash-object, serializace).",
+   "en": "F7: input validation (index parser, git hash-object output, serialization)."
+  },
+  "6dde45e9707ef16c": {
+   "cs": "Vyřešeno sloučením základu (S1).",
+   "en": "Resolved by merging the foundation (S1)."
+  },
+  "6e0d51148a26c3df": {
+   "cs": "• konfigurace obsahující příkazovou řádku je odmítnuta;\n• deklarovaný provider, který chybí, vede k zamítnutí, nikdy k přeskočení;\n• požadavek, který nemá ani providera, ani politiku `NOT_REQUIRED`, se zamítá;\n• nerozpoznaný projekt jasně oznámí, že nelze nic dokázat;\n• konfiguraci lze parsovat a vysvětlit, ale před P1.9 nesmí k verdiktu `GRANTED` přispět ani výběr providera, ani politika `NOT_REQUIRED` z repozitáře;\n• nic z konfigurace se zatím nespouští, čeká se na P1.9.",
+   "en": "• a configuration containing a command line is rejected;\n• a declared provider that is missing produces denial, never a skip;\n• a requirement with neither a provider nor a `NOT_REQUIRED` policy denies;\n• an unrecognized project reports that nothing can be proven, clearly;\n• configuration may be parsed and explained, but before P1.9 neither provider selection nor `NOT_REQUIRED` policy from the repository may contribute to a `GRANTED` verdict;\n• nothing from configuration is executed yet, pending P1.9."
+  },
+  "6e4deae660e0ae6c": {
+   "cs": "Strategická roadmapa: 23 fází plus schopnosti, otevřená rozhodnutí a směřování po verzi 1.0 (41 řádků). Filtrujte podle Typ, Stav, Postavení.",
+   "en": "Strategic roadmap: 23 phases plus capabilities, open decisions and post-1.0 direction (41 rows). Filter on Type, Status, Standing."
+  },
+  "6e5332a1d6f50293": {
+   "cs": "Dispozice matice: 21 řádků ❓, 9 řádků 📝 na referenčním commitu; 8 scénářů vyžaduje rozhodnutí správce.",
+   "en": "Matrix dispositions: 21 rows ❓, 9 rows 📝 at the reference commit; 8 scenarios need a maintainer decision."
+  },
+  "6ed8d78f8eb91cf7": {
+   "cs": "Není součástí datového modelu 1.0.",
+   "en": "Not part of the 1.0 data model."
+  },
+  "7053573bb77f5454": {
+   "cs": "viz P2.6 [D: six conditions]",
+   "en": "see P2.6 [D: six conditions]"
+  },
+  "706b54a10eb2a9f1": {
+   "cs": "Citováno pouze jako zdroj důkazů; žádný stav se z něj nekopíruje. Obnova je samostatné rozhodnutí.",
+   "en": "Cited as a source of evidence only; no status is copied from it. Refreshing it is a separate decision."
+  },
+  "70d3befc3b856aa5": {
+   "cs": "Kanonický legacy launcher",
+   "en": "Canonical legacy launcher"
+  },
+  "70ecd64d11f1b648": {
+   "cs": "2026-10-25: pracovní MICROMAP revize 2 byla ratifikována vlastníkem (části brány M1 – M1-GA a M1-GB – přijaty, takže M1 je DONE; krok P1.2-M2a schválen k zahájení). Ratifikace se vztahuje jen na pracovní MICROMAP; nezměnila žádný ratifikovaný dokument repozitáře.",
+   "en": "2026-10-25: the working MICROMAP revision 2 was ratified by the owner (M1 gate legs M1-GA and M1-GB accepted, so M1 is DONE; step P1.2-M2a approved to start). The ratification applies to the working MICROMAP only; it changed no ratified repository document."
+  },
+  "710ec5125b66e44a": {
+   "cs": "Rozhodněte o jediném zdroji pravdy a o tom, kde žije oficiální dokumentace (například docs/ v repozitáři).",
+   "en": "Decide the single source of truth and where official documentation lives (for example docs/ in the repository)."
+  },
+  "7178c76b645996cf": {
+   "cs": "Druhý běh bez změn nevykoná žádnou externí práci; částečné záznamy se nikdy nevyhodnotí jako VALID.",
+   "en": "Second run with no changes performs no external work; partial records never evaluate VALID."
+  },
+  "71a0194938fc7037": {
+   "cs": "Limit příkazové řádky Windows v git hash-object (F1). Brání uzavření P1.2; oprava je P1.2-M2. Není to výstupní kritérium roadmapy (OPEN-02).",
+   "en": "Windows command-line limit in git hash-object (F1). Blocks closing P1.2; fix is P1.2-M2. Not a roadmap exit criterion (OPEN-02)."
+  },
+  "727d3d7c7f4dc097": {
+   "cs": "otevřené rozhodnutí 1 [D: 'per open decision 1']",
+   "en": "open decision 1 [D: 'per open decision 1']"
+  },
+  "72c5b49f8dc65c64": {
+   "cs": "LONGTERMMAP — P0.0 … P2.6, strategická roadmapa     |     referenční commit b05f2d2 (2026-10-18)",
+   "en": "LONGTERMMAP — P0.0 … P2.6, strategic roadmap     |     reference commit b05f2d2 (2026-10-18)"
+  },
+  "72ec712da4c654b5": {
+   "cs": "F11 (GAP, prokázáno): přiřazení Object ID k cestě v dávkovém hashi nehlídá žádný test. Mutanty A-MUT-1 a A-MUT-2 přežijí všech 330 testů na main.",
+   "en": "F11 (GAP, proven): the Object ID to path attribution in the batch hash is not guarded by any test. Mutants A-MUT-1 and A-MUT-2 survive all 330 tests on main."
+  },
+  "730876864392b6d6": {
+   "cs": "roadmap.md:504-525\nŽádná implementace na referenčním commitu.",
+   "en": "roadmap.md:504-525\nNo implementation at the reference commit."
+  },
+  "7420de2ca7cc2523": {
+   "cs": "Mimo zdokumentovaný rozsah M1: OPEN-05.",
+   "en": "Outside the documented M1 scope: OPEN-05."
+  },
+  "748d64d904b5d6c3": {
+   "cs": "Důkazy (PR, commit, test)",
+   "en": "Evidence (PR, commit, test)"
+  },
+  "74fe2b45e6e64779": {
+   "cs": "Rozhodnutí: gitlink a submodul (režim 160000).",
+   "en": "Decision: gitlink and submodule (mode 160000)."
+  },
+  "76355e5332b6babc": {
+   "cs": "T1: jeden test závisí na externím programu rm v PATH.",
+   "en": "T1: a test depends on the external program rm on PATH."
+  },
+  "763f79466f502f54": {
+   "cs": "F13a (GAP): oba testy mnoha cest v návrhu M2 se na Linuxu okamžitě vrátí a hlásí PASS.",
+   "en": "F13a (GAP): the two many-paths tests of the M2 draft return at once on Linux and report PASS."
+  },
+  "766e6db14ffc604d": {
+   "cs": "MICROMAP.md revize 2, 'M1 gate analysis'; architecture.md I4:72-113",
+   "en": "MICROMAP.md revision 2, 'M1 gate analysis'; architecture.md I4:72-113"
+  },
+  "76dc8a13e108d3d7": {
+   "cs": "BUILD je výslovná politika NOT_REQUIRED.",
+   "en": "BUILD is an explicit NOT_REQUIRED policy."
+  },
+  "77774f9ad43a3319": {
+   "cs": "Každý stav stojí na souboru, testu, commitu, PR nebo jiném konkrétním důkazu ve sloupci Důkazy. Bez důkazu je stav PLANNED nebo UNKNOWN, nikdy DONE.",
+   "en": "Every status rests on a file, test, commit, PR or other concrete evidence in the Evidence column. Without evidence the status is PLANNED or UNKNOWN, never DONE."
+  },
+  "77f4c560bfc24fab": {
+   "cs": "Existuje zdokumentovaná překážka. Žádný řádek ji na referenčním commitu nepoužívá.",
+   "en": "A documented obstacle exists. No row uses it at the reference commit."
+  },
+  "78b6d38961003b64": {
+   "cs": "F2: slabá kontrola cest na Windows (aliasy cest v Gitu).",
+   "en": "F2: weak path check on Windows (Git path aliases)."
+  },
+  "78bcc3d8c87a786c": {
+   "cs": "Pokrývá výslovný seznam 10 konfiguračních scénářů (hooks, template, excludes, attributes, autocrlf, merge_ff, merge_signatures, branch_merge_options, ignore_stat, fsmonitor); není to obecná záruka hermetičnosti. Nezávislý audit 2026-10-18 posoudil 8 z 10 (branch_merge_options a ignore_stat byly přidány později a posouzeny nebyly). OPEN-05.",
+   "en": "Covers an explicit list of 10 configuration scenarios (hooks, template, excludes, attributes, autocrlf, merge_ff, merge_signatures, branch_merge_options, ignore_stat, fsmonitor); it is not a general hermeticity guarantee. An independent audit on 2026-10-18 reviewed 8 of the 10 (branch_merge_options and ignore_stat were added afterwards and were not reviewed). OPEN-05."
+  },
+  "78df5f601a70adf5": {
+   "cs": "Výstupní kritéria P1.2",
+   "en": "P1.2 exit criteria"
+  },
+  "794a3299545702fd": {
+   "cs": "V repozitáři ani v CI není zaznamenán žádný běh UCRT64. CI nenastavuje CODELAXY_GIT_ENVIRONMENT_ROOT (ci.yml).",
+   "en": "No UCRT64 run is recorded in the repository or in CI. CI does not set CODELAXY_GIT_ENVIRONMENT_ROOT (ci.yml)."
+  },
+  "7a54b7b8650bd068": {
+   "cs": "Rozhodnutí: vnořený repozitář.",
+   "en": "Decision: nested repository."
+  },
+  "7a72200ea73327ca": {
+   "cs": "Formát a schéma konfigurace",
+   "en": "Configuration format and schema"
+  },
+  "7b16a3304635a2e2": {
+   "cs": "Závěrečná revize",
+   "en": "Exit review"
+  },
+  "7b24cf78e0004adb": {
+   "cs": "Sešit označuje závislost [I]. Ratifikujte, nebo zahoďte.",
+   "en": "Workbook marks the dependency [I]. Ratify or drop."
+  },
+  "7b95ed1162c9a16f": {
+   "cs": "roadmap.md:450-478\nŽádná implementace na referenčním commitu.",
+   "en": "roadmap.md:450-478\nNo implementation at the reference commit."
+  },
+  "7ba55bfae249065a": {
+   "cs": "• rozhraní má číslo verze;\n• ratifikovaný kontrakt lze popsat bez pojmenování typu .NET;\n• třetí adapter lze napsat podle příručky bez čtení jádra.",
+   "en": "• the interface has a version number;\n• the ratified contract is describable without naming a .NET type;\n• a third adapter could be written from the guide without reading the core."
+  },
+  "7baaa146543e7390": {
+   "cs": "Stejný počet testů, zelené.",
+   "en": "Same number of tests, green."
+  },
+  "7c248d865ddf2ce7": {
+   "cs": "LONGTERMMAP — P0.0 … P2.6, strategická roadmapa     |     referenční commit ab71863 (2026-10-24)     |     revize R5",
+   "en": "LONGTERMMAP — P0.0 … P2.6, strategic roadmap     |     reference commit ab71863 (2026-10-24)     |     revision R5"
+  },
+  "7c3a75e3992a5d1d": {
+   "cs": "T2: testy závisí na dotnet v PATH.",
+   "en": "T2: tests depend on dotnet on PATH."
+  },
+  "7ce7a476ea020c1a": {
+   "cs": "F5: zastaralá matice testů snapshotu.",
+   "en": "F5: stale snapshot test matrix."
+  },
+  "7d1c194851a3a89c": {
+   "cs": "new GitProcessRunner(\"dotnet\") na 10 místech: L291, L311, L407, L472, L528, L657, L677, L696, L717, L732",
+   "en": "new GitProcessRunner(\"dotnet\") in 10 places: L291, L311, L407, L472, L528, L657, L677, L696, L717, L732"
+  },
+  "7d69e11ed76129cf": {
+   "cs": "roadmap.md status block:26-52\nroadmap.md P0 poznámka",
+   "en": "roadmap.md status block:26-52\nroadmap.md P0 note"
+  },
+  "7deea33e82aafbb4": {
+   "cs": "Datum inventury",
+   "en": "Inventory date"
+  },
+  "7e0055469ddde96f": {
+   "cs": "Koncepty obou map v Markdownu. Externí zdroje: nejsou commitnuté v repozitáři, proto neexistuje přenosný odkaz.",
+   "en": "Markdown drafts of the two maps. External sources: not committed to the repository, so there is no portable link."
+  },
+  "7e01b7b50a249726": {
+   "cs": "Kroky PLANNED",
+   "en": "Steps PLANNED"
+  },
+  "7e6a17cfadfd9c67": {
+   "cs": "Test: druh repozitáře: pozorovaný linked worktree.",
+   "en": "Test: repository kind: observed linked worktree."
+  },
+  "7e86cad09c889d70": {
+   "cs": "Záchranná síť (safety net). Otevřeno: golden W (M1.4), T1 (M1.5), T2 (M1.6); gate UCRT64 UNKNOWN (M1.7). Hotovo: gate F3, golden H/I/S, doplňky PR #7 a PR #9.",
+   "en": "Safety net. Open: golden W (M1.4), T1 (M1.5), T2 (M1.6); UCRT64 gate UNKNOWN (M1.7). Done: F3 gate, golden H/I/S, extras PR #7 and PR #9."
+  },
+  "7faf5b85bcc79f6e": {
+   "cs": "Value objects ObjectId, GitFileMode, RepositoryPath, Fingerprint; striktní parser indexu a deserializace (F7).",
+   "en": "Value objects ObjectId, GitFileMode, RepositoryPath, Fingerprint; strict index parser and deserialization (F7)."
+  },
+  "800d16e3c2f4bf86": {
+   "cs": "Nikdy vedlejší účinek dotnet test (I14).",
+   "en": "Never a side effect of dotnet test (I14)."
+  },
+  "802d88e262c81770": {
+   "cs": "Filtrujte podle sloupce Typ na MICROMAP nebo LONGTERMMAP.",
+   "en": "Filter on the Type column of MICROMAP or LONGTERMMAP."
+  },
+  "805b7f3c2a50881a": {
+   "cs": "AUDIT-B B-3 (protokoly ve workspace, ne v repozitáři).",
+   "en": "AUDIT-B B-3 (workspace protocols, not in the repository)."
+  },
+  "80e679e53bb0cc8c": {
+   "cs": "Uzavřít dispozice matice: 8 rozhodnutí a 18 testů (řádky P1.2-M4.D1–D8 a P1.2-M4.T01–T18 níže).",
+   "en": "Close the matrix dispositions: 8 decisions and 18 tests (rows P1.2-M4.D1–D8 and P1.2-M4.T01–T18 below)."
+  },
+  "80f3e46cf74a984e": {
+   "cs": "adapter pro něj [D]",
+   "en": "an adapter for it [D]"
+  },
+  "810eeb8408171cb5": {
+   "cs": "F10 (DEFECT, prokázáno na Linuxu): nesledovaný soubor, který zmizí mezi ls-files a čtením režimu, způsobí, že BuildAsync vyhodí FileNotFoundException místo vrácení selhání.",
+   "en": "F10 (DEFECT, proven on Linux): an untracked file that disappears between ls-files and the mode read makes BuildAsync throw FileNotFoundException instead of returning a failure."
+  },
+  "81389978efee7246": {
+   "cs": "Původní tabulka nálezů je zastaralá. P12-MIKROMAPA-PC.md (referenční main = 80a98a5) uvádí F3 a F4 jako otevřené a F5, F6 jako práci v sandboxu. Na referenčním commitu jsou F3 (PR #6) a F4, F5, F6 (PR #5) sloučeny.",
+   "en": "Original findings table is stale. P12-MIKROMAPA-PC.md (reference main = 80a98a5) lists F3 and F4 as open and F5, F6 as sandbox work. At the reference commit F3 (PR #6) and F4, F5, F6 (PR #5) are merged."
+  },
+  "817f7f654a2f2af2": {
+   "cs": "Model důvěry",
+   "en": "Trust model"
+  },
+  "81a48137e5df2ae2": {
+   "cs": "Gate varování F3: CI selže při nové diagnostice kompilátoru oproti commitnuté baseline.",
+   "en": "F3 warning gate: CI fails on a new compiler diagnostic compared with a committed baseline."
+  },
+  "81d702f49a35a816": {
+   "cs": "• nepřátelská konfigurace nespustí nic bez výslovné důvěry;\n• nedůvěryhodná konfigurace nemůže získat `GRANTED` tím, že každý požadavek prohlásí za `NOT_REQUIRED`;\n• úprava konfigurace důvěru odvolá;\n• nedůvěryhodná cesta je pokryta testy.",
+   "en": "• a hostile configuration executes nothing without explicit trust;\n• an untrusted configuration cannot obtain `GRANTED` by declaring every requirement `NOT_REQUIRED`;\n• editing the configuration revokes trust;\n• the untrusted path is covered by tests."
+  },
+  "82243a76b3e704aa": {
+   "cs": "W se mezi Windows a Linuxem záměrně liší (nesledovaný příznak spustitelnosti; matrix:28); návrh fixture s tím musí počítat [I]. P1.2-M2 na této položce závisí [I] (OPEN-07).",
+   "en": "W differs between Windows and Linux by design (untracked executable bit; matrix:28); fixture design must account for it [I]. P1.2-M2 depends on this item [I] (OPEN-07)."
+  },
+  "82dd0d26357d8bb3": {
+   "cs": "Baseline stále uvádí S3267, S3776 a MA0051 (dvakrát) pro GitProcessRunner.cs (warning-baseline.json); RT1–RT3 nebyly znovu ověřeny.",
+   "en": "The baseline still lists S3267, S3776 and MA0051 (twice) for GitProcessRunner.cs (warning-baseline.json); RT1–RT3 were not re-verified."
+  },
+  "847c92ccc89ce1ce": {
+   "cs": "Matice testů",
+   "en": "Test matrix"
+  },
+  "84b532491025957f": {
+   "cs": "Žádné (plánováno). Matice nyní: 19 řádků ❓, 8 řádků 📝, 1 řádek ❌.",
+   "en": "None (planned). Matrix now: 19 rows ❓, 8 rows 📝, 1 row ❌."
+  },
+  "8610458ab428b9ed": {
+   "cs": "Navržený dodatek k výstupním kritériím P1.2 (MO3). Navržený text: pozorovaný stav repozitáře (soubor, který zmizel, je zamčený nebo nejde přečíst) nekončí neošetřenou infrastrukturní výjimkou z metody BuildAsync; BuildAsync vrátí výsledek selhání s diagnostikou a bez Snapshotu; jedinou výjimkou, která smí tuto metodu opustit, je OperationCanceledException způsobená zrušením volajícím. Prokázaná porušení: F10 na main, F9 po přistání M2. Dokud není ratifikováno do roadmap.md, je to povinný kontrolní bod kroku M5.",
+   "en": "Proposed exit-criterion addendum for P1.2 (MO3). Proposed text: an observed state of the repository (a file that has vanished, is locked or cannot be read) does not end in an unhandled infrastructure exception from BuildAsync; BuildAsync returns a failure result with a diagnostic and no Snapshot; the only exception allowed to leave it is OperationCanceledException caused by the caller's cancellation. Proven violations: F10 on main, F9 once M2 lands. Until it is ratified into roadmap.md it is a mandatory checkpoint of step M5."
+  },
+  "862d5133f58e2c07": {
+   "cs": "H, I, S: golden testy zelené v CI na Windows i Linuxu (HsGolden001, INDEX goldeny). W: žádný nezávislý golden (P1.2-M1.4); W se mezi Windows a Linuxem záměrně liší.\nroadmap.md P1.2",
+   "en": "H, I, S: golden tests green on Windows and Linux CI (HsGolden001, INDEX goldens). W: no independent golden (P1.2-M1.4); W differs between Windows and Linux by design.\nroadmap.md P1.2"
+  },
+  "86a2ce8470a1ba6a": {
+   "cs": "Řádek matice zobrazen se značkami, které nese na referenčním commitu.",
+   "en": "Matrix row shown with the marks it carries at the reference commit."
+  },
+  "86ae00bb983eb980": {
+   "cs": "Strojově čitelné reportování MrProper",
+   "en": "MrProper machine-readable reporting"
+  },
+  "86fec65a23ec045c": {
+   "cs": "omezuje P1.4 a P1.7",
+   "en": "constrains P1.4 and P1.7"
+  },
+  "87c463fcc2af727d": {
+   "cs": "Mimo P1.2",
+   "en": "Outside P1.2"
+  },
+  "87ffaef6b2a5e0c3": {
+   "cs": "Závažnost LOW. Gate E1-5 kroku M2. Rozhodnutí se činí v M2, ne v M4.",
+   "en": "Severity LOW. Gate E1-5 of M2. The decision is taken in M2, not in M4."
+  },
+  "8953ac330223a047": {
+   "cs": "Původní tvrzení o čtyřech výstupních kritériích P1.2. P12-MIKROMAPA-PC.md uvádí, že čtyři výstupní kritéria jsou pokryta testy. Inventura na referenčním commitu: kritérium 1 PARTIAL (žádný nezávislý golden pro W; W se mezi Windows a Linuxem záměrně liší), kritérium 3 PARTIAL (žádný test nad rámec zákazu tokenů v Core/Contracts; dnes platí, protože Core nemá zdrojové soubory a CLI je jen kostra), kritéria 2 a 4 DONE.",
+   "en": "Original claim about the four P1.2 exit criteria. P12-MIKROMAPA-PC.md states that the four exit criteria are covered by tests. Inventory at the reference commit: criterion 1 PARTIAL (no independent golden for W; W differs between Windows and Linux by design), criterion 3 PARTIAL (no test beyond Core/Contracts token ban; holds today because Core has no sources and the CLI is a scaffold), criteria 2 and 4 DONE."
+  },
+  "89837b17d0d7aa6f": {
+   "cs": "Rozhodl vlastník 2026-10-25: M1-GA a M1-GB přijaty. Zbývá otázka MSYS2-COMPAT.",
+   "en": "Decided by the owner on 2026-10-25: M1-GA and M1-GB accepted. The remaining question is MSYS2-COMPAT."
+  },
+  "8a3b5152b127fef0": {
+   "cs": "Kompatibilita příkazů s deklarovaným minimem Git 2.31; přesné prahy bufferu roury u F9 a chování nad 1 000 000 souborů; F10 na Windows; macOS. MSYS2 Git: OPEN-18.",
+   "en": "Compatibility of the commands with the declared minimum Git 2.31; the exact pipe-buffer thresholds of F9 and the behaviour above 1 000 000 files; F10 on Windows; macOS. MSYS2 Git: OPEN-18."
+  },
+  "8a7525b1492fb848": {
+   "cs": "Poznámky",
+   "en": "Notes"
+  },
+  "8b583d68348b8871": {
+   "cs": "Konfigurace a detekce projektu",
+   "en": "Configuration and project detection"
+  },
+  "8b5bb576fea185c3": {
+   "cs": "Sada zelená z prostředí PowerShell i z UCRT64.",
+   "en": "Suite green from PowerShell and from UCRT64."
+  },
+  "8b89674febc471e0": {
+   "cs": "• shodné stavy dávají shodné fingerprinty napříč běhy a stroji se stejnou verzí Gitu;\n• staged snapshot není ovlivněn nestaged úpravami;\n• žádný konzument nezpracovává výstup Gitu mimo `Codelaxy.Git`;\n• serializovaná podoba projde round-trip a odmítá neznámé typy záznamů.",
+   "en": "• identical states produce identical fingerprints across runs and machines with the same Git version;\n• a staged snapshot is unaffected by unstaged edits;\n• no consumer parses Git output outside `Codelaxy.Git`;\n• the serialized form round-trips and rejects unknown record types."
+  },
+  "8b8ec150688c1b35": {
+   "cs": "Žádné (plánováno). F8 stále přítomno: GitRepositoryStateReader.cs:88-89",
+   "en": "None (planned). F8 still present: GitRepositoryStateReader.cs:88-89"
+  },
+  "8c116656e33ee4c8": {
+   "cs": "Žádný důkaz opravy; pro tento sešit znovu neověřeno.",
+   "en": "No evidence of a fix; not re-verified for this workbook."
+  },
+  "8c2e4a035f5f3d21": {
+   "cs": "STAV",
+   "en": "STATUS"
+  },
+  "8cb980c416097f04": {
+   "cs": "GitSnapshotBuilder.cs:542-551 (chybějící soubor se klasifikuje jako běžný), GitSnapshotBuilder.cs:926-933 (GetUnixFileMode)\nAUDIT-A A-1 (protokoly ve workspace, ne v repozitáři). Reprodukováno na Linuxu, 2 ze 3 běhů; na Windows nereprodukováno.",
+   "en": "GitSnapshotBuilder.cs:542-551 (a missing file is classified as regular), GitSnapshotBuilder.cs:926-933 (GetUnixFileMode)\nAUDIT-A A-1 (workspace protocols, not in the repository). Reproduced on Linux, 2 of 3 runs; not reproduced on Windows."
+  },
+  "8cd6bbc7db414796": {
+   "cs": "Blokátor",
+   "en": "Blocker"
+  },
+  "8ce8eede344f00e2": {
+   "cs": "ID jsou stabilní a nikdy se nepoužijí znovu. Řádky se nemažou; vyřazený řádek si ponechá své ID a dostane poznámku.",
+   "en": "IDs are stable and never reused. Rows are not deleted; a retired row keeps its ID and gets a note."
+  },
+  "8e6a6cca7aae1d1e": {
+   "cs": "Krok",
+   "en": "Step"
+  },
+  "8ea99ceb5458ed89": {
+   "cs": "Brána M1: sada testů projde z prostředí PowerShell i z UCRT64. Brána M1 vyžaduje, aby sada prošla z prostředí PowerShell (M1-GA) a ze shellu s MSYSTEM=UCRT64 (M1-GB). Dne 2026-10-25 vlastník přijal GATE-RECORD obou částí (běh CI 40066814847 na referenčním commitu a dva běhy auditora), takže M1 je k tomuto datu DONE. Záznamy jsou dokumenty ve workspace, ne v repozitáři. Brána nic neříká o Gitu poskytovaném MSYS2: to je samostatný bod (viz MSYS2-COMPAT níže).",
+   "en": "M1 gate: suite passes from PowerShell and from UCRT64. The M1 gate requires the suite to pass from PowerShell (M1-GA) and from a shell with MSYSTEM=UCRT64 (M1-GB). On 2026-10-25 the owner accepted the GATE-RECORDs of both legs (CI run 40066814847 on the reference commit and two auditor runs), so M1 is DONE as of that date. The records are workspace documents, not in the repository. The gate says nothing about a Git provided by MSYS2: that is a separate point (see MSYS2-COMPAT below)."
+  },
+  "8fbfa6cccf8238a4": {
+   "cs": "Žádný test neexistuje (hledání worktree.v1 a očekávaných konstant W v testech je prázdné).\nmatrix §7:144 W ❓",
+   "en": "No test exists (search for worktree.v1 and expected W constants in tests is empty).\nmatrix §7:144 W ❓"
+  },
+  "90182c3d0434ea00": {
+   "cs": "Dispozice matice: 8 rozhodnutí, 18 testů; F10. Plánováno.",
+   "en": "Matrix dispositions: 8 decisions, 18 tests; F10. Planned."
+  },
+  "90c160823e99bca4": {
+   "cs": "Ratifikace rozhraní",
+   "en": "Interface ratification"
+  },
+  "916a13f9cce0fea3": {
+   "cs": "Test: změna bez obsahu: přepnutí větve, stejný HEAD.",
+   "en": "Test: change without content: branch switch, same HEAD."
+  },
+  "916b32eddf27a98a": {
+   "cs": "Fáze / ID",
+   "en": "Phase / ID"
+  },
+  "9176bbb067f03db1": {
+   "cs": "Všechny řádky PHASE a CAPABILITY.",
+   "en": "All PHASE and CAPABILITY rows."
+  },
+  "9179eb1ce9881dfd": {
+   "cs": "Matice podpory Windows / macOS / Linux pro verzi 1.0",
+   "en": "Windows / macOS / Linux support matrix for 1.0"
+  },
+  "920a4f6fb41e9967": {
+   "cs": "Otevřené body",
+   "en": "Open points"
+  },
+  "920e413c7d411b61": {
+   "cs": "Stav",
+   "en": "Status"
+  },
+  "924ddb46dec69bb6": {
+   "cs": "Inventář testů před a po na každém operačním systému (identita, výsledek PASS/FAIL/SKIP, důvod každého SKIP, každý rozdíl); samotné shodné součty PASS+SKIP nestačí.",
+   "en": "Test inventory before and after on each operating system (identity, result PASS/FAIL/SKIP, reason of every SKIP, every difference); equal PASS+SKIP totals alone are not sufficient."
+  },
+  "92ae688ac4970cbc": {
+   "cs": "Nové varování shodí CI.",
+   "en": "A new warning fails CI."
+  },
+  "930d4dac5592463b": {
+   "cs": "ID / Pojem",
+   "en": "ID / Term"
+  },
+  "9317608b3382c773": {
+   "cs": "Původní větev dev/codelaxy/p12-tests-split.",
+   "en": "Original branch dev/codelaxy/p12-tests-split."
+  },
+  "9349f488e797b6f9": {
+   "cs": "omezuje P2.6 [I]",
+   "en": "constrains P2.6 [I]"
+  },
+  "93707581f63a07d4": {
+   "cs": "Testy nezávisí na nástrojích v PATH.",
+   "en": "Tests do not depend on tools on PATH."
+  },
+  "938fa1bd2ecc7deb": {
+   "cs": "F11: žádný test nehlídá přiřazení Object ID k cestě (mutanty na main přežijí). Gate E1-2 kroku P1.2-M2.",
+   "en": "F11: no test guards the Object ID to path attribution (mutants survive on main). Gate E1-2 of P1.2-M2."
+  },
+  "93b0e79cc9f71fcd": {
+   "cs": "Test: druh repozitáře: detached HEAD.",
+   "en": "Test: repository kind: detached HEAD."
+  },
+  "93fcea79a6929302": {
+   "cs": "roadmap.md:529-553\nŽádná implementace na referenčním commitu.",
+   "en": "roadmap.md:529-553\nNo implementation at the reference commit."
+  },
+  "95329163c213e68d": {
+   "cs": "Rozhodnutí: prázdný adresář.",
+   "en": "Decision: empty directory."
+  },
+  "953e06969ece7ea0": {
+   "cs": "Test: identita pracovního stromu u cest s diakritikou.",
+   "en": "Test: working-tree identity of paths with diacritics."
+  },
+  "95be2102ab9be48e": {
+   "cs": "Který dokument je závazný. Stejný plán nyní existuje jako P12-MIKROMAPA-PC.md, pracovní MICROMAP (revize 2, vlastníkem ratifikovaná 2026-10-25 jen jako pracovní dokument), koncept LONGTERMMAP a tento sešit. Soubor ODS je binární a nemá smysluplný git diff.",
+   "en": "Which document is authoritative. The same plan now exists as P12-MIKROMAPA-PC.md, the working MICROMAP (revision 2, ratified by the owner on 2026-10-25 as a working document only) and the LONGTERMMAP draft, and this workbook. An ODS file is binary and has no meaningful git diff."
+  },
+  "960af4e105b1c9a6": {
+   "cs": "Uzavírá fázi P1.2 v LONGTERMMAP.",
+   "en": "Closes phase P1.2 in LONGTERMMAP."
+  },
+  "969c158b2933cf11": {
+   "cs": "roadmap.md:272-297\nŽádná implementace na referenčním commitu.",
+   "en": "roadmap.md:272-297\nNo implementation at the reference commit."
+  },
+  "975fb44eaa5e9441": {
+   "cs": "• pro projekt CMake lze vytvořit verdikt, aniž by jádro vědělo, co je kompilátor;\n• nepřítomnost nástroje dává `UNUSABLE`, což zamítá, nikoli přeskakuje;\n• adapter neobsahuje žádnou logiku platnosti (`architecture.md` §7).",
+   "en": "• a verdict can be produced for a CMake project without the core knowing what a compiler is;\n• absence of the tool yields `UNUSABLE`, which denies rather than skips;\n• the adapter contains no validity logic (`architecture.md` §7)."
+  },
+  "9794a454ea535caa": {
+   "cs": "• každý test, který vyžaduje stav repozitáře, si vytvoří vlastní dočasný repozitář; žádný test nečte ani nemění stav vývojového repozitáře Codelaxy;\n• test otráveného prostředí selže, pokud se izolace odstraní;\n• žádná cesta v kódu nesestavuje příkazovou řádku shellu;\n• chybějící spustitelný soubor Gitu vyvolá diagnostiku, nikoli výjimku ani stav důkazu;\n• bare repozitář vyvolá diagnostiku, která tento důvod pojmenuje;\n• vlastní odpovědi Gitu se používají doslova, bez přepisování cest (I4).",
+   "en": "• every test that requires repository state creates its own temporary repository; no test reads or mutates repository state of the Codelaxy development repository;\n• the poisoned-environment test fails if isolation is removed;\n• no code path constructs a shell command line;\n• a missing Git executable produces a diagnostic, not an exception and not an evidence state;\n• a bare repository produces a diagnostic naming that reason;\n• Git's own answers are used verbatim, with no path rewriting (I4)."
+  },
+  "97b0f6c7d2fe1535": {
+   "cs": "Žádné (plánováno). Důkaz závady: matrix:105 ❌",
+   "en": "None (planned). Defect evidence: matrix:105 ❌"
+  },
+  "984599b3a0f407bd": {
+   "cs": "Pokrytí golden testy: H, I, S, W DONE (W s omezením: F11). matrix:144",
+   "en": "Golden coverage: H, I, S, W DONE (W with a limit: F11). matrix:144"
+  },
+  "9859597853197476": {
+   "cs": "Projekt",
+   "en": "Project"
+  },
+  "985f166a47f0abea": {
+   "cs": "Gate vyžadovaný I10; nelze doplnit později.",
+   "en": "Gate required by I10; cannot be added later."
+  },
+  "98a4ab276c9d71a4": {
+   "cs": "Provider interface\nKontrakt mezi Codelaxy a vnějším světem. Navrženo zde, ratifikováno v P1.7 (I12).",
+   "en": "Provider interface\nThe contract between Codelaxy and the outside world. Designed here, ratified in P1.7 (I12)."
+  },
+  "98f11374a472f487": {
+   "cs": "Prokázaná závada nebo mezera, kterou zatím nezavírá žádná sloučená změna (pracovní MICROMAP revize 2).",
+   "en": "A proven defect or gap that no merged change closes yet (working MICROMAP revision 2)."
+  },
+  "9a7f428a812c35a4": {
+   "cs": "Requirement / Evidence / Verdict engine\nRozhodnout, co je třeba dokázat, zda stávající důkaz platí a jaký je verdikt — aniž by cokoli věděl o nástrojích.",
+   "en": "Requirement / Evidence / Verdict engine\nDecide what must be proven, whether existing proof is valid, and what the verdict is — without knowing anything about tools."
+  },
+  "9af6b192e9c40932": {
+   "cs": "Počty varování se liší od původního textu. P12-MIKROMAPA-PC.md (80a98a5) uvádí varování Windows 9 a Linux 10 s rozpisem podle oblastí. Aktuální baseline tools/ci/warning-baseline.json obsahuje 10 varování v 9 záznamech a je jednou baseline pro oba operační systémy. Auditní replika na referenčním commitu naměřila 10 varování v 9 místech a pravidlech na Windows i Linuxu.",
+   "en": "Warning counts differ from the original text. P12-MIKROMAPA-PC.md (80a98a5) reports warnings Windows 9 and Linux 10 with a per-area breakdown. The current baseline tools/ci/warning-baseline.json holds 10 warnings in 9 entries and is one baseline for both operating systems. An audit replica on the reference commit measured 10 warnings in 9 locations and rules on Windows and Linux."
+  },
+  "9b4527775f1b5ea6": {
+   "cs": "Vyžaduje výslovné rozhodnutí správce.",
+   "en": "Needs an explicit maintainer decision."
+  },
+  "9b7b8e749c9f5a4e": {
+   "cs": "V docs/snapshot-test-matrix.md nezůstane žádné ❓ ani 📝.",
+   "en": "No ❓ or 📝 remains in docs/snapshot-test-matrix.md."
+  },
+  "9bd17b7034d6fda8": {
+   "cs": "Hashování cest (F1)",
+   "en": "Hashing of paths (F1)"
+  },
+  "9c36e768a83effe0": {
+   "cs": "Gate M1: sada testů projde z UCRT64. Gate M1 vyžaduje, aby sada prošla z PowerShell i z UCRT64. V repozitáři ani v CI není zaznamenán žádný běh UCRT64 a CI nenastavuje CODELAXY_GIT_ENVIRONMENT_ROOT.",
+   "en": "M1 gate: suite passes from UCRT64. The M1 gate requires the suite to pass from PowerShell and from UCRT64. No UCRT64 run is recorded in the repository or in CI, and CI does not set CODELAXY_GIT_ENVIRONMENT_ROOT."
+  },
+  "9cc422b537bd25cb": {
+   "cs": "Referenční hodnoty vypočtené nezávisle na Codelaxy; dispozice podle platformy tam, kde se W liší.",
+   "en": "Reference values computed independently of Codelaxy; per-platform disposition where W differs."
+  },
+  "9d46b20532b9cbfb": {
+   "cs": "Value objects, striktní parsery (F7). Plánováno.",
+   "en": "Value objects, strict parsers (F7). Planned."
+  },
+  "9db7085f0fd7a346": {
+   "cs": "F1: RED test nad 32 767 znaků cest; GitObjectHasher používající git hash-object --stdin-paths; odmítnout cesty obsahující LF; validovat ObjectId; změřit na Linuxu.",
+   "en": "F1: RED test above 32 767 characters of paths; GitObjectHasher using git hash-object --stdin-paths; reject paths containing LF; validate ObjectId; measure Linux."
+  },
+  "9dcfccff3beacbd0": {
+   "cs": "Synchronizace dokumentace (F4, F5, F6). PR #5.",
+   "en": "Docs sync (F4, F5, F6). PR #5."
+  },
+  "9de06a342e80e7d0": {
+   "cs": "Názvy větví se liší od původního plánu. Původní plán uvádí dev/codelaxy/p12-safety-net a podobné. M1 bylo dodáno na feat/m1-f3-warning-gate, fix/m1-test-path-isolation, test/m1-snapshot-golden-hs a test/m1-git-fixture-config-isolation.",
+   "en": "Branch names differ from the original plan. The original plan names dev/codelaxy/p12-safety-net and similar. M1 was delivered on feat/m1-f3-warning-gate, fix/m1-test-path-isolation, test/m1-snapshot-golden-hs and test/m1-git-fixture-config-isolation."
+  },
+  "9dfd47283208705d": {
+   "cs": "Slovník stavů není v roadmap.md. roadmap.md používá DONE, IN PROGRESS a PLANNED. PARTIAL, BLOCKED a UNKNOWN pocházejí z inventury. Sešit mapuje IN PROGRESS na PARTIAL pro P1.2.",
+   "en": "Status vocabulary is not in roadmap.md. roadmap.md uses DONE, IN PROGRESS and PLANNED. PARTIAL, BLOCKED and UNKNOWN come from the inventory. The workbook maps IN PROGRESS to PARTIAL for P1.2."
+  },
+  "9e39f999f16bbebe": {
+   "cs": "Test M4 (P1.2-M4.T01 … T18).",
+   "en": "An M4 test (P1.2-M4.T01 … T18)."
+  },
+  "9e86248cf2351e38": {
+   "cs": "Milník",
+   "en": "Milestone"
+  },
+  "a0807556a6388a8e": {
+   "cs": "Dispozice v M5: přijmout jako nepodporované a zdokumentovat, nebo doložit pomocí MSYS2 Git, CODELAXY_GIT_ENVIRONMENT_ROOT a zaznamenaného běhu. OPEN-18.",
+   "en": "Disposition at M5: accept as unsupported and document it, or evidence it with an MSYS2 Git, CODELAXY_GIT_ENVIRONMENT_ROOT and a recorded run. OPEN-18."
+  },
+  "a188ee0c511009bc": {
+   "cs": "neuvedeno",
+   "en": "none stated"
+  },
+  "a1c6f2c93fbfd018": {
+   "cs": "Nic sloučeno (plánováno). Důkaz závady: matrix:105 ❌. Návrh patche existuje, necommitnutý, ve worktree Codelaxy-m2 (větev fix/p12-m2-stdin-paths); verdikt AUDIT-B NO-GO.",
+   "en": "None merged (planned). Defect evidence: matrix:105 ❌. A draft patch exists, uncommitted, in the worktree Codelaxy-m2 (branch fix/p12-m2-stdin-paths); AUDIT-B verdict NO-GO."
+  },
+  "a1c824936dedb5af": {
+   "cs": "Rozhodnutí: souběžně s M1–M2 [D]\nTesty: před P1.2-M3b [D]",
+   "en": "Decisions: in parallel with M1–M2 [D]\nTests: before P1.2-M3b [D]"
+  },
+  "a22d46b96d23e199": {
+   "cs": "Ratifikujte slovník i to, zda ho má roadmap.md převzít.",
+   "en": "Ratify the vocabulary, and whether roadmap.md should adopt it."
+  },
+  "a2e4dc25f86be231": {
+   "cs": "Výslovně po verzi 1.0; mimo kontrakt 1.0.",
+   "en": "Explicitly after 1.0; outside the 1.0 contract."
+  },
+  "a359170020760770": {
+   "cs": "Nezávislý golden fingerprint I (index), kanonická v2, včetně Unicode cest.",
+   "en": "Independent golden fingerprint I (index), canonical v2, including Unicode paths."
+  },
+  "a3e9fb94396fe368": {
+   "cs": "• repozitář jen s Pythonem dospěje k verdiktu, kde je `BUILD` hlášen jako `NOT_REQUIRED` s uvedeným důvodem;\n• změna verze interpretu zneplatní opětovné použití;\n• oba adaptery splňují pravidlo pro adaptery.",
+   "en": "• a Python-only repository reaches a verdict with `BUILD` reported as `NOT_REQUIRED` and the reason stated;\n• changing the interpreter version invalidates reuse;\n• both adapters satisfy the adapter rule."
+  },
+  "a40858caa3bf448a": {
+   "cs": "Pojmenováno jako zamýšlená budoucí práce, výslovně mimo kontrakt 1.0.",
+   "en": "Named as intended future work, explicitly outside the 1.0 contract."
+  },
+  "a4817b79d383190b": {
+   "cs": "Mapování otevřených rozhodnutí 3 a 4 na fáze. Otevřená rozhodnutí 1, 2 a 5 jsou s fázemi svázána textem roadmapy (P2.5, P2.3, P1.4/P1.7). Vazba rozhodnutí 3 (matice podpory) na P2.6 a rozhodnutí 4 (formát konfigurace) na P1.8 je odvozena.",
+   "en": "Mapping of open decisions 3 and 4 to phases. Open decisions 1, 2 and 5 are tied to phases by roadmap text (P2.5, P2.3, P1.4/P1.7). The link of decision 3 (support matrix) to P2.6 and of decision 4 (configuration format) to P1.8 is inferred."
+  },
+  "a5286bc6316b07d2": {
+   "cs": "Rozdělit BuildSingleObservationAsync na HeadObserver, IndexObserver, TrackedWorkingTreeObserver, UntrackedWorkingTreeObserver, GitObjectHasher, FingerprintComposer, DriftGuard; GitSnapshotBuilder pouze orchestruje.",
+   "en": "Split BuildSingleObservationAsync into HeadObserver, IndexObserver, TrackedWorkingTreeObserver, UntrackedWorkingTreeObserver, GitObjectHasher, FingerprintComposer, DriftGuard; GitSnapshotBuilder only orchestrates."
+  },
+  "a63950b33621aca2": {
+   "cs": "Provider pro shell: shellcheck, shfmt",
+   "en": "Shell provider: shellcheck, shfmt"
+  },
+  "a64ca2f8cd8b5166": {
+   "cs": "Platí pro řádky PHASE, CAPABILITY, STEP, ITEM, EXTRA, EXIT, FINDING, DECISION a TEST; řádky DECISION a DIRECTION na LONGTERMMAP nesou '—'.",
+   "en": "Applies to PHASE, CAPABILITY, STEP, ITEM, EXTRA, EXIT, FINDING, DECISION and TEST rows; DECISION and DIRECTION rows of LONGTERMMAP carry '—'."
+  },
+  "a6ab88e3a75be5b7": {
+   "cs": "• porušení formátování zamítá s pojmenováním dotčených souborů;\n• žádný provider nemění soubor;\n• důkaz `BUILD` pro C# existuje nezávisle na jakémkoli běhu testů a je samostatně znovupoužitelný;\n• sloupce C++ a C# v tabulce §6.1 nemají žádnou buňku bez adapteru.",
+   "en": "• a formatting violation denies with the offending files named;\n• no provider modifies a file;\n• `BUILD` evidence for C# exists independently of any test run and is reusable on its own;\n• the C++ and C# columns of the §6.1 table have no cell without an adapter."
+  },
+  "a703b5555cdd6864": {
+   "cs": "Legenda, pravidla aktualizace, vztah k ratifikovaným dokumentům a 21 otevřených bodů.",
+   "en": "Legend, update rules, relation to ratified documents, and 21 open points."
+  },
+  "a7a14f583c847cf4": {
+   "cs": "T2: testy závisí na dotnet v PATH (10 míst).",
+   "en": "T2: tests depend on dotnet on PATH (10 places)."
+  },
+  "a83475d4199d4c60": {
+   "cs": "Rozhodl vlastník 2026-10-25: bezpředmětné, protože golden W je DONE. M2 následuje po M2a (rozhodnutí MD1).",
+   "en": "Decided by the owner on 2026-10-25: moot, because the golden W is DONE. M2 follows M2a (decision MD1)."
+  },
+  "a8529cb7c6fe39e3": {
+   "cs": "OTEVŘENÝ BOD",
+   "en": "OPEN POINT"
+  },
+  "a870acf34648c248": {
+   "cs": "Odvozená závislost: OPEN-10.",
+   "en": "Inferred dependency: OPEN-10."
+  },
+  "a8baf21b2ba758df": {
+   "cs": "Milník a otevřené položky",
+   "en": "Milestone and open items"
+  },
+  "a9012ccc27c71746": {
+   "cs": "Rozdělení observeru",
+   "en": "Observer split"
+  },
+  "a98e1d2c3cc91cbb": {
+   "cs": "Kanonická v2 fingerprintu I.",
+   "en": "Canonical v2 of fingerprint I."
+  },
+  "a9f1911021d0157a": {
+   "cs": "Nic, co repozitář deklaruje, se nespustí před konfigurací a důvěrou (I10).",
+   "en": "Nothing declared by a repository runs before configuration and trust (I10)."
+  },
+  "aa6c162865332486": {
+   "cs": "F8, rozdělení testů, CA2025. Plánováno.",
+   "en": "F8, test split, CA2025. Planned."
+  },
+  "aa94fcc4039a93dc": {
+   "cs": "Řádek matice zobrazen se značkami, které nese na referenčním commitu. Regrese souběžnosti na Windows je ve stejném řádku uvedena jako dosud nedokázaná.",
+   "en": "Matrix row shown with the marks it carries at the reference commit. The Windows concurrency regression is stated as not yet proven in the same row."
+  },
+  "aab79d7823da2587": {
+   "cs": "Ratifikováno, revize 7.",
+   "en": "Ratified, revision 7."
+  },
+  "aade0420d6e347a9": {
+   "cs": "Zdokumentováno, neimplementováno.",
+   "en": "Documented, not implemented."
+  },
+  "aaf3acab55ef4c73": {
+   "cs": "VZTAH K RATIFIKOVANÝM DOKUMENTŮM",
+   "en": "RELATION TO RATIFIED DOCS"
+  },
+  "aca431beb6ad1637": {
+   "cs": "Koncept strategické mapy v Markdownu. Externí zdroj: není commitnut v repozitáři, proto neexistuje přenosný odkaz.",
+   "en": "Markdown draft of the strategic map. External source: not committed to the repository, so there is no portable link."
+  },
+  "affc2b7e192f9387": {
+   "cs": "Třída rizika R3. Windows: asi 21 200 znaků cest projde, asi 42 400 selže (matice). Linux (měření auditu, ARG_MAX 2 097 152): 20 000 souborů projde, 100 000 selže. Vstupní podmínka: M2a sloučeno, nebo výslovné rozhodnutí vlastníka. Závislost na golden W (splněna): OPEN-07.",
+   "en": "Risk class R3. Windows: about 21 200 characters of paths succeed, about 42 400 fail (matrix). Linux (audit measurement, ARG_MAX 2 097 152): 20 000 files succeed, 100 000 fail. Entry condition: M2a merged, or an explicit owner decision. Dependency on golden W (satisfied): OPEN-07."
+  },
+  "b03dc94af2ecafa7": {
+   "cs": "Codelaxy_Assurance_Matrix-5.ods (neupraven, nesloučen)",
+   "en": "Codelaxy_Assurance_Matrix-5.ods (not modified, not merged)"
+  },
+  "b073f6c68ef87211": {
+   "cs": "Rozsah",
+   "en": "Scope"
+  },
+  "b07d171f32b5529b": {
+   "cs": "Sešit je ukazuje jako řádky EXTRA (DONE) a nepočítá je jako uzavření jakékoli položky M1. Ratifikujte, zda patří do rozsahu M1.",
+   "en": "Workbook shows them as EXTRA rows (DONE) and does not count them as closing any M1 item. Ratify whether they belong to M1 scope."
+  },
+  "b0cfd0731626ed63": {
+   "cs": "Každý krok plánu P1.2 zachovává fingerprinty H (HEAD), I (index), S (staged) a W (pracovní strom) bitově shodné. Golden testy existují proto, aby to vynucovaly.",
+   "en": "Every step of the P1.2 plan keeps the H (HEAD), I (index), S (staged) and W (working tree) fingerprints bit-identical. The golden tests exist to enforce it."
+  },
+  "b0d996b3a409b659": {
+   "cs": "omezuje P1.8 [I]",
+   "en": "constrains P1.8 [I]"
+  },
+  "b11332dccebda37c": {
+   "cs": "1. P1.2-M0 a P1.2-M1.  2. P1.2-M2.  3. Rozhodnutí M4 souběžně s M1–M2; testy M4 před M3b.  4. M3a → M3b → M3c; M3d kdykoli.  5. M5.  (P12-MIKROMAPA-PC.md, 'Pořadí')",
+   "en": "1. P1.2-M0 and P1.2-M1.  2. P1.2-M2.  3. M4 decisions in parallel with M1–M2; M4 tests before M3b.  4. M3a → M3b → M3c; M3d at any time.  5. M5.  (P12-MIKROMAPA-PC.md, 'Pořadí')"
+  },
+  "b1b0adb84b0e5452": {
+   "cs": "roadmap.md uvádí pro P1.2 IN PROGRESS; sešit ukazuje PARTIAL (OPEN-16).",
+   "en": "roadmap.md writes IN PROGRESS for P1.2; the workbook shows PARTIAL (OPEN-16)."
+  },
+  "b1ccaab83e3ce7aa": {
+   "cs": "serializovaná podoba projde round-trip a odmítá neznámé typy záznamů.",
+   "en": "the serialized form round-trips and rejects unknown record types."
+  },
+  "b27c244297b56ce3": {
+   "cs": "F8 (bool.Parse v GitRepositoryStateReader); rozdělit GitSnapshotBuilderTests (S104); CA2025.",
+   "en": "F8 (bool.Parse in GitRepositoryStateReader); split GitSnapshotBuilderTests (S104); CA2025."
+  },
+  "b3e3d25530a8f64b": {
+   "cs": "Rozhodnutí: linked worktree uvnitř worktree.",
+   "en": "Decision: linked worktree inside a worktree."
+  },
+  "b4657a70ce30be26": {
+   "cs": "MICROMAP.md revize 2, 'M1 gate analysis'; záznam o ratifikaci 2026-10-25; ci.yml",
+   "en": "MICROMAP.md revision 2, 'M1 gate analysis'; ratification record 2026-10-25; ci.yml"
+  },
+  "b4b89adbd354144d": {
+   "cs": "roadmap.md:5-6; P12-MIKROMAPA-PC.md; MICROMAP.md revize 2",
+   "en": "roadmap.md:5-6; P12-MIKROMAPA-PC.md; MICROMAP.md revision 2"
+  },
+  "b504286c79e3ff5d": {
+   "cs": "ZDROJ ZÁVISLOSTI",
+   "en": "DEPENDENCY SOURCE"
+  },
+  "b54e267b1af6d64d": {
+   "cs": "RULES — legenda, pravidla, otevřené body     |     referenční commit ab71863 (2026-10-24)     |     revize R5",
+   "en": "RULES — legend, rules, open points     |     reference commit ab71863 (2026-10-24)     |     revision R5"
+  },
+  "b5d30b19775366e7": {
+   "cs": "Test: souběžná změna na Windows.",
+   "en": "Test: concurrent change on Windows."
+  },
+  "b5f607187da593ab": {
+   "cs": "Položky P1.2-M1.1 … M1.7 a doplňky M1.8, M1.9 níže.\nPR #6, PR #8, PR #9 sloučeny.",
+   "en": "Items P1.2-M1.1 … M1.7 and extras M1.8, M1.9 below.\nPR #6, PR #8, PR #9 merged."
+  },
+  "b60c8d0786f68752": {
+   "cs": "Zahájit P1.2-M2a (F9) ve vlastním worktree a větvi z main. Vlastník schválil zahájení 2026-10-25; commit, push, pull request a merge vyžaduje každý samostatné schválení. Návrh M2 zůstává nedotčen, dokud není M2a sloučeno.",
+   "en": "Start P1.2-M2a (F9) in its own worktree and branch from main. The owner approved the start on 2026-10-25; commit, push, pull request and merge each need a separate approval. The M2 draft stays untouched until M2a is merged."
+  },
+  "b6663c37586189e6": {
+   "cs": "Fáze DONE",
+   "en": "Phases DONE"
+  },
+  "b6e2b2864a856657": {
+   "cs": "Tabulka stavu vývoje.",
+   "en": "Development status table."
+  },
+  "b764d2fc248fe639": {
+   "cs": "F8: bool.Parse v GitRepositoryStateReader.",
+   "en": "F8: bool.Parse in GitRepositoryStateReader."
+  },
+  "b79a95db6d1a1e99": {
+   "cs": "AKTUÁLNÍ FÁZE",
+   "en": "CURRENT PHASE"
+  },
+  "b7b82e49ddd038f2": {
+   "cs": "Verdikt, který nikdy neudělí z chybějících informací",
+   "en": "A verdict that never grants from missing information"
+  },
+  "b8d3609afc57353e": {
+   "cs": "F3: CI nehlídalo varování kompilátoru.",
+   "en": "F3: CI did not watch compiler warnings."
+  },
+  "b9a1e8da061084a5": {
+   "cs": "Serialize_IsDeterministicAndRoundTrips:53\nDeserialize_RejectsUnknownRecordType:83\nDeserialize_RejectsUnknownSchemaVersion:41\nPřísnější validace je F7.\nroadmap.md P1.2",
+   "en": "Serialize_IsDeterministicAndRoundTrips:53\nDeserialize_RejectsUnknownRecordType:83\nDeserialize_RejectsUnknownSchemaVersion:41\nStricter validation is F7.\nroadmap.md P1.2"
+  },
+  "b9f06ecba790e75b": {
+   "cs": "F12 (GAP, prokázáno, relevantní pro bezpečnost): --no-filters u nesledovaných souborů nehlídá žádný test. Bez něj se spustí clean filtr deklarovaný repozitářem (I10) a hash závisí na core.autocrlf (A-MUT-3 na main přežije).",
+   "en": "F12 (GAP, proven, security relevant): --no-filters for untracked files is not guarded by any test. Without it a repository-declared clean filter runs (I10) and the hash depends on core.autocrlf (A-MUT-3 survives on main)."
+  },
+  "ba2a50a920fc7f9e": {
+   "cs": "Závažnost LOW. Gate E1-4 kroku M2: testy se skutečně spouštějí na Linuxu i na Windows.",
+   "en": "Severity LOW. Gate E1-4 of M2: the tests really run on Linux and on Windows."
+  },
+  "ba35f0c47d862763": {
+   "cs": "Nezahájeno",
+   "en": "Not started"
+  },
+  "ba9a55a462389b6f": {
+   "cs": "F1 je blokátor mimo výstupní kritéria roadmapy. Výstupní kritéria P1.2 v roadmap.md F1 nezmiňují (limit příkazové řádky Windows v git hash-object). Matice testů říká, že P1.2 nelze dokončit před opravou F1, a mikromapa jej uvádí jako blokující. Podle samotné roadmap.md by šlo P1.2 uzavřít s otevřeným F1.",
+   "en": "F1 is a blocker outside the roadmap exit criteria. The P1.2 exit criteria in roadmap.md do not mention F1 (Windows command-line limit in git hash-object). The test matrix says P1.2 cannot be completed before F1 is fixed, and the micromap lists it as blocking. By roadmap.md alone P1.2 could be closed with F1 open."
+  },
+  "baaddf70fb5d432b": {
+   "cs": "Typ",
+   "en": "Type"
+  },
+  "bb2e4e276b89c11c": {
+   "cs": "Výstupní kritéria / podmínka",
+   "en": "Exit criteria / condition"
+  },
+  "bb95661ae926ae2c": {
+   "cs": "RULES — legenda, pravidla, otevřené body     |     referenční commit b05f2d2 (2026-10-18)",
+   "en": "RULES — legend, rules, open points     |     reference commit b05f2d2 (2026-10-18)"
+  },
+  "bd3169e13258ccd0": {
+   "cs": "P1.8 a P1.9 [D: 'both configuration semantics and trust semantics']",
+   "en": "P1.8 and P1.9 [D: 'both configuration semantics and trust semantics']"
+  },
+  "bd581fa4b0a5d590": {
+   "cs": "Referenční hodnoty vypočtené nezávisle na Codelaxy.",
+   "en": "Reference values computed independently of Codelaxy."
+  },
+  "bdc080ddf6e737aa": {
+   "cs": "Pokrytí golden: H, I, S DONE; W PLANNED (P1.2-M1.4). matrix:144",
+   "en": "Golden coverage: H, I, S DONE; W PLANNED (P1.2-M1.4). matrix:144"
+  },
+  "be6d380494a701a8": {
+   "cs": "GitProcessRunner.cs:282-294\nAUDIT-A A-4, AUDIT-B B-1 (protokoly ve workspace, ne v repozitáři). Na main je spouštěčem souběh (2 z 300 volání na Linuxu); s --stdin-paths ho vyvolá jakýkoli soubor, který Git neotevře, plus dlouhý seznam cest (Windows 300 souborů, Linux 3 000).",
+   "en": "GitProcessRunner.cs:282-294\nAUDIT-A A-4, AUDIT-B B-1 (workspace protocols, not in the repository). On main the trigger is a race (2 of 300 calls on Linux); with --stdin-paths any file Git cannot open plus a long path list triggers it (Windows 300 files, Linux 3 000)."
+  },
+  "be7b9a5820a64e5f": {
+   "cs": "Sešit používá prefix P1.2-. Ratifikujte prefix a ID podpoložek, nebo pojmenujte náhrady.",
+   "en": "Workbook uses the P1.2- prefix. Ratify the prefix and the sub-item IDs, or name replacements."
+  },
+  "bf0bd3eb57666aad": {
+   "cs": "docs/MICROMAP.md (pracovní, revize 2 ratifikována 2026-10-25) a koncept docs/LONGTERMMAP.md (workspace)",
+   "en": "docs/MICROMAP.md (working, revision 2 ratified 2026-10-25) and docs/LONGTERMMAP.md draft (workspace)"
+  },
+  "bfe73126b873f4f4": {
+   "cs": "Rozhodnutí: unborn HEAD.",
+   "en": "Decision: unborn HEAD."
+  },
+  "c12daf1046028e96": {
+   "cs": "Mimo P1.2; původní plán jej přiřazuje fázi konfigurace (P1.8).",
+   "en": "Outside P1.2; the original plan assigns it to the configuration phase (P1.8)."
+  },
+  "c17915eb74e56a6a": {
+   "cs": "OD-n: otevřené rozhodnutí (architecture.md §11). DIR-n: zamýšlená budoucí práce po verzi 1.0. Na MICROMAP znamená DECISION rozhodnutí M4 (P1.2-M4.Dn).",
+   "en": "OD-n: open decision (architecture.md §11). DIR-n: intended future work after 1.0. In MICROMAP, DECISION means an M4 decision (P1.2-M4.Dn)."
+  },
+  "c216881a1469dac2": {
+   "cs": "Pouze dokumentace; samotná kompatibilita s Gitem 2.31 není testována.",
+   "en": "Documentation only; compatibility with Git 2.31 itself is not tested."
+  },
+  "c21ead0614e7e1b7": {
+   "cs": "Uzavřeno",
+   "en": "Closed"
+  },
+  "c277000a129c5336": {
+   "cs": "P1.2 Snapshot engine — PARTIAL (znění roadmapy: IN PROGRESS; OPEN-16). Neuzavřeno: viz otevřené blokátory níže a MICROMAP.",
+   "en": "P1.2 Snapshot engine — PARTIAL (roadmap wording: IN PROGRESS; OPEN-16). Not closed: see open blockers below and the MICROMAP."
+  },
+  "c29e59e234e9ebd5": {
+   "cs": "Test: cesta s mezerami.",
+   "en": "Test: path with spaces."
+  },
+  "c2b69988b8886763": {
+   "cs": "P1.2-M3a [D: order]\nP1.2-M4 testy [D: before M3b]",
+   "en": "P1.2-M3a [D: order]\nP1.2-M4 tests [D: before M3b]"
+  },
+  "c2e4547b384ee381": {
+   "cs": "DONE k 2026-10-25 rozhodnutím vlastníka. Ratifikovaný pracovní MICROMAP stále uvádí PARTIAL, protože je to text tak, jak byl předložen; změna je zaznamenána v záznamu o ratifikaci. Sloučený PR není dokončený krok: všechny PR byly sloučeny do 2026-10-24 a krok zůstal PARTIAL, dokud nebyly přijaty záznamy brány. Původní větev dev/codelaxy/p12-safety-net nebyla použita (OPEN-17). Rozsah nad rámec zdokumentovaného seznamu: OPEN-05. MSYS2 Git je samostatný otevřený bod: OPEN-18.",
+   "en": "DONE as of 2026-10-25 by decision of the owner. The ratified working MICROMAP still shows PARTIAL because that is the text as submitted; the change is recorded in its ratification record. A merged PR is not a completed step: all the PRs were merged by 2026-10-24 and the step stayed PARTIAL until the gate records were accepted. Original branch dev/codelaxy/p12-safety-net was not used (OPEN-17). Scope beyond the documented list: OPEN-05. MSYS2 Git is a separate open point: OPEN-18."
+  },
+  "c5af9f760a0bac73": {
+   "cs": "Dnes platí, protože Codelaxy.Core nemá žádné zdrojové soubory a CLI je jen kostra. CoreBoundaryInvariantTests:3 zakazuje tokeny nástrojů jen v Core a Contracts; žádný test nepokrývá další konzumenty.\nroadmap.md P1.2",
+   "en": "Holds today because Codelaxy.Core has no sources and the CLI is a scaffold. CoreBoundaryInvariantTests:3 bans tool tokens in Core and Contracts only; no test covers other consumers.\nroadmap.md P1.2"
+  },
+  "c5b42b62502afa0d": {
+   "cs": "Sdílená hermetická golden fixture a adversariální regresní test globální konfigurace Gitu s pozitivními kontrolami.",
+   "en": "Shared hermetic golden fixture and an adversarial global-Git-configuration regression with positive controls."
+  },
+  "c5d670c93a4993b2": {
+   "cs": "Nové varování shodí CI; sada testů projde z prostředí PowerShell (M1-GA) i ze shellu s MSYSTEM=UCRT64 (M1-GB), každé potvrzené přijatým GATE-RECORD. MSYS2-COMPAT není součástí této brány.",
+   "en": "A new warning fails CI; the suite passes from PowerShell (M1-GA) and from a shell with MSYSTEM=UCRT64 (M1-GB), each proven by an accepted GATE-RECORD. MSYS2-COMPAT is not part of this gate."
+  },
+  "c6125cd9c8697c93": {
+   "cs": "otevřené rozhodnutí 2 [D: 'TEST resolved by open decision 2']",
+   "en": "open decision 2 [D: 'TEST resolved by open decision 2']"
+  },
+  "c69181c9e8874f87": {
+   "cs": "roadmap.md:147-170\nřádky MICROMAP s nadřazeným P1.2\nsnapshot-test-matrix.md",
+   "en": "roadmap.md:147-170\nMICROMAP rows with Parent P1.2\nsnapshot-test-matrix.md"
+  },
+  "c6c00429f6306280": {
+   "cs": "všechny dokumenty",
+   "en": "all documents"
+  },
+  "c70240aed03d8a59": {
+   "cs": "• repozitář jen se shellem dospěje k verdiktu;\n• `NOT_REQUIRED` se ve výstupu objevuje jako běžný výsledek s vysvětlením a je rozlišitelné od přeskočené nebo chybějící kontroly;\n• pro přidání tohoto jazyka nebyla potřeba žádná změna jádra, nebo je každá potřebná změna zaznamenána jako vada rozhraní (I12).",
+   "en": "• a shell-only repository reaches a verdict;\n• `NOT_REQUIRED` appears in output as a normal result with an explanation, and is distinguishable from a skipped or missing check;\n• no core change was needed to add this language, or every change that was needed is recorded as an interface defect (I12)."
+  },
+  "c73919f92b8cb0c2": {
+   "cs": "roadmap.md poznámka P0",
+   "en": "roadmap.md P0 note"
+  },
+  "c877f39047c810fc": {
+   "cs": "Sešit se řídí inventurou. Ratifikujte výklad.",
+   "en": "Workbook follows the inventory. Ratify the interpretation."
+  },
+  "c8f39b5bf97c4dea": {
+   "cs": "Vydání 1.0",
+   "en": "Release 1.0"
+  },
+  "c93fe3175bef7f35": {
+   "cs": "MICROMAP.md revize 2, 'MO2'; architecture.md I6:131-134",
+   "en": "MICROMAP.md revision 2, 'MO2'; architecture.md I6:131-134"
+  },
+  "ccaff97539bc94c1": {
+   "cs": "staged snapshot není ovlivněn nestaged úpravami;",
+   "en": "a staged snapshot is unaffected by unstaged edits;"
+  },
+  "cd030ad11f608bef": {
+   "cs": "Dispozice matice: 8 rozhodnutí, 18 testů. Plánováno.",
+   "en": "Matrix dispositions: 8 decisions, 18 tests. Planned."
+  },
+  "cd3ee21cdc1ef54a": {
+   "cs": "Rozhodnutí zaznamenáno; řádek matice již není 📝.",
+   "en": "Decision recorded; matrix row no longer 📝."
+  },
+  "cd6e146b1e0d40fc": {
+   "cs": "GitSnapshotInvalidUtf8Tests.cs:447 (Process.Start(\"rm\", …) v DeleteDirectoryNatively)",
+   "en": "GitSnapshotInvalidUtf8Tests.cs:447 (Process.Start(\"rm\", …) in DeleteDirectoryNatively)"
+  },
+  "ce2ce4a42538778a": {
+   "cs": "PR #15 (1522c7e): v testech nezůstalo žádné new GitProcessRunner(\"dotnet\") (GitProcessRunnerTests.cs)",
+   "en": "PR #15 (1522c7e): no new GitProcessRunner(\"dotnet\") remains in the tests (GitProcessRunnerTests.cs)"
+  },
+  "ce53bbcd7efd84ec": {
+   "cs": "P1.2 MICROMAP — KROKY",
+   "en": "P1.2 MICROMAP — STEPS"
+  },
+  "cec73135a5b88ff9": {
+   "cs": "Taktická roadmapa P1.2: 58 řádků (kroky, položky, výstupní kritéria, nálezy, dispozice M4). Filtrujte podle Typ, Rodič, Stav.",
+   "en": "P1.2 tactical roadmap: 58 rows (steps, items, exit criteria, findings, M4 dispositions). Filter on Type, Parent, Status."
+  },
+  "cec8c6def138e83f": {
+   "cs": "Zdroj závislosti (D / I)",
+   "en": "Dependency source (D / I)"
+  },
+  "cef8ad2afac54bbe": {
+   "cs": "Kroky DONE",
+   "en": "Steps DONE"
+  },
+  "cfb68d6e182908a1": {
+   "cs": "Počty varování se liší od původního textu. P12-MIKROMAPA-PC.md (80a98a5) uvádí varování Windows 9 a Linux 10 s rozpisem podle oblastí. Aktuální baseline tools/ci/warning-baseline.json obsahuje 10 varování v 9 záznamech a je jednou baseline pro oba operační systémy.",
+   "en": "Warning counts differ from the original text. P12-MIKROMAPA-PC.md (80a98a5) reports warnings Windows 9 and Linux 10 with a per-area breakdown. The current baseline tools/ci/warning-baseline.json holds 10 warnings in 9 entries and is one baseline for both operating systems."
+  },
+  "cfcf80adabd9ca82": {
+   "cs": "V původním plánu hlášeno jako otevřené.",
+   "en": "Reported open in the original plan."
+  },
+  "d04071a93654a9ff": {
+   "cs": "po verzi 1.0 [D]",
+   "en": "after 1.0 [D]"
+  },
+  "d09f7e54e582c487": {
+   "cs": "Nedůvěryhodná deklarace NOT_REQUIRED nemůže přispět k GRANTED (I10).",
+   "en": "An untrusted NOT_REQUIRED declaration cannot contribute to GRANTED (I10)."
+  },
+  "d0cc7cb3f6e9a2f4": {
+   "cs": "Baseline: 10 varování v 9 záznamech. Auditní replika na referenčním commitu prošla na Windows i Linuxu. OPEN-08.",
+   "en": "Baseline: 10 warnings in 9 entries. An audit replica on the reference commit passed on Windows and Linux. OPEN-08."
+  },
+  "d13f1670bea02598": {
+   "cs": "Třída rizika R3. Původní větev dev/codelaxy/p12-snapshot-value-objects. Codelaxy.Git je anti-corruption vrstva; Contracts a schéma Snapshotu v1 se nemění.",
+   "en": "Risk class R3. Original branch dev/codelaxy/p12-snapshot-value-objects. Codelaxy.Git is the anti-corruption layer; Contracts and Snapshot schema v1 do not change."
+  },
+  "d1a6ab9af1f9f284": {
+   "cs": "Sladění 26 scénářů s řádky matice: OPEN-09.",
+   "en": "Reconciliation of the 26 scenarios with matrix rows: OPEN-09."
+  },
+  "d1f47a89fe9e3c6d": {
+   "cs": "Gate / Kritéria přijetí",
+   "en": "Gate / Acceptance criteria"
+  },
+  "d1fb402f1269ba73": {
+   "cs": "PROJEKT",
+   "en": "PROJECT"
+  },
+  "d2019b8c6d3d8e2b": {
+   "cs": "Navržené upřesnění invariantu I6 (MO2). Pracovní MICROMAP navrhuje, aby invariant I6 povoloval kódování dat pro zdokumentovaný protokol standardního vstupu procesu (například citované a escapované řádky git hash-object --stdin-paths), pokud nezávislý test ekvivalence ukáže, že proces kódovaná data čte jako zamýšlenou hodnotu. docs/architecture.md se tímto návrhem nemění.",
+   "en": "Proposed refinement of invariant I6 (MO2). The working MICROMAP proposes that invariant I6 permits encoding data for a documented standard-input protocol of a process (for example the quoted and escaped lines of git hash-object --stdin-paths), provided an independent equivalence test shows that the process reads the encoded data as the intended value. docs/architecture.md is not changed by this proposal."
+  },
+  "d240e31c5896f597": {
+   "cs": "Žádný (plánováno). Důkaz závady: AUDIT-A A-4 a AUDIT-B B-1 (protokoly ve workspace, ne v repozitáři); GitProcessRunner.cs:282-294",
+   "en": "None (planned). Defect evidence: AUDIT-A A-4 and AUDIT-B B-1 (workspace protocols, not in the repository); GitProcessRunner.cs:282-294"
+  },
+  "d2d988b973d5f953": {
+   "cs": "CI na referenčním commitu",
+   "en": "CI at reference commit"
+  },
+  "d3a8822e7975da7a": {
+   "cs": "Chybí nezávislý golden pro W. Otevřená položka M1; P1.2-M2 na ní závisí [I].",
+   "en": "No independent golden for W. Open M1 item; P1.2-M2 depends on it [I]."
+  },
+  "d3be1c59d33f8d23": {
+   "cs": "Existovalo již před PR #8.",
+   "en": "Pre-existing before PR #8."
+  },
+  "d3d369a67d7f5c38": {
+   "cs": "Rozhodnutí: CRLF versus LF na disku.",
+   "en": "Decision: CRLF versus LF on disk."
+  },
+  "d41c7f19bbfe82a9": {
+   "cs": "Taktická roadmapa P1.2: 68 řádků (kroky, položky, výstupní kritéria, nálezy, dispozice M4). Filtrujte podle Typ, Rodič, Stav.",
+   "en": "P1.2 tactical roadmap: 68 rows (steps, items, exit criteria, findings, M4 dispositions). Filter on Type, Parent, Status."
+  },
+  "d458fd9386b0f83f": {
+   "cs": "Test: změna bez obsahu: ignorovaný soubor.",
+   "en": "Test: change without content: ignored file."
+  },
+  "d4a0b0e74e7ff4fb": {
+   "cs": "Value objects",
+   "en": "Value objects"
+  },
+  "d55a0bd6a11085bf": {
+   "cs": "Pravidlo / Definice",
+   "en": "Rule / Definition"
+  },
+  "d5933d4d38d07621": {
+   "cs": "Úklid resolveru (T3, R1–R3). Plánováno; lze provést kdykoli.",
+   "en": "Resolver cleanup (T3, R1–R3). Planned; may run at any time."
+  },
+  "d6644632bf5b2c53": {
+   "cs": "Další jazyky a providery",
+   "en": "Additional languages and providers"
+  },
+  "d67a0df6be2fbe31": {
+   "cs": "Test: core.ignoreCase=false.",
+   "en": "Test: core.ignoreCase=false."
+  },
+  "d68af4abae87f6f4": {
+   "cs": "F14 (rozhodnutí přijato, MD2): LF v cestě. main to podporuje; návrh M2 ho odmítá, ačkoli Git přijímá escapovanou formu. Rozhodnutí: podporu ponechat, negativní test nahradit pozitivním integračním testem.",
+   "en": "F14 (decision taken, MD2): LF in a path. main supports it; the M2 draft rejects it although Git accepts the escaped form. Decision: keep the support, replace the negative test by a positive integration test."
+  },
+  "d6dedcea9617891b": {
+   "cs": "všechny čtyři dokumenty",
+   "en": "all four documents"
+  },
+  "d6e7a2cdb41dd5d3": {
+   "cs": "Otevřené body v RULES",
+   "en": "RULES open points"
+  },
+  "d7613f7c6fa467aa": {
+   "cs": "Třída rizika R4. Původní větev dev/codelaxy/p12-resolver-cleanup. Mezery v testech resolveru se před revizí 2 pracovního MICROMAP jmenovaly R1–R3 (přejmenováno na RT1–RT3).",
+   "en": "Risk class R4. Original branch dev/codelaxy/p12-resolver-cleanup. The resolver test gaps were called R1–R3 before revision 2 of the working MICROMAP (renamed RT1–RT3)."
+  },
+  "d7654a0fccf8ddf5": {
+   "cs": "Test: změna bez obsahu: pouze mtime.",
+   "en": "Test: change without content: mtime only."
+  },
+  "d7c65e05d0d9d324": {
+   "cs": "Brání uzavření P1.2 (matrix: 'P1.2 cannot be completed before it').",
+   "en": "Blocks closing P1.2 (matrix: 'P1.2 cannot be completed before it')."
+  },
+  "d8ddfb05922f4909": {
+   "cs": "Stav P0.0–P1.1 převzatý z roadmapy. P0.0–P0.4 byly provedeny převážně v legacy implementaci mimo tento repozitář (roadmap.md uvádí, že DONE neznamená, že zde historická implementace existuje). P1.1 je DONE podle roadmap.md; jeho výstupní kritéria nebyla pro tento sešit znovu auditována.",
+   "en": "Status of P0.0–P1.1 taken from the roadmap. P0.0–P0.4 were performed mostly in the legacy implementation outside this repository (roadmap.md says DONE does not mean the historical implementation exists here). P1.1 is DONE per roadmap.md; its exit criteria were not re-audited for this workbook."
+  },
+  "d8f13c41097ec99a": {
+   "cs": "roadmap.md:352-374\nŽádná implementace na referenčním commitu.",
+   "en": "roadmap.md:352-374\nNo implementation at the reference commit."
+  },
+  "d9371b8f4e7c1331": {
+   "cs": "Žádné tvrzení, že test prošel, bez pozorovaného výstupu (architecture.md, definice hotového).",
+   "en": "No claim that a test passed without observed output (architecture.md, definition of done)."
+  },
+  "d9cdd1079ce206ab": {
+   "cs": "F10: zmizelý nesledovaný soubor způsobí výjimku z BuildAsync (prokázáno na Linuxu). Uzavře P1.2-M4; blokuje M5.",
+   "en": "F10: a vanished untracked file makes BuildAsync throw (proven on Linux). Closed by P1.2-M4; blocks M5."
+  },
+  "dbcb4e3a9eecea74": {
+   "cs": "Limit příkazové řádky v git hash-object (F1). Brání uzavření P1.2; oprava je P1.2-M2. Není výstupním kritériem roadmapy (OPEN-02).",
+   "en": "Command-line limit in git hash-object (F1). Blocks closing P1.2; fix is P1.2-M2. Not a roadmap exit criterion (OPEN-02)."
+  },
+  "dbd5378b1a44397b": {
+   "cs": "PR #8 (657b5f3, izolace hooků)\nHsGolden001_…:39\nCI na referenčním commitu: zelené na obou operačních systémech",
+   "en": "PR #8 (657b5f3, hook isolation)\nHsGolden001_…:39\nCI at reference commit: green on both operating systems"
+  },
+  "dc60a5adddba998d": {
+   "cs": "roadmap.md blok stavu",
+   "en": "roadmap.md status block"
+  },
+  "dc683eb6b66971d6": {
+   "cs": "Sešit nezavádí žádný milník, nemění žádnou architekturu ani schválený rozsah. Pouze přeformulovává a řadí.",
+   "en": "The workbook introduces no milestone, changes no architecture and no approved scope. It restates and orders."
+  },
+  "dcf6f85b8ae8fded": {
+   "cs": "RED → GREEN pro RUN-1, RUN-2 a RUN-5; RUN-3, RUN-4 a stávající testy runneru zůstanou zelené; diagnostika gitu, zrušení, timeout a chování fail-closed zachovány; balíček R4; nezávislý audit R4; CI na Windows i Ubuntu na hlavě PR.",
+   "en": "RED → GREEN for RUN-1, RUN-2 and RUN-5; RUN-3, RUN-4 and the existing runner tests stay green; git diagnostic, cancellation, timeout and fail-closed behaviour preserved; R4 package; independent R4 audit; Windows and Ubuntu CI on the PR head."
+  },
+  "dd86242d2e5853e2": {
+   "cs": "Referenční hodnoty byly nezávisle přepočítány při auditu 2026-10-17 (8/8 shoda; neuloženo v repozitáři).",
+   "en": "Reference values were recomputed independently in an audit on 2026-10-17 (8/8 match; not stored in the repository)."
+  },
+  "de1b574dba447698": {
+   "cs": "• žádná kombinace vstupů nevytvoří udělený verdikt z chybějících informací;\n• `REUSED` + `FAILED` i `EXECUTED` + `PASSED` jsou obě vyjádřitelné;\n• změna samotné verze adapteru zneplatní opětovné použití; změna samotné verze nástroje zneplatní opětovné použití; obojí je v odůvodnění rozlišitelné;\n• důkaz pro jeden druh požadavku nikdy nesplní jiný;\n• dva požadavky stejného druhu, ale s různou identitou, se nikdy navzájem nesplní;\n• `NOT_REQUIRED` je dosažitelné bez vymyšleného záznamu důkazu;\n• vyhodnocení `UNKNOWN` vynutí novou verifikaci a nikdy nesplní;\n• engine se překládá a testuje bez přítomného provideru (I1).",
+   "en": "• no input combination produces a granted verdict from missing information;\n• `REUSED` + `FAILED` and `EXECUTED` + `PASSED` are both representable;\n• changing only the adapter version invalidates reuse; changing only the tool version invalidates reuse; the two are distinguishable in the explanation;\n• evidence for one requirement kind never satisfies another;\n• two requirements of the same kind but different identities never satisfy each other;\n• `NOT_REQUIRED` is reachable without fabricating an evidence record;\n• an `UNKNOWN` evaluation forces fresh verification and never satisfies;\n• the engine compiles and is tested with no provider present (I1)."
+  },
+  "de9650ed637ea08a": {
+   "cs": "Dispozice matice",
+   "en": "Matrix dispositions"
+  },
+  "df42a4d5d3537666": {
+   "cs": "Základ (Foundation)",
+   "en": "Foundation"
+  },
+  "df993539e46446ac": {
+   "cs": "Sešit ukazuje aktuální stav. Ratifikujte aktualizaci textu plánu.",
+   "en": "Workbook shows the current state. Ratify updating the plan text."
+  },
+  "dfbd976fd02fb913": {
+   "cs": "Snapshot engine\nJeden autoritativní popis přesného posuzovaného stavu.",
+   "en": "Snapshot engine\nOne authoritative description of the exact state being judged."
+  },
+  "dfca5da56b8cdb62": {
+   "cs": "Sekce",
+   "en": "Section"
+  },
+  "e052eabc95b86fa7": {
+   "cs": "Výstupní kritérium roadmapy; uzavírá se s P1.2-M5.",
+   "en": "Roadmap exit criterion; closes with P1.2-M5."
+  },
+  "e0b0f0ecdb5ed324": {
+   "cs": "Fáze PARTIAL",
+   "en": "Phases PARTIAL"
+  },
+  "e10a25a830f0abe8": {
+   "cs": "Provider pro Python: pytest, ruff",
+   "en": "Python provider: pytest, ruff"
+  },
+  "e2abebbffe445be9": {
+   "cs": "Nelze potvrdit z repozitáře.",
+   "en": "Cannot be confirmed from the repository."
+  },
+  "e2c173ddee9eb7f7": {
+   "cs": "Test: nezávislost identity na core.ignoreCase.",
+   "en": "Test: identity independence from core.ignoreCase."
+  },
+  "e2e177f0099057fc": {
+   "cs": "Nezávislé audity z 2026-10-24 (main na referenčním commitu; necommitnutý návrh M2), oba NO-GO, a návrh dodatku. Dokumenty ve workspace, ne v repozitáři; dodatek je stále DRAFT.",
+   "en": "Independent audits of 2026-10-24 (main at the reference commit; the uncommitted M2 draft), both NO-GO, and a draft addendum. Workspace documents, not in the repository; the addendum is still a DRAFT."
+  },
+  "e2f0eefdefaccac6": {
+   "cs": "Schopnost a co vyžaduje (CAP-n); výklad existujících tvrzení, žádný nový milník.",
+   "en": "A capability and what it requires (CAP-n); a reading of existing statements, no new milestone."
+  },
+  "e3367efd47b8abcd": {
+   "cs": "Dispozice matice: 19 řádků ❓, 8 řádků 📝 na referenčním commitu; 8 scénářů vyžaduje rozhodnutí správce.",
+   "en": "Matrix dispositions: 19 rows ❓, 8 rows 📝 at the reference commit; 8 scenarios need a maintainer decision."
+  },
+  "e4b35726fbafe7f9": {
+   "cs": "Postavení",
+   "en": "Standing"
+  },
+  "e573a4591f1795cf": {
+   "cs": "Rozhodnutí: info/exclude.",
+   "en": "Decision: info/exclude."
+  },
+  "e5feee0257faae55": {
+   "cs": "Běh CI 40066814847 na ab71863 (push do main): success; windows-latest (pwsh 7, Git 2.56.0.windows.2) 330 z 330, ubuntu-24.04 (Git 2.55.0) 330 z 330. Kontroly CI na referenčním commitu\nM1-GA: běh auditora, PowerShell 7.6.8, čistý klon referenčního commitu: 330 z 330; runner zvolil Git for Windows (cmd\\git.exe).\nM1-GB: běh auditora, Git Bash s MSYSTEM=UCRT64, stejný klon: 330 z 330; runner zvolil Git for Windows (ucrt64\\bin\\git.exe).\nZáznamy jsou dokumenty ve workspace, ne v repozitáři.",
+   "en": "CI run 40066814847 on ab71863 (push to main): success; windows-latest (pwsh 7, Git 2.56.0.windows.2) 330 of 330, ubuntu-24.04 (Git 2.55.0) 330 of 330. CI checks at the reference commit\nM1-GA: auditor run, PowerShell 7.6.8, clean clone of the reference commit: 330 of 330; the runner selected Git for Windows (cmd\\git.exe).\nM1-GB: auditor run, Git Bash with MSYSTEM=UCRT64, same clone: 330 of 330; the runner selected Git for Windows (ucrt64\\bin\\git.exe).\nThe records are workspace documents, not in the repository."
+  },
+  "e6d56e94a7dfec2a": {
+   "cs": "Golden fingerprinty beze změny; mutanty.",
+   "en": "Golden fingerprints unchanged; mutants."
+  },
+  "e6d89f6cbc620154": {
+   "cs": "Hranice procesu Gitu\nSpolehlivý, izolovaný způsob, jak klást Gitu dotazy na Windows i Linuxu, bez shellu a bez zdědění kontextu Gitu volajícího.",
+   "en": "Git process boundary\nA reliable, isolated way to ask Git questions, on Windows and Linux, without a shell and without inheriting the caller's Git context."
+  },
+  "e794e3995381e5ec": {
+   "cs": "Nález sledovaný plánem (F1–F14, T3, S2, MSYS2-COMPAT). T1 a T2 jsou položky P1.2-M1.5 a P1.2-M1.6.",
+   "en": "A finding tracked by the plan (F1–F14, T3, S2, MSYS2-COMPAT). T1 and T2 are items P1.2-M1.5 and P1.2-M1.6."
+  },
+  "e8fd6b532c6922f1": {
+   "cs": "Jazyk sešitu. Obsah je anglicky, v souladu s docs/ a koncepty v Markdownu. Česká verze nebyla vytvořena.",
+   "en": "Workbook language. Content is English, matching docs/ and the Markdown drafts. No Czech version was produced."
+  },
+  "e953c5083155b0d3": {
+   "cs": "roadmap.md:482-500\nŽádná implementace na referenčním commitu.",
+   "en": "roadmap.md:482-500\nNo implementation at the reference commit."
+  },
+  "eab70dbc7f1f31c4": {
+   "cs": "řádky LONGTERMMAP; roadmap.md; architecture.md",
+   "en": "LONGTERMMAP rows; roadmap.md; architecture.md"
+  },
+  "eb626f1a783b2e5a": {
+   "cs": "b05f2d2 — main = origin/main; pracovní strom byl při inventuře čistý.",
+   "en": "b05f2d2 — main = origin/main; working tree clean at the time of the inventory."
+  },
+  "ec0ce20b350b5cc2": {
+   "cs": "Gate: sada testů projde z prostředí PowerShell (M1-GA) i ze shellu s MSYSTEM=UCRT64 (M1-GB).",
+   "en": "Gate: the suite passes from PowerShell (M1-GA) and from a shell with MSYSTEM=UCRT64 (M1-GB)."
+  },
+  "ec695de5fe45701d": {
+   "cs": "DONE pro Windows a Linux. Zbylá záložní větev je mimo matici CI a nebyla ověřena (macOS).",
+   "en": "DONE for Windows and Linux. The residual fallback is outside the CI matrix and was not verified (macOS)."
+  },
+  "ec91e2b7bc25db1f": {
+   "cs": "Informativní. Ratifikujte pojmenování zbývajících kroků.",
+   "en": "Informational. Ratify the naming for the remaining steps."
+  },
+  "ee1f78a10d06baa2": {
+   "cs": "Nezávislý audit GO od obou auditorů i od správce.",
+   "en": "Independent audit GO from both auditors and the maintainer."
+  },
+  "ee22b679ac636252": {
+   "cs": "Provider CMake/CTest, zapojený explicitně",
+   "en": "CMake/CTest provider, wired explicitly"
+  },
+  "ee83c2da82d46435": {
+   "cs": "Jemnozrnné opětovné použití pod hranicemi entit",
+   "en": "Fine-grained reuse below entity boundaries"
+  },
+  "eec2860281c31a1a": {
+   "cs": "Uzavřeno v M3d, které začíná až po sloučení M2a (stejná funkce RunCoreAsync).",
+   "en": "Closed in M3d, which starts only after M2a is merged (same function RunCoreAsync)."
+  },
+  "eef727b6130ff1f3": {
+   "cs": "Codelaxy — důkazy o přesných stavech repozitáře uložené přímo v Gitu (před verzí 1.0).",
+   "en": "Codelaxy — Git-native evidence for exact repository states (pre-1.0)."
+  },
+  "eff7ca9145fb17cb": {
+   "cs": "Nové varování shodí CI; sada testů projde z prostředí PowerShell i z UCRT64.",
+   "en": "A new warning fails CI; the suite passes from PowerShell and from UCRT64."
+  },
+  "f0adfc7c550877ba": {
+   "cs": "Gate varování (F3), hygiena testů T1/T2, nezávislé golden fingerprinty H/I/S/W.",
+   "en": "Warning gate (F3), T1/T2 test hygiene, independent golden fingerprints H/I/S/W."
+  },
+  "f0bcfd29f183849f": {
+   "cs": "ZDROJOVÉ DOKUMENTY",
+   "en": "SOURCE DOCUMENTS"
+  },
+  "f0f5f42183ba8d2f": {
+   "cs": "F13b (DEBT): asi 112 ochranných předčasných návratů v testech na main hlásí PASS bez spuštění; nepoužívá se žádný Skip.",
+   "en": "F13b (DEBT): about 112 early-return guards in the tests on main report PASS without running; no Skip is used."
+  },
+  "f11986b10559edf9": {
+   "cs": "CPU Router nemůže splnit vlastní podmínku odmrazení, dokud je zmrazený, protože zatím nemá build v CMake. Zmrazení se proto uvolňuje úzce: Při vstupu do P1.10 je povolena přesně jedna vyhrazená integrační větev CPU Router, a to jen pro integraci Codelaxy a CMake. Běžný vývoj routeru zůstává zmrazen do prvního platného Verdictu. Commity na této větvi, které nejsou integrační prací, jsou porušením zmrazení, nikoli šedou zónou.\nPoznámka: stávající `format-check` routeru nemá ekvivalent až do P2.1. Do té doby jeho gate pokrývá jen `BUILD` a `TEST` a toto zúžení se uvádí v integračním pull requestu, ne tiše pohlcuje.\nNásledné kroky po odmrazení: vyřadit `verify.sh` a čtyři shellové nástroje v tom repozitáři; obnovit zmrazený seznam vad routeru (P0.5.7, P0.6); ladění výkonu gate.\nŠtítky závislostí: OPEN-10.",
+   "en": "CPU Router cannot satisfy its own unfreeze condition while frozen, because it has no CMake build yet. The freeze is therefore lifted narrowly: On entering P1.10, exactly one dedicated integration branch of CPU Router is permitted, for Codelaxy and CMake integration only. Ordinary router development stays frozen until the first valid Verdict. Commits on that branch that are not integration work are a violation of the freeze, not a grey area.\nNote: the router's existing `format-check` has no equivalent until P2.1. Until then its gate covers `BUILD` and `TEST` only, and that reduction is stated in the integration pull request rather than quietly absorbed.\nFollow-up after the unfreeze: retire `verify.sh` and the four shell tools in that repository; resume the frozen router defect list (P0.5.7, P0.6); gate performance tuning.\nDependency labels: OPEN-10."
+  },
+  "f2cf7d898f6a595c": {
+   "cs": "z 10 kroků (M3a–M3d se počítají zvlášť)",
+   "en": "of 10 steps (M3a–M3d counted separately)"
+  },
+  "f2d00e1c5b97069d": {
+   "cs": "ŽELEZNÉ PRAVIDLO",
+   "en": "IRON RULE"
+  },
+  "f37b2fa8e50266a9": {
+   "cs": "DŮKAZY A AKTUALIZACE",
+   "en": "EVIDENCE & UPDATES"
+  },
+  "f42b8ab7df127110": {
+   "cs": "F9 (DEFECT, prokázáno): GitProcessRunner vyhodí IOException, když Git skončí dřív, než přečte celý stdin, místo aby vrátil výsledek. Blok catch zpracovává jen OperationCanceledException.",
+   "en": "F9 (DEFECT, proven): GitProcessRunner throws IOException when Git exits before it has read all of stdin, instead of returning a result. The catch handles only OperationCanceledException."
+  },
+  "f47c3ad1141e3321": {
+   "cs": "Práce dodaná nad rámec zdokumentovaného rozsahu M1. Zdokumentovaný rozsah M1 je F3, T1/T2 a golden fingerprinty H/I/S/W. PR #7 (úklid dočasných repozitářů na Windows bezpečný vůči junctionům) a PR #9 (sdílená hermetická fixture a adversariální konfigurační regrese o 10 případech zapojená do CI) byly dodány navíc.",
+   "en": "Work delivered beyond the documented M1 scope. The documented M1 scope is F3, T1/T2 and golden fingerprints H/I/S/W. PR #7 (junction-safe cleanup of temporary repositories on Windows) and PR #9 (shared hermetic fixture and a 10-case adversarial configuration regression wired into CI) were delivered in addition."
+  },
+  "f52095bb124786d8": {
+   "cs": "Krok mikromapy P1.2-M0 … P1.2-M5 (včetně M2a a M3a–M3d).",
+   "en": "A micromap step P1.2-M0 … P1.2-M5 (M2a and M3a–M3d included)."
+  },
+  "f54d483391f32e1a": {
+   "cs": "roadmap.md Pracovní pravidla; architecture.md §12",
+   "en": "roadmap.md Working rules; architecture.md §12"
+  },
+  "f592e6a4db3c6638": {
+   "cs": "Koncepty",
+   "en": "Drafts"
+  },
+  "f593fc864ac3a12d": {
+   "cs": "Třída rizika R1–R2. Původní větev dev/codelaxy/p12-tests-split.",
+   "en": "Risk class R1–R2. Original branch dev/codelaxy/p12-tests-split."
+  },
+  "f670ed68c4e54374": {
+   "cs": "Sloučený PR není dokončený krok: PR #9 je DONE, krok je PARTIAL. Původní větev dev/codelaxy/p12-safety-net nebyla použita (OPEN-17). Rozsah nad rámec zdokumentovaného seznamu: OPEN-05.",
+   "en": "A merged PR is not a completed step: PR #9 is DONE, the step is PARTIAL. Original branch dev/codelaxy/p12-safety-net was not used (OPEN-17). Scope beyond the documented list: OPEN-05."
+  },
+  "f7c6cf55c859c0b8": {
+   "cs": "Codelaxy — Sešit roadmapy",
+   "en": "Codelaxy — Roadmap Workbook"
+  },
+  "f7c9bfc83b8480aa": {
+   "cs": "OPEN-11.\nOdvozená závislost: OPEN-10.",
+   "en": "OPEN-11.\nInferred dependency: OPEN-10."
+  },
+  "f88d62484478ac03": {
+   "cs": "Politika NOT_REQUIRED převzatá z repozitáře",
+   "en": "NOT_REQUIRED policy taken from a repository"
+  },
+  "f8b86227959c727f": {
+   "cs": "P12-MIKROMAPA-PC.md, železné pravidlo a pořadí; MICROMAP.md revize 2",
+   "en": "P12-MIKROMAPA-PC.md, iron rule and order; MICROMAP.md revision 2"
+  },
+  "f9783b741d03e4b6": {
+   "cs": "Spuštění providera deklarovaného repozitářem",
+   "en": "Running a repository-declared provider"
+  },
+  "fa369d2d4bb5204e": {
+   "cs": "Netvrďte podporu jazyka, který nemá adapter (lesson 18).",
+   "en": "Do not claim support for a language that has no adapter (lesson 18)."
+  },
+  "fa4bc2c7322a20e2": {
+   "cs": "• druhý běh bez změn nevykoná žádnou externí práci;\n• změna verze adapteru nebo verze nástroje zneplatní opětovné použití i bez změny zdrojů;\n• částečně zapsaný záznam se vyhodnotí jako `INCOMPLETE`, nikdy jako `VALID`;\n• souběžní a zhroucení producenti nemohou publikovat důkaz, který jiný proces přijme.",
+   "en": "• a second run with no changes performs no external work;\n• changing either the adapter version or the tool version invalidates reuse, with no source change;\n• a partially written record evaluates as `INCOMPLETE`, never as `VALID`;\n• concurrent and crashed producers cannot publish evidence another process accepts."
+  },
+  "fa7474117f091c92": {
+   "cs": "omezuje P2.3",
+   "en": "constrains P2.3"
+  },
+  "fad180e27c63b3e2": {
+   "cs": "MSYS2-COMPAT není doloženo. Codelaxy má fungovat s Gitem poskytovaným MSYS2 (POSIX cesty v metadatech propojených worktree, CODELAXY_GIT_ENVIRONMENT_ROOT, architecture.md I4). Obě instalace Gitu na stroji správce jsou Git for Windows 2.56.0.windows.2, který zapisuje cesty ve stylu Windows; žádný MSYS2 Git není nainstalován. Přijaté záznamy brány M1 proto o MSYS2 Gitu nic neříkají. Neblokuje uzavření P1.2; blokuje jakékoli tvrzení, že MSYS2 Git je podporován.",
+   "en": "MSYS2-COMPAT is not evidenced. Codelaxy is meant to work with a Git provided by MSYS2 (POSIX paths in linked-worktree metadata, CODELAXY_GIT_ENVIRONMENT_ROOT, architecture.md I4). Both Git installations on the maintainer's machine are Git for Windows 2.56.0.windows.2, which writes Windows-style paths; no MSYS2 Git is installed. The accepted M1 gate records therefore say nothing about MSYS2 Git. It does not block the closure of P1.2; it blocks any claim that MSYS2 Git is supported."
+  },
+  "fae6dd59efc8a72a": {
+   "cs": "PR #6; viz P1.2-M1.1",
+   "en": "PR #6; see P1.2-M1.1"
+  },
+  "fb070d254032b1f9": {
+   "cs": "Pojistka pro E1: na MICROMAP a LONGTERMMAP zčervená buňka Důkazy, když je Stav DONE a Důkazy jsou prázdné nebo pomlčka. Napište důkaz nebo změňte stav.",
+   "en": "Guard for E1: on MICROMAP and LONGTERMMAP the Evidence cell turns red when Status is DONE and Evidence is empty or a dash. Write the evidence or change the status."
+  },
+  "fb121bf25823a917": {
+   "cs": "Původní tvrzení o čtyřech výstupních kritériích P1.2. P12-MIKROMAPA-PC.md uvádí, že čtyři výstupní kritéria jsou pokryta testy. Inventura na referenčním commitu: kritérium 1 PARTIAL (nezávislé golden testy pro H, I, S a W existují v CI na Windows i Linuxu, ale golden W má jeden sledovaný a jeden nesledovaný soubor, takže nezachytí chybné přiřazení Object ID (F11); W se mezi Windows a Linuxem záměrně liší), kritérium 3 PARTIAL (žádný test mimo zákaz tokenů v Core/Contracts; dnes platí, protože Core nemá žádné zdrojové soubory a CLI je jen kostra), kritéria 2 a 4 DONE.",
+   "en": "Original claim about the four P1.2 exit criteria. P12-MIKROMAPA-PC.md states that the four exit criteria are covered by tests. Inventory at the reference commit: criterion 1 PARTIAL (independent goldens for H, I, S and W exist on Windows and Linux CI, but the W golden has one tracked and one untracked file, so it cannot detect a wrong Object ID attribution (F11); W differs between Windows and Linux by design), criterion 3 PARTIAL (no test beyond Core/Contracts token ban; holds today because Core has no sources and the CLI is a scaffold), criteria 2 and 4 DONE."
+  },
+  "fb16d26b12b18918": {
+   "cs": "Rozhodnutí: fixture pro 'checkout different repository state'.",
+   "en": "Decision: fixture for 'checkout different repository state'."
+  },
+  "fb786832e43e318d": {
+   "cs": "roadmap.md revize 7 a architecture.md revize 7 jsou závazné. Pokud se s nimi tento sešit rozchází, vyhrávají ony (tak jako README.md vůči architecture.md).",
+   "en": "roadmap.md revision 7 and architecture.md revision 7 are authoritative. If this workbook disagrees with them, they win (as README.md does for architecture.md)."
+  },
+  "fc204f44a2ce8fde": {
+   "cs": "Záchranná síť (safety net). Hotovo: gate F3, golden H/I/S/W, T1, T2, doplňky PR #7, #9, #12, #13; části brány M1-GA a M1-GB přijaty 2026-10-25. Nepokryto: MSYS2-COMPAT.",
+   "en": "Safety net. Done: F3 gate, golden H/I/S/W, T1, T2, extras PR #7, #9, #12, #13; gate legs M1-GA and M1-GB accepted on 2026-10-25. Not covered: MSYS2-COMPAT."
+  },
+  "fc255dc1d36dcdf3": {
+   "cs": "Nezávislé golden fingerprinty H (HEAD) a S (staged).",
+   "en": "Independent golden fingerprints H (HEAD) and S (staged)."
+  },
+  "fcb4dd842c61858a": {
+   "cs": "Závisí na",
+   "en": "Depends on"
+  },
+  "fcb88dde0bab42c2": {
+   "cs": "Úklid dočasných repozitářů na Windows bezpečný vůči junctionům.",
+   "en": "Junction-safe cleanup of temporary repositories on Windows."
+  },
+  "fce05462aec49082": {
+   "cs": "Synchronizace architektury a dokumentace, rozhodnutí o samostatném C#/.NET",
+   "en": "Architecture and docs sync, standalone C#/.NET decision"
+  },
+  "fd5178bf7c8fead1": {
+   "cs": "Ratifikujte každé I, nebo je povyšte na D doplněním tvrzení do roadmap.md.",
+   "en": "Ratify each I, or promote it to D by adding the statement to roadmap.md."
+  },
+  "fe29920ac7c8d8ad": {
+   "cs": "Pouze sémantika kontroly; žádný provider nemění soubor. C# BUILD patří sem, ne do P1.6 (I14).",
+   "en": "Check semantics only; no provider modifies a file. C# BUILD is owned here, not by P1.6 (I14)."
+  },
+  "fe5ab4b41427eca1": {
+   "cs": "Sešit hlásí DONE (jak uvádí roadmap.md). Ratifikujte, nebo požádejte o nový audit P1.1.",
+   "en": "Workbook reports DONE (as stated by roadmap.md). Ratify, or request a re-audit of P1.1."
+  },
+  "fe953ed89f8e5ad9": {
+   "cs": "Tento ovládací panel.",
+   "en": "This control panel."
+  },
+  "ff411ce5b69f84ba": {
+   "cs": "Nález sledovaný plánem (F1–F8, T3, S2). T1 a T2 jsou položky P1.2-M1.5 a P1.2-M1.6.",
+   "en": "A finding tracked by the plan (F1–F8, T3, S2). T1 and T2 are items P1.2-M1.5 and P1.2-M1.6."
+  }
+ },
+ "lang": "cs",
+ "name": "Čeština"
+}
