@@ -489,6 +489,22 @@ class BrowserFromDisk(unittest.TestCase):
         self.assertIn("no on-device translator", status)
         self.assertTrue("— Roadmap Workbook" in r["_dom"])
 
+    def test_translation_finishing_after_a_language_switch_is_cached_under_its_own_language(self):
+        fake = (
+            "self.Translator={availability:function(){return Promise.resolve('available')},"
+            "create:function(o){return Promise.resolve({translate:function(t){return new Promise(function(r){"
+            "setTimeout(function(){r(o.targetLanguage+':'+t)},o.targetLanguage==='de'?3000:0)})}})}};"
+            "window.__rvSelftestHook=function(rv){var td=document.querySelector('td.tr');var p=rv.tipContent(td);"
+            "return rv.setLang('fr').then(function(){return p.catch(function(){})}).then(function(){"
+            "return new Promise(function(r){setTimeout(r,4000)})})};"
+        )
+        r = chrome_dom(self.page, "lang=de", extra_head_script=fake)
+        self.assertEqual((r["lang"], r["mode"]), ("fr", "api"))
+        self.assertTrue(r["cache"], "the pending German translation never finished")
+        for entry in r["cache"]:
+            lang, _, rest = entry.partition("|")
+            self.assertTrue(rest.split("=", 1)[1].startswith(lang + ":"), f"{lang} cache holds foreign text: {entry[:80]}")
+
     def test_storage_that_throws_does_not_break_the_page(self):
         blocked = "Object.defineProperty(window,'localStorage',{get:function(){throw new Error('blocked')}});"
         with_fragment = chrome_dom(self.page, "lang=cs", extra_head_script=blocked)

@@ -54,6 +54,8 @@ MUTATIONS = [
      "function load(k) { return localStorage.getItem(k); }", [T + "BrowserFromDisk.test_storage_that_throws_does_not_break_the_page"]),
     ("invalid language code accepted", "viewer.js", "var ready = setLang(CODE_RE.test(wanted) ? wanted : 'en', false);",
      "var ready = setLang(wanted, false);", [T + "BrowserFromDisk.test_an_invalid_language_code_is_ignored_safely"]),
+    ("late translation cached under the new language", "viewer.js", "state.cache[lang + '|' + key] = res;", "state.cache[state.lang + '|' + key] = res;",
+     [T + "BrowserFromDisk.test_translation_finishing_after_a_language_switch_is_cached_under_its_own_language"]),
 ]
 
 
