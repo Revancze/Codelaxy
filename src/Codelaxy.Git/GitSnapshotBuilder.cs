@@ -366,14 +366,22 @@ public sealed class GitSnapshotBuilder
 
         if (regularTrackedPaths.Count > 0)
         {
-            var hashArguments = new List<string> { "hash-object", "--no-filters", "--" };
-
-            hashArguments.AddRange(regularTrackedPaths);
+            if (
+                !GitObjectHasher.TryEncodePaths(
+                    regularTrackedPaths,
+                    out var pathInput,
+                    out var pathDiagnostic
+                )
+            )
+            {
+                return Failure(pathDiagnostic);
+            }
 
             var trackedHashResult = await RunRepositoryReadOnlyAsync(
                 startDirectory,
                 repository.TopLevel,
-                hashArguments,
+                ["hash-object", "--no-filters", "--stdin-paths"],
+                pathInput,
                 cancellationToken
             );
 
@@ -387,16 +395,15 @@ public sealed class GitSnapshotBuilder
                 );
             }
 
-            var regularObjectIds = trackedHashResult.StandardOutput.Split(
-                '\n',
-                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
-            );
-
-            if (regularObjectIds.Length != regularTrackedPaths.Count)
+            if (
+                !GitObjectHasher.TryParseObjectIds(
+                    trackedHashResult.StandardOutput,
+                    regularTrackedPaths.Count,
+                    out var regularObjectIds
+                )
+            )
             {
-                return Failure(
-                    "Git returned an unexpected number " + "of tracked working-tree object hashes."
-                );
+                return Failure("Git returned invalid tracked working-tree object hashes.");
             }
 
             for (var index = 0; index < regularTrackedPaths.Count; ++index)
@@ -408,12 +415,11 @@ public sealed class GitSnapshotBuilder
         foreach (var symbolicLinkPath in symbolicLinkPaths)
         {
             var fullPath = Path.Combine(fileSystemTopLevel, symbolicLinkPath);
-
             var linkTarget = new FileInfo(fullPath).LinkTarget;
 
             if (linkTarget is null)
             {
-                return Failure("Unable to read tracked symbolic link " + $"'{symbolicLinkPath}'.");
+                return Failure($"Unable to read tracked symbolic link '{symbolicLinkPath}'.");
             }
 
             if (IsLossyDecoded(linkTarget))
@@ -433,13 +439,26 @@ public sealed class GitSnapshotBuilder
             {
                 return Failure(
                     CreateGitDiagnostic(
-                        "Unable to hash tracked symbolic link " + $"'{symbolicLinkPath}'",
+                        $"Unable to hash tracked symbolic link '{symbolicLinkPath}'",
                         symlinkHashResult
                     )
                 );
             }
 
-            trackedObjectIds[symbolicLinkPath] = symlinkHashResult.StandardOutput.Trim();
+            if (
+                !GitObjectHasher.TryParseObjectIds(
+                    symlinkHashResult.StandardOutput,
+                    1,
+                    out var symlinkObjectIds
+                )
+            )
+            {
+                return Failure(
+                    $"Git returned invalid tracked symbolic-link object hash for '{symbolicLinkPath}'."
+                );
+            }
+
+            trackedObjectIds[symbolicLinkPath] = symlinkObjectIds[0];
         }
 
         var trackedParts = new List<string>();
@@ -576,19 +595,40 @@ public sealed class GitSnapshotBuilder
                     );
                 }
 
-                untrackedObjectIds[untrackedPath] = symlinkHashResult.StandardOutput.Trim();
+                if (
+                    !GitObjectHasher.TryParseObjectIds(
+                        symlinkHashResult.StandardOutput,
+                        1,
+                        out var symlinkObjectIds
+                    )
+                )
+                {
+                    return Failure(
+                        $"Git returned invalid untracked symbolic-link object hash for '{untrackedPath}'."
+                    );
+                }
+
+                untrackedObjectIds[untrackedPath] = symlinkObjectIds[0];
             }
 
             if (regularUntrackedPaths.Count > 0)
             {
-                var hashArguments = new List<string> { "hash-object", "--no-filters", "--" };
-
-                hashArguments.AddRange(regularUntrackedPaths);
+                if (
+                    !GitObjectHasher.TryEncodePaths(
+                        regularUntrackedPaths,
+                        out var pathInput,
+                        out var pathDiagnostic
+                    )
+                )
+                {
+                    return Failure(pathDiagnostic);
+                }
 
                 var untrackedHashResult = await RunRepositoryReadOnlyAsync(
                     startDirectory,
                     repository.TopLevel,
-                    hashArguments,
+                    ["hash-object", "--no-filters", "--stdin-paths"],
+                    pathInput,
                     cancellationToken
                 );
 
@@ -599,14 +639,15 @@ public sealed class GitSnapshotBuilder
                     );
                 }
 
-                var regularObjectIds = untrackedHashResult.StandardOutput.Split(
-                    '\n',
-                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
-                );
-
-                if (regularObjectIds.Length != regularUntrackedPaths.Count)
+                if (
+                    !GitObjectHasher.TryParseObjectIds(
+                        untrackedHashResult.StandardOutput,
+                        regularUntrackedPaths.Count,
+                        out var regularObjectIds
+                    )
+                )
                 {
-                    return Failure("Git returned an unexpected number of untracked object hashes.");
+                    return Failure("Git returned invalid untracked object hashes.");
                 }
 
                 for (var index = 0; index < regularUntrackedPaths.Count; ++index)

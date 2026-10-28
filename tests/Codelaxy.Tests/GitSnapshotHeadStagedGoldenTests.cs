@@ -188,6 +188,216 @@ public sealed class GitSnapshotHeadStagedGoldenTests
         }
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task WorktreeGoldenF11_MultiplePathsKeepOidAttribution(bool tracked)
+    {
+        const string expectedTrackedI =
+            "sha256:0938a02f94788084ce6957893b5c485178d86bb7725eb6cf2b69a3c4d18d7973";
+        const string expectedTrackedS =
+            "sha256:2a5539e74818aca17f6c381c990bde98171c35cb0cc8cf0b82127f6d2027f06a";
+        const string expectedTrackedW =
+            "sha256:23fd050198a17b12206d7ab1bb9c39ab17a8df2106b61f37d82cbaeeb7977897";
+        const string expectedUntrackedW =
+            "sha256:c08c07398df974ee8a5973e392a96df2512553bb211609f79b342b7ca531afc5";
+
+        var runner = new GitProcessRunner();
+        var root = Path.Combine(Path.GetTempPath(), $"Codelaxy F11 {Guid.NewGuid():N}");
+
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            await InitializeBaselineAsync(runner, root);
+
+            await File.WriteAllTextAsync(
+                Path.Combine(root, "a.txt"),
+                "alpha\n",
+                new UTF8Encoding(false)
+            );
+            await File.WriteAllTextAsync(
+                Path.Combine(root, "b.txt"),
+                "charlie\n",
+                new UTF8Encoding(false)
+            );
+            await File.WriteAllTextAsync(
+                Path.Combine(root, "c.txt"),
+                "bravo\n",
+                new UTF8Encoding(false)
+            );
+
+            if (tracked)
+            {
+                await GitAsync(runner, root, "add", "--", "a.txt", "b.txt", "c.txt");
+            }
+
+            var result = await new GitSnapshotBuilder(runner).BuildAsync(root);
+
+            Assert.True(result.Succeeded, result.Diagnostic);
+            Assert.True(result.Succeeded, result.Diagnostic);
+            Assert.NotNull(result.Snapshot);
+
+            var snapshot = result.Snapshot;
+
+            Assert.Equal(ExpectedH, snapshot.HeadFingerprint);
+
+            Assert.Equal(tracked ? expectedTrackedI : ExpectedEmptyI, snapshot.IndexFingerprint);
+
+            Assert.Equal(tracked ? expectedTrackedS : ExpectedEmptyS, snapshot.StagedFingerprint);
+
+            Assert.Equal(
+                tracked ? expectedTrackedW : expectedUntrackedW,
+                snapshot.WorkingTreeFingerprint
+            );
+        }
+        finally
+        {
+            foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+            }
+
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [LinuxOnlyTheory]
+    [InlineData("a.txt", "sha256:753ced1332e5fbe22d4ba06fb67b68eeb2280b6935898621e833baf642579f4d")]
+    [InlineData("c.txt", "sha256:379d4d0fcf213bc3675488a157fb70717e140f4f5adbdcd5fde9bfdee6989643")]
+    public async Task WorktreeGoldenF11_MixedUntrackedSymlinkKeepsOidAttribution(
+        string linkTarget,
+        string expectedW
+    )
+    {
+        var runner = new GitProcessRunner();
+        var root = Path.Combine(Path.GetTempPath(), $"Codelaxy F11 Mixed {Guid.NewGuid():N}");
+
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            await InitializeBaselineAsync(runner, root);
+
+            await File.WriteAllTextAsync(
+                Path.Combine(root, "a.txt"),
+                "alpha\n",
+                new UTF8Encoding(false)
+            );
+
+            await File.WriteAllTextAsync(
+                Path.Combine(root, "c.txt"),
+                "bravo\n",
+                new UTF8Encoding(false)
+            );
+
+            var linkPath = Path.Combine(root, "b.link");
+
+            File.CreateSymbolicLink(linkPath, linkTarget);
+
+            Assert.Equal(linkTarget, new FileInfo(linkPath).LinkTarget);
+
+            var result = await new GitSnapshotBuilder(runner).BuildAsync(root);
+
+            Assert.True(result.Succeeded, result.Diagnostic);
+            Assert.NotNull(result.Snapshot);
+
+            var snapshot = result.Snapshot;
+
+            Assert.Equal(ExpectedH, snapshot.HeadFingerprint);
+            Assert.Equal(ExpectedEmptyI, snapshot.IndexFingerprint);
+            Assert.Equal(ExpectedEmptyS, snapshot.StagedFingerprint);
+            Assert.Equal(expectedW, snapshot.WorkingTreeFingerprint);
+        }
+        finally
+        {
+            foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+            }
+
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Theory]
+    [InlineData(false, "sha256:7746826a6606ab10bbbd6c47d4d34d69862c02836e41ee6f210321e22d659f4b")]
+    [InlineData(true, "sha256:91227ae363aa7ae7bb48791bbcd665bd3b2bc43e75ca98ec563674ce3afcb289")]
+    public async Task WorktreeGoldenF11_MixedTrackedStatesKeepOidAttribution(
+        bool directoryConflict,
+        string expectedW
+    )
+    {
+        const string expectedI =
+            "sha256:0938a02f94788084ce6957893b5c485178d86bb7725eb6cf2b69a3c4d18d7973";
+        const string expectedS =
+            "sha256:2a5539e74818aca17f6c381c990bde98171c35cb0cc8cf0b82127f6d2027f06a";
+
+        var runner = new GitProcessRunner();
+        var root = Path.Combine(
+            Path.GetTempPath(),
+            $"Codelaxy F11 Tracked Mixed {Guid.NewGuid():N}"
+        );
+
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            await InitializeBaselineAsync(runner, root);
+
+            await File.WriteAllTextAsync(
+                Path.Combine(root, "a.txt"),
+                "alpha\n",
+                new UTF8Encoding(false)
+            );
+
+            var middlePath = Path.Combine(root, "b.txt");
+
+            await File.WriteAllTextAsync(middlePath, "charlie\n", new UTF8Encoding(false));
+
+            await File.WriteAllTextAsync(
+                Path.Combine(root, "c.txt"),
+                "bravo\n",
+                new UTF8Encoding(false)
+            );
+
+            await GitAsync(runner, root, "add", "--", "a.txt", "b.txt", "c.txt");
+
+            // Keep b.txt in the index but exclude it
+            // from regular working-tree hashing.
+            File.Delete(middlePath);
+
+            if (directoryConflict)
+            {
+                Directory.CreateDirectory(middlePath);
+            }
+
+            Assert.False(File.Exists(middlePath));
+            Assert.Equal(directoryConflict, Directory.Exists(middlePath));
+
+            var result = await new GitSnapshotBuilder(runner).BuildAsync(root);
+
+            Assert.True(result.Succeeded, result.Diagnostic);
+            Assert.NotNull(result.Snapshot);
+
+            var snapshot = result.Snapshot;
+
+            Assert.Equal(ExpectedH, snapshot.HeadFingerprint);
+            Assert.Equal(expectedI, snapshot.IndexFingerprint);
+            Assert.Equal(expectedS, snapshot.StagedFingerprint);
+            Assert.Equal(expectedW, snapshot.WorkingTreeFingerprint);
+        }
+        finally
+        {
+            foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+            }
+
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
     private static async Task InitializeBaselineAsync(GitProcessRunner runner, string root)
     {
         await GoldenGitFixture.InitializeSha1Async(runner, root);
