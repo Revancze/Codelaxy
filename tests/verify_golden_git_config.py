@@ -29,6 +29,13 @@ CASES = (
     "fsmonitor",
 )
 
+# Exact outcome of the Golden filter per platform. The Linux-only symlink theory
+# is reported as skipped on Windows; nothing else may be skipped or missing.
+EXPECTED_COUNTS = {
+    "windows": {"total": 12, "passed": 11, "failed": 0, "skipped": 1},
+    "linux": {"total": 13, "passed": 13, "failed": 0, "skipped": 0},
+}
+
 
 def run(args, cwd, env, *, check=True):
     result = subprocess.run(
@@ -403,6 +410,61 @@ def positive_control(name, directory, config, env):
     return markers
 
 
+def platform_key():
+    if sys.platform == "win32":
+        return "windows"
+
+    if sys.platform.startswith("linux"):
+        return "linux"
+
+    raise AssertionError(f"Unsupported platform for Golden counts: {sys.platform}")
+
+
+def read_trx_counts(trx, name):
+    """Return outcome counts, cross-checked between TRX counters and results."""
+    document = ET.parse(trx)
+    counters = document.find(".//{*}Counters")
+    require(counters is not None, f"{name}: missing test counters")
+
+    outcomes = [
+        result.get("outcome")
+        for result in document.findall(".//{*}UnitTestResult")
+    ]
+
+    observed = {
+        "total": len(outcomes),
+        "passed": outcomes.count("Passed"),
+        "failed": outcomes.count("Failed"),
+        "skipped": outcomes.count("NotExecuted"),
+    }
+
+    require(
+        sum(observed[key] for key in ("passed", "failed", "skipped"))
+        == observed["total"],
+        f"{name}: unexpected test outcome in TRX results: {sorted(set(outcomes))}",
+    )
+
+    # TRX does not count skipped tests as notExecuted; they are total - executed.
+    reported = {key: int(counters.get(key, "-1")) for key in counters.keys()}
+
+    require(
+        reported.get("total") == observed["total"]
+        and reported.get("passed") == observed["passed"]
+        and reported.get("failed") == observed["failed"]
+        and reported.get("executed") == observed["total"] - observed["skipped"],
+        f"{name}: TRX counters {reported} disagree with results {observed}",
+    )
+
+    ignored = {"total", "executed", "passed", "failed"}
+
+    require(
+        all(value == 0 for key, value in reported.items() if key not in ignored),
+        f"{name}: unexpected non-zero TRX counters: {reported}",
+    )
+
+    return observed
+
+
 def run_golden_tests(name, directory, env):
     results = directory / "results"
     results.mkdir()
@@ -424,20 +486,21 @@ def run_golden_tests(name, directory, env):
     require(result.returncode == 0, f"{name}: dotnet test failed")
     require(trx.is_file(), f"{name}: missing TRX report")
 
-    counters = ET.parse(trx).find(".//{*}Counters")
-    require(counters is not None, f"{name}: missing test counters")
-
-    total = int(counters.get("total", "-1"))
-    passed = int(counters.get("passed", "-1"))
-    failed = int(counters.get("failed", "-1"))
+    platform = platform_key()
+    observed = read_trx_counts(trx, name)
+    expected = EXPECTED_COUNTS[platform]
 
     require(
-        (total, passed, failed) == (7, 7, 0),
-        f"{name}: unexpected test counts: "
-        f"total={total}, passed={passed}, failed={failed}",
+        observed == expected,
+        f"{name}: unexpected test counts on {platform}: "
+        f"expected {expected}, observed {observed}",
     )
 
-    print(f"{name}: GOLDEN 7/7 PASS", flush=True)
+    print(
+        f"{name}: GOLDEN {observed['passed']}/{observed['total']} PASS "
+        f"({observed['skipped']} skipped on {platform})",
+        flush=True,
+    )
 
 
 def main():

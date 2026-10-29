@@ -271,23 +271,15 @@ public sealed class GitProcessRunner
 
         var waitToken = waitCancellation?.Token ?? cancellationToken;
 
+        var inputWriteFailed = false;
+
         try
         {
-            if (standardInput is null)
-            {
-                process.StandardInput.Close();
-            }
-            else
-            {
-                await process.StandardInput.BaseStream.WriteAsync(
-                    standardInput.AsMemory(),
-                    waitToken
-                );
-
-                await process.StandardInput.BaseStream.FlushAsync(waitToken);
-
-                process.StandardInput.Close();
-            }
+            inputWriteFailed = await WriteStandardInputWithFailureAsync(
+                process,
+                standardInput,
+                waitToken
+            );
 
             await process.WaitForExitAsync(waitToken);
         }
@@ -319,8 +311,51 @@ public sealed class GitProcessRunner
             process.ExitCode,
             await standardOutputTask,
             await standardErrorTask,
-            GitCommandFailureKind.None
+            inputWriteFailed ? GitCommandFailureKind.InputFailure : GitCommandFailureKind.None
         );
+    }
+
+    // Returns true when writing or closing stdin encounters an I/O failure.
+    private static async Task<bool> WriteStandardInputWithFailureAsync(
+        Process process,
+        byte[]? standardInput,
+        CancellationToken cancellationToken
+    )
+    {
+        if (standardInput is null)
+        {
+            process.StandardInput.Close();
+            return false;
+        }
+
+        var inputFailed = false;
+
+        try
+        {
+            await process.StandardInput.BaseStream.WriteAsync(
+                standardInput.AsMemory(),
+                cancellationToken
+            );
+
+            await process.StandardInput.BaseStream.FlushAsync(cancellationToken);
+        }
+        catch (IOException)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            inputFailed = true;
+        }
+
+        try
+        {
+            process.StandardInput.Close();
+        }
+        catch (IOException)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            inputFailed = true;
+        }
+
+        return inputFailed;
     }
 
     private string? GetGitLaunchRefusalDiagnostic(string gitExecutable, string workingDirectory)

@@ -73,6 +73,7 @@ Snapshot identity must not depend on how the observer is configured.
 |---|---|
 | `status.renames` | ✅ FingerprintsDoNotDependOnStatusRenameConfiguration |
 | `core.autocrlf` | ✅ FingerprintsDoNotDependOnCoreAutoCrlfConfiguration |
+| repository-declared clean filter (`filter.<name>.clean`) with `core.autocrlf=true` | ✅ untracked files, Windows + Linux: BuildAsync_DoesNotRunCleanFilterOrConvertUntrackedFileWithAutoCrlf. The test first proves, with the same fixture, that where filters are allowed the filter runs and the blob is converted (LF, pinned blob ID); then that `--no-filters` hashes the bytes on disk (pinned CRLF blob ID); then that BuildAsync runs no filter (marker file absent) and produces the same W as a control repository without the filter and with `core.autocrlf=false`. It fails, with an F12 message, when the untracked batch loses `--no-filters` (checked on Windows and Linux, audit run 2026-10-28). Tracked files: dropping `--no-filters` from the tracked batch is killed on Windows by FingerprintsDoNotDependOnCoreAutoCrlfConfiguration (not run on Linux); a clean filter on a tracked file has no dedicated test ❓ |
 | `core.excludesFile` | ✅ FingerprintsDoNotDependOnCoreExcludesFile |
 | `core.fileMode` | ✅ FileModeConfigurationDoesNotChangeExecutableWorkingTreeIdentityOnLinux |
 | `core.symlinks` | ✅ SupportsTrackedSymlinkMaterializedAsRegularFileWhenCoreSymlinksFalse + UsesSameWorkingTreeFingerprintForMaterializedAndNativeTrackedSymlinkOnLinux |
@@ -99,10 +100,11 @@ Snapshot identity must not depend on how the observer is configured.
 
 | Case | Status | Notes |
 |---|---|---|
-| path with spaces | ❓ in snapshot | runner test exists |
-| Unicode paths in index (NFC/NFD and supplementary-plane characters) | ✅ IndexGoldenUnicode001_GitFixturePreservesPathsAndProducesExpectedIndexFingerprint | A real Git fixture with NFC and NFD `é` and supplementary-plane names pins the index fingerprint. Unicode paths in W ❓ |
-| path with leading `-` | ❓ | `--` separator is used |
-| many files (long path list) | ❌ Windows: reproduced, CONSERVATIVE FAILURE | All regular tracked paths, and separately all regular untracked paths, go to one `git hash-object` command line; Windows limits a command line to 32 767 characters. Reproduced manually on 2026-10-12 with Git for Windows 2.55: about 21 200 characters of paths succeed, about 42 400 fail with "Unable to hash tracked working-tree files" and no Snapshot. The limit depends on total path length, not on a file count. Linux `ARG_MAX` not measured. Regression test and fix (batching or `--stdin-paths`) pending as F1; P1.2 cannot be completed before it. |
+| path with spaces | ✅ tracked and untracked, Windows + Linux: BuildAsync_ObservesSpecialNamesWithoutLosingWorkingTreeChanges (`space name.txt`) | Detection of change only: the test edits each special-named file in turn and asserts that H, I and S stay equal and W changes. It pins no Golden value and does not check which object ID belongs to which path; that attribution is covered by the F11 Golden tests (§7), which use ASCII names. On Linux the same test also covers names with a leading quote, a backslash and a tab. A runner test for spaces exists as well. |
+| Unicode paths in index (NFC/NFD and supplementary-plane characters) | ✅ IndexGoldenUnicode001_GitFixturePreservesPathsAndProducesExpectedIndexFingerprint | A real Git fixture with NFC and NFD `é` and supplementary-plane names pins the index fingerprint. Unicode paths in W: ✅ detection only, tracked and untracked, Windows + Linux: BuildAsync_ObservesSpecialNamesWithoutLosingWorkingTreeChanges with `český-žluťoučký.txt`, `日本語-文書.txt`, `emoji-😀.txt` (U+1F600, supplementary plane), precomposed `composed-é.txt` and decomposed `decomposed-e` + U+0301; no W value is pinned. |
+| path with leading `-` | ✅ tracked and untracked, Windows + Linux: BuildAsync_ObservesSpecialNamesWithoutLosingWorkingTreeChanges (`-leading-dash.txt`) | Regular files are named in quoted records on standard input, not as command-line arguments, so a leading `-` cannot be taken for an option. The test proves success and that W follows the file; the same evidence boundary as for spaces applies (change detection, no Golden value). |
+| many files (long path list) | ✅ Windows, regression proven. Linux: tests run and pass, no RED claimed | Regular tracked paths and, separately, regular untracked paths are sent to `git hash-object --no-filters --stdin-paths` on standard input (`GitObjectHasher`: strict UTF-8, C-style quoting, validated output) instead of the command line; symbolic-link targets are hashed separately with `--stdin`. Tests: Windows only BuildAsync_HandlesTrackedPathsExceedingWindowsCommandLineLimit and BuildAsync_HandlesUntrackedPathsExceedingWindowsCommandLineLimit (450 paths, about 38 000 and 40 000 characters, above the 32 767-character command-line limit); Windows + Linux BuildAsync_ReadableFilesAmongManyPaths_Succeeds, BuildAsync_UnreadableFileAmongManyPaths_ReturnsFailureWithoutThrowing (Git stops reading standard input early; the payload is asserted to be at least 128 KiB) and GitObjectHasherTests. Regression evidence: the same tests against the previous builder (`ab71863`) fail on Windows (6 tests; audit run 2026-10-28, not a CI run). Boundary: the previous implementation was not run on Linux and is not expected to fail there at these sizes (about 130 KiB of paths against an `ARG_MAX` of 2 MiB), so no Linux RED is claimed. The Linux limit (an earlier audit checkpoint reported 20 000 files passing and 100 000 failing) was not re-measured. |
+| path containing LF (newline) | ✅ Linux, tracked and untracked: BuildAsync_AcceptsLineFeedPathOnLinux. ➖ Windows | NTFS cannot hold LF in a file name, so there is no Windows snapshot test. The batch input writes every byte outside 33–126, and `"` and `\`, as a three-digit octal escape inside quotes, so an LF cannot split a record: GitObjectHasherTests.TryEncodePaths_EncodesLineFeedWithGitOctalEscape (all platforms). The Linux test asserts success and that W changes; it does not pin a Golden value for the LF path. |
 | file changes during snapshot | ✅ Linux regression tests | BuildAsync performs two complete observations and compares SchemaVersion, H/I/S/W fingerprints. Detected drift returns a diagnostic without a Snapshot. Coordinated ABA remains a known observation-model limitation. Windows-specific concurrency regression is not yet proven. |
 | filename differing only in case | ✅ with `core.ignoreCase=true`, never a Snapshot blind to the rename: BuildAsync_DoesNotLoseCaseOnlyRenamedTrackedFileWhenGitIgnoresCase (all platforms) + BuildAsync_DoesNotLoseCaseOnlyRenamedTrackedFileOnWindows | The tests accept either a refusal ("Case-only path mismatch") or a correctly distinct W. The current implementation refuses. `core.ignoreCase=false` ❓ |
 | symlink target with invalid UTF-8 bytes (Unix) | untracked ✅ never merged: BuildAsync_DoesNotMergeSymlinkTargetsWithDifferentInvalidUtf8OnLinux; tracked ❓ untested | The test accepts either a refusal or a distinct W. The current implementation refuses a lossily decoded target. Tracked symlinks pass through the same check in code, but no test proves it. Arbitrary target-byte fidelity stays unsupported. |
@@ -142,6 +144,7 @@ calculated independently of Codelaxy.
 | I — Index | ✅ | INDEX-GOLDEN-001 and INDEX-GOLDEN-UNICODE-001 |
 | S — Staged | ✅ Windows + Ubuntu | HsGolden001_ProducesIndependentExpectedFingerprints |
 | W — WorkingTree | ✅ Windows + Ubuntu | WORKTREE-GOLDEN-001; WorktreeGolden001_ProducesIndependentExpectedFingerprints |
+| W — object ID ↔ path attribution (F11) | ✅ Windows + Ubuntu (symlink case Linux only) | WorktreeGoldenF11_MultiplePathsKeepOidAttribution (tracked and untracked), WorktreeGoldenF11_MixedTrackedStatesKeepOidAttribution (missing file, directory conflict), WorktreeGoldenF11_MixedUntrackedSymlinkKeepsOidAttribution (Linux only) |
 
 H/S Golden fixture:
 - fixed SHA-1 HEAD commit;
@@ -155,6 +158,14 @@ W Golden fixture:
 - H, I and S remain unchanged;
 - unstaged content edit produces two independently pinned W values;
 - reference calculated by tests/golden_worktree_reference.py.
+
+F11 Golden fixtures (the batch hash keeps every object ID attached to its path):
+- three files whose blob-ID order differs from their path order (a.txt `alpha`, b.txt `charlie`, c.txt `bravo`), once tracked and once untracked;
+- tracked states: b.txt missing, or replaced by a directory (no object ID in W);
+- Linux only: an untracked symlink between two regular files, retargeted to a.txt and to c.txt;
+- reference values: tests/golden_f11_reference.py (hashlib only, no Codelaxy code). It also cross-checks the constants pinned in the C# tests and, on Unix, the real-Git symlink fixture (not verified on Windows);
+- mutants (audit run 2026-10-28): sorting the batch object IDs before pairing them with the paths is killed on the tracked batch and on the untracked batch, each by the corresponding MultiplePaths case. The reference's M8/M9 variants exist only as a Python model and were not executed against the C# code;
+- CI: run 40724167266 (PR head d020ecb, test merge 40d59be), Windows and Ubuntu SUCCESS; the symlink test is skipped on Windows.
 
 Cross-platform evidence:
 - GitHub Actions run 39478019502;
