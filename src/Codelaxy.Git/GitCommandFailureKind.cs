@@ -6,4 +6,5 @@ public enum GitCommandFailureKind
     LaunchFailure,
     Timeout,
     InvalidOutput,
+    InputFailure,
 }

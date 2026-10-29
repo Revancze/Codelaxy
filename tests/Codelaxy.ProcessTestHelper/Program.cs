@@ -1,5 +1,10 @@
 using System.Globalization;
 
+if (args.Length == 2 && args[0] == "exit-before-stdin")
+{
+    await Console.Error.WriteAsync("M2a helper: stdin deliberately ignored");
+    return int.Parse(args[1], NumberStyles.Integer, CultureInfo.InvariantCulture);
+}
 if (args.Length == 1 && args[0] == "read-stdin")
 {
     var input = await Console.In.ReadToEndAsync();
