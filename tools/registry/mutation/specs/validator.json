@@ -1,0 +1,210 @@
+{
+  "mutants": [
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR01",
+      "new": "if False:",
+      "note": "empty registry accepted",
+      "old": "if len(safe)<min_records:"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR02",
+      "new": "if False:",
+      "note": "unknown enums ignored",
+      "old": "if field in r and (not isinstance(r[field],str) or r[field] not in values):"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR03",
+      "new": "if False:",
+      "note": "stored derived fields accepted",
+      "old": "if any(k in r for k in DERIVED_FIELDS):"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR04",
+      "new": "if False:",
+      "note": "historical alias deletion missed",
+      "old": "if not new_aliases.get(key):"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR05",
+      "new": "CHECKS=(_structure,_references,_sources,_bindings,_derive,_diagnostics)",
+      "note": "history rules disabled",
+      "old": "CHECKS=(_structure,_references,_sources,_history,_bindings,_derive,_diagnostics)"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR06",
+      "new": "CHECKS=(_structure,_references,_history,_bindings,_derive,_diagnostics)",
+      "note": "source proofs disabled",
+      "old": "CHECKS=(_structure,_references,_sources,_history,_bindings,_derive,_diagnostics)"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR07",
+      "new": "CHECKS=(_structure,_references,_sources,_history,_derive,_diagnostics)",
+      "note": "binding constraints disabled",
+      "old": "CHECKS=(_structure,_references,_sources,_history,_bindings,_derive,_diagnostics)"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR08",
+      "new": "if False:",
+      "note": "artifact hash mismatch ignored",
+      "old": "if hashlib.sha256(path.read_bytes()).hexdigest()!=artifact.get('sha256'):"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR09",
+      "new": "pass",
+      "note": "artifact path escapes proof root",
+      "old": "path.relative_to(root)"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR10",
+      "new": "if False:",
+      "note": "missing mutation baseline qualifies",
+      "old": "if not _baseline_ok(e,evds,scns):"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR11",
+      "new": "if False:",
+      "note": "retired scenario qualifies",
+      "old": "if r.get('lifecycle')!='ACTIVE' or r.get('definition')!='DEFINED':"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR12",
+      "new": "and not failing",
+      "note": "data/drift findings no longer block gate",
+      "old": "and not failing and not blockers"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR14",
+      "new": "elif False: effective='BLOCKED'",
+      "note": "blocked requirement done",
+      "old": "elif r.get('blocked'): effective='BLOCKED'"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR15",
+      "new": "if False:",
+      "note": "owner acceptance conditions ignored",
+      "old": "if ac.get('kind')=='decision':"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR16",
+      "new": "if False:",
+      "note": "late data errors retain positive claims",
+      "old": "if any(f[0]=='DATA_ERROR' for f in findings):"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR17",
+      "new": "if False: refs += []",
+      "note": "missing scenario/baseline references ignored",
+      "old": "if r.get('type')=='EVD': refs += [r.get('scenario'),r.get('baseline')]"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR18",
+      "new": "if False:",
+      "note": "unknown/missing nested fields accepted",
+      "old": "if set(obj)-allowed or required-set(obj):"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR19",
+      "new": "enum=None",
+      "note": "unknown nested domain accepted",
+      "old": "enum=NESTED_ENUMS.get((field,key))"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR20",
+      "new": "if False:",
+      "note": "boolean claims accepted as strings",
+      "old": "if key in ('resolved','baseline_required','clean_tree','ci','proven','assessed','holds') and type(value) is not bool:"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR21",
+      "new": "age=0",
+      "note": "observed scope age ignored",
+      "old": "age=_scope_commit_age(run.context['repo'],_dict(e.get('subject')).get('commit'),run.context.get('ref','HEAD'),scenario.get('scope_paths'))"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR22",
+      "new": "count+=1",
+      "note": "unrelated Git changes counted as scoped age",
+      "old": "if any(freshness.matches(path,mask) for path in paths for mask in masks): count+=1"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR23",
+      "new": "if type(threshold) is int and threshold>0:",
+      "note": "threshold zero ignored",
+      "old": "if type(threshold) is int and threshold>=0:"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR24",
+      "new": "if False:",
+      "note": "contradictory clean_tree/tree_state accepted",
+      "old": "if field=='subject' and type(obj.get('clean_tree')) is bool and obj.get('tree_state') in ('CLEAN','DIRTY') and obj['clean_tree']!=(obj['tree_state']=='CLEAN'):"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR25",
+      "new": "                pass",
+      "note": "source reference without quote bypasses catalog existence",
+      "old": "                try:\n                    sources.find_version(run.catalog,ref.get('source'),ref.get('version'))\n                except sources.SourceLookupError:\n                    run.add('DE-03',rid,'unknown source/version: '+str(ref.get('source'))+'/'+str(ref.get('version')))\n                    continue"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR26",
+      "new": "observations={o.get('name'):o.get('outcome') for o in _list(baseline.get('observations')) if isinstance(o,dict)}",
+      "note": "conflicting baseline observation hidden by last PASS",
+      "old": "observations=evidence.observation_outcomes(baseline.get('observations'))"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR27",
+      "new": "obs={o.get('name'):o.get('outcome') for o in _list(r.get('observations')) if isinstance(o,dict)}",
+      "note": "diagnostic EM09 ignores observation conflict",
+      "old": "obs=evidence.observation_outcomes(r.get('observations'))"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR28",
+      "new": "if False:",
+      "note": "normative changes mislabeled EDITORIAL not rejected without base",
+      "old": "if v.get('change_class')=='EDITORIAL' and (index==0 or not isinstance(history[index-1],dict) or v.get('digest')!=history[index-1].get('digest')):"
+    },
+    {
+      "file": "clxreg/validator.py",
+      "id": "VR29",
+      "new": "break",
+      "note": "legitimate identical-digest editorial transitions lose equivalence",
+      "old": "if not isinstance(item,dict) or not isinstance(previous,dict) or item.get('change_class')!='EDITORIAL' or item.get('digest')!=previous.get('digest'): break"
+    },
+    {
+      "id": "VR30",
+      "file": "clxreg/validator.py",
+      "old": "    env['freshness']={eid:'UNDETERMINED' for eid in evds}",
+      "new": "    env.setdefault('freshness',{})",
+      "note": "caller CURRENT accepted without live Git measurement"
+    }
+  ],
+  "tests": [
+    "tests.test_validator"
+  ]
+}

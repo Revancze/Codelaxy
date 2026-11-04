@@ -1,0 +1,73 @@
+{
+  "acceptance": [
+    {
+      "id": "AC-1",
+      "kind": "evidence",
+      "resolved": false,
+      "text": "Definition and observable acceptance remain unresolved."
+    }
+  ],
+  "aliases": [
+    {
+      "namespace": "micromap-resolver-gaps",
+      "source": {
+        "anchor": "L41",
+        "fragment": "RT1",
+        "quote": "RT1…RT3       resolver test gaps (renamed from \"R1–R3\" of revision 1, proposal MO4). The risk",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "status": "ACTIVE",
+      "value": "RT1"
+    }
+  ],
+  "applies_to": {
+    "platforms": [
+      "windows",
+      "linux"
+    ]
+  },
+  "definition": "UNRESOLVED",
+  "definition_note": "No located source defines the item, expected result or meaning of killed. Searched pinned versions: [('micromap', 'ratified-bytes', '8178ab3cf2031b5bf1faf4433eff54f4b9becb8ccb04ccc99ae8d4639710f8d3'), ('micromap', 'revision-1', '4397961caffbe5cee87ca734f6b9b07f5b8b24b2e647e62a5bca4e1780889fd5'), ('micromap-ratification', '2026-10-25', '9bee10ed585f4fd60e036a85066724d5ef79560b537db4e9c0b21ec78ffdaac4')]",
+  "id": "CLX-REQ-0001",
+  "kind": "test-obligation",
+  "lifecycle": "ACTIVE",
+  "ms_ref": "M3d",
+  "note": "Pilot only. Historical R1/R3 occurrences remain ambiguous across namespaces (TD-9); no historical meaning or mutant binding is inferred. AUDIT-C runner mutants are explicitly excluded from RT evidence; no alias is fabricated from an uncatalogued source.",
+  "open_questions": [
+    {
+      "text": "TD-10: owner must define, replace or withdraw this historical item."
+    }
+  ],
+  "origin": {
+    "anchor": "L41",
+    "fragment": "RT1",
+    "quote": "RT1…RT3       resolver test gaps (renamed from \"R1–R3\" of revision 1, proposal MO4). The risk",
+    "source": "micromap",
+    "version": "ratified-bytes"
+  },
+  "persistence": "UNSPECIFIED",
+  "ratification": {
+    "source": {
+      "anchor": "L41",
+      "fragment": "RT1",
+      "quote": "RT1…RT3       resolver test gaps (renamed from \"R1–R3\" of revision 1, proposal MO4). The risk",
+      "source": "micromap",
+      "version": "ratified-bytes"
+    },
+    "state": "RATIFIED"
+  },
+  "revision": 1,
+  "revisions": [
+    {
+      "change_class": "INITIAL",
+      "digest": "a204ffb1a487f40ec75e6ad07fed3793f4d75722bfbfeb53904b932b26058e8d",
+      "n": 1
+    }
+  ],
+  "schema_version": 1,
+  "statement": "RT1",
+  "statement_origin": "quoted",
+  "title": "RT1 — unresolved historical resolver gap",
+  "type": "REQ"
+}

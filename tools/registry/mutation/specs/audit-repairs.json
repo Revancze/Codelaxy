@@ -1,0 +1,70 @@
+{
+ "tests": [
+  "tests.test_s2_regressions"
+ ],
+ "mutants": [
+  {
+   "id": "AR01",
+   "file": "clxreg/provenance.py",
+   "old": "return value.astimezone(timezone.utc)",
+   "new": "return value.replace(tzinfo=timezone.utc)",
+   "note": "UTC offset ignored"
+  },
+  {
+   "id": "AR02",
+   "file": "clxreg/provenance.py",
+   "old": "                return None\n            offset =",
+   "new": "                return value.replace(tzinfo=timezone.utc)\n            offset =",
+   "note": "missing naive timezone accepted"
+  },
+  {
+   "id": "AR03",
+   "file": "clxreg/dirty.py",
+   "old": "    _reject_link(path)\n",
+   "new": "    pass\n",
+   "note": "file symlink accepted"
+  },
+  {
+   "id": "AR04",
+   "file": "clxreg/dirty.py",
+   "old": "        if current != root and (current / \".git\").exists():",
+   "new": "        if False:",
+   "note": "nested repo silently accepted"
+  },
+  {
+   "id": "AR05",
+   "file": "clxreg/dirty.py",
+   "old": "                _reject_link(current / name)",
+   "new": "                pass",
+   "note": "directory symlink ignored"
+  },
+  {
+   "id": "AR06",
+   "file": "clxreg/evidence.py",
+   "old": "    if ctx.get(\"persistence\") not in (\"ONCE\", \"CONTINUOUS\", \"UNSPECIFIED\", None):",
+   "new": "    if False:",
+   "note": "invalid persistence accepted with current freshness"
+  },
+  {
+   "id": "AR07",
+   "file": "clxreg/provenance.py",
+   "old": "    if not isinstance(s, str) or not re.fullmatch(r\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:[.,]\\d+)?(?:Z|[+-]\\d{2}:\\d{2})?\", s):",
+   "new": "    if not isinstance(s, str):",
+   "note": "date-only accepted as a precise capture instant"
+  },
+  {
+   "id": "AR08",
+   "file": "clxreg/dirty.py",
+   "old": "followlinks=False, onerror=unreadable",
+   "new": "followlinks=False",
+   "note": "unreadable directories silently omitted"
+  },
+  {
+   "id": "AR09",
+   "file": "clxreg/evidence.py",
+   "old": "    obs = {}\n    for o in observations or []:\n        if isinstance(o, dict) and isinstance(o.get(\"name\"), str):\n            name, outcome = o.get(\"name\"), o.get(\"outcome\")\n            obs[name] = outcome if name not in obs else \"PASS\" if obs[name] == outcome == \"PASS\" else \"INCONCLUSIVE\"\n    return obs",
+   "new": "    return {o.get(\"name\"): o.get(\"outcome\") for o in (observations or []) if isinstance(o, dict)}",
+   "note": "later PASS hides earlier failed or skipped observation"
+  }
+ ]
+}

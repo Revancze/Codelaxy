@@ -1,0 +1,228 @@
+{
+  "derived": {
+    "CLX-REQ-0001": {
+      "conditions": {
+        "AC-1": "SATISFIED"
+      },
+      "effective_status": "DONE",
+      "provisional": [],
+      "verification": "VERIFIED"
+    }
+  },
+  "examined": 3,
+  "external_findings": [],
+  "findings": [
+    {
+      "class": "ADVISORY",
+      "code": "AD-04",
+      "message": "pinning is sha256-only (outside git): the version is identified by its hash alone",
+      "record": "sources:doc/v1"
+    },
+    {
+      "class": "ADVISORY",
+      "code": "AD-04",
+      "message": "pinning is sha256-only (outside git): the version is identified by its hash alone",
+      "record": "sources:doc/v2"
+    },
+    {
+      "class": "ADVISORY",
+      "code": "AD-04",
+      "message": "pinning is sha256-only (outside git): the version is identified by its hash alone",
+      "record": "sources:doc/v2m"
+    },
+    {
+      "class": "ADVISORY",
+      "code": "AD-04",
+      "message": "pinning is sha256-only (outside git): the version is identified by its hash alone",
+      "record": "sources:doc/v3"
+    },
+    {
+      "class": "ADVISORY",
+      "code": "AD-04",
+      "message": "pinning is sha256-only (outside git): the version is identified by its hash alone",
+      "record": "sources:ratification/r1"
+    }
+  ],
+  "records": [
+    {
+      "artifacts": [
+        {
+          "locator": "artifact.txt",
+          "role": "test-log",
+          "sha256": "c26de83abdc9496cd1301470918ec39ecca1cf389ef0ae1c6504da1800d1c431"
+        }
+      ],
+      "evidences": [
+        {
+          "acceptance": "AC-1",
+          "requirement": "CLX-REQ-0001",
+          "requirement_revision": 1
+        }
+      ],
+      "executor": {
+        "independence": "independent",
+        "kind": "ci",
+        "name": "ci"
+      },
+      "id": "CLX-EVD-0001",
+      "lifecycle": "ACTIVE",
+      "observations": [
+        {
+          "name": "T.One",
+          "outcome": "PASS"
+        }
+      ],
+      "performed_at": "2026-11-01T16:12:09",
+      "platform": {
+        "os": "windows"
+      },
+      "result": "PASS",
+      "scenario": "CLX-SCN-0001",
+      "scenario_revision": 1,
+      "schema_version": 1,
+      "source": {
+        "availability": "AVAILABLE",
+        "integrity": "HASH_CHECKED"
+      },
+      "subject": {
+        "commit": "227733484a1851bc512f7ba3fef6dd78b6d0e5da",
+        "repository": "r",
+        "tree_state": "CLEAN"
+      },
+      "title": "A result",
+      "type": "EVD"
+    },
+    {
+      "acceptance": [
+        {
+          "id": "AC-1",
+          "kind": "evidence",
+          "resolved": true,
+          "text": "Observable acceptance"
+        }
+      ],
+      "applies_to": {
+        "platforms": [
+          "windows"
+        ]
+      },
+      "definition": "DEFINED",
+      "id": "CLX-REQ-0001",
+      "kind": "test-obligation",
+      "lifecycle": "ACTIVE",
+      "origin": {
+        "anchor": "L2",
+        "quote": "RT1–RT3 are the resolver test gaps.",
+        "source": "doc",
+        "version": "v2"
+      },
+      "persistence": "ONCE",
+      "ratification": {
+        "state": "DRAFT"
+      },
+      "revision": 1,
+      "revisions": [
+        {
+          "change_class": "INITIAL",
+          "digest": "246ccfd037761274fdf04dbb48380062b5b498877def7190eef2adf424bdbf72",
+          "n": 1
+        }
+      ],
+      "schema_version": 1,
+      "statement": "A condition",
+      "statement_origin": "quoted",
+      "title": "A requirement",
+      "type": "REQ"
+    },
+    {
+      "definition": "DEFINED",
+      "expected": "PASS",
+      "id": "CLX-SCN-0001",
+      "implementation": [
+        {
+          "commit": "227733484a1851bc512f7ba3fef6dd78b6d0e5da",
+          "path": "tests/Test.cs",
+          "test": "T.One"
+        }
+      ],
+      "lifecycle": "ACTIVE",
+      "method": "test",
+      "observation_required": true,
+      "platforms_required": [
+        "windows"
+      ],
+      "procedure": "Execute the test",
+      "procedure_origin": "authored",
+      "revision": 1,
+      "revisions": [
+        {
+          "change_class": "INITIAL",
+          "digest": "6024aa484f9725cbc0cf155ead9db53f293c2d9e35877403393dd295cb381c5f",
+          "n": 1
+        }
+      ],
+      "schema_version": 1,
+      "title": "A scenario",
+      "type": "SCN",
+      "verifies": [
+        {
+          "acceptance": "AC-1",
+          "adequacy": "ACCEPTED",
+          "basis": {
+            "anchor": "L2",
+            "quote": "RT1–RT3 are the resolver test gaps.",
+            "source": "doc",
+            "version": "v2"
+          },
+          "requirement": "CLX-REQ-0001",
+          "requirement_revision": 1
+        }
+      ]
+    }
+  ],
+  "rule_counts": {
+    "AD-01": 0,
+    "AD-02": 0,
+    "AD-03": 0,
+    "AD-04": 5,
+    "AD-05": 0,
+    "AD-06": 0,
+    "AD-07": 0,
+    "AD-08": 0,
+    "AD-09": 0,
+    "DE-00": 0,
+    "DE-01": 0,
+    "DE-01b": 0,
+    "DE-02": 0,
+    "DE-03": 0,
+    "DE-04": 0,
+    "DE-05": 0,
+    "DE-06": 0,
+    "DE-07": 0,
+    "DE-08": 0,
+    "DE-08b": 0,
+    "DE-09": 0,
+    "DE-10": 0,
+    "DE-11": 0,
+    "DE-12": 0,
+    "DE-13": 0,
+    "DE-14": 0,
+    "DE-15": 0,
+    "DE-16": 0,
+    "DE-17": 0,
+    "EM-01": 0,
+    "EM-02": 0,
+    "EM-03": 0,
+    "EM-04": 0,
+    "EM-05": 0,
+    "EM-06": 0,
+    "EM-07": 0,
+    "EM-08": 0,
+    "EM-09": 0,
+    "EM-10": 0,
+    "EM-11": 0,
+    "EM-12": 0
+  },
+  "schema": "model/1",
+  "valid": true
+}

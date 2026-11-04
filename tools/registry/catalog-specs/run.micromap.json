@@ -1,0 +1,18 @@
+{
+  "excluded": [],
+  "include": [
+    {
+      "source": "micromap",
+      "version": "revision-1"
+    },
+    {
+      "source": "micromap",
+      "version": "ratified-bytes"
+    },
+    {
+      "source": "micromap-ratification",
+      "version": "2026-10-25"
+    }
+  ],
+  "schema": "clx.ledger-run/1"
+}

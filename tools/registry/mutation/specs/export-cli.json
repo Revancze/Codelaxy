@@ -1,0 +1,92 @@
+{
+  "tests": [
+    "tests.test_export",
+    "tests.test_cli"
+  ],
+  "mutants": [
+    {
+      "id": "EX01",
+      "file": "clxreg/export.py",
+      "old": "        raise FileExistsError(f'refusing to overwrite {path}')",
+      "new": "        return {'findings': []}",
+      "note": "an existing output is silently accepted instead of refused"
+    },
+    {
+      "id": "EX02",
+      "file": "clxreg/export.py",
+      "old": "    if not isinstance(registry_commit, str) or not re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', registry_commit):",
+      "new": "    if False:",
+      "note": "the export labels a partial or missing registry commit as provenance"
+    },
+    {
+      "id": "EX03",
+      "file": "clxreg/export.py",
+      "old": "    return sorted(records, key=lambda r: r['id'])",
+      "new": "    return records",
+      "note": "export bytes depend on input record ordering"
+    },
+    {
+      "id": "EX04",
+      "file": "clxreg/export.py",
+      "old": "            summary.append([*key, str(count)])",
+      "new": "            summary.append([*key, '0'])",
+      "note": "coverage summary hides imported occurrences"
+    },
+    {
+      "id": "EX05",
+      "file": "clxreg/export.py",
+      "old": "        if len(found) != 1:",
+      "new": "        if False:",
+      "note": "missing or ambiguous ODS row identifiers are not reported"
+    },
+    {
+      "id": "EX06",
+      "file": "clxreg/export.py",
+      "old": "    if not isinstance(model, dict) or model.get('schema') != 'model/1':",
+      "new": "    if not isinstance(model, dict):",
+      "note": "unknown model versions are accepted by the export"
+    },
+    {
+      "id": "CL01",
+      "file": "clxreg/cli.py",
+      "old": "    if output == source or source in output.parents:",
+      "new": "    if False:",
+      "note": "generated outputs may be written inside the input registry"
+    },
+    {
+      "id": "CL02",
+      "file": "clxreg/cli.py",
+      "old": "    model['external_findings'] = external",
+      "new": "    model['external_findings'] = external\n    model['findings'] = model['findings'] + external",
+      "note": "external reports become authoritative validator findings"
+    },
+    {
+      "id": "CL03",
+      "file": "clxreg/cli.py",
+      "old": "            return status if status else 0 if outcome['passed'] else 2",
+      "new": "            return status if status else 0",
+      "note": "an unmet gate returns successful exit status"
+    },
+    {
+      "id": "CL04",
+      "file": "clxreg/cli.py",
+      "old": "        raise export.ExportError('; '.join(f.line() for f in findings))",
+      "new": "        raise sources.SourceError('; '.join(f.line() for f in findings))",
+      "note": "malformed JSON is misclassified as a missing source"
+    },
+    {
+      "id": "CL05",
+      "file": "clxreg/cli.py",
+      "old": "           or (f.get('code') == 'EM-04' and f.get('message', '').startswith('artifact could not be located and hash-verified:'))\n",
+      "new": "",
+      "note": "an unreadable or tampered evidence artifact loses the source-failure exit code"
+    },
+    {
+      "id": "CL06",
+      "file": "clxreg/cli.py",
+      "old": "        context['artifact_root'] = args.artifact_root",
+      "new": "        pass",
+      "note": "explicit artifact proof root is not forwarded to the validator"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "tests": ["tests.test_localcat"],
+  "mutants": [
+    {"id": "LC01", "file": "clxreg/localcat.py", "old": "            if hashlib.sha256(data).hexdigest() != v[\"sha256\"]:", "new": "            if False:", "note": "declared hash not compared with the file"},
+    {"id": "LC02", "file": "clxreg/localcat.py", "old": "    if c[\"quote\"] not in text:", "new": "    if False:", "note": "basis quote not looked up"},
+    {"id": "LC03", "file": "clxreg/localcat.py", "old": "    if must_contain is not None and must_contain not in c[\"quote\"]:", "new": "    if False:", "note": "hash basis that does not contain the hash"},
+    {"id": "LC04", "file": "clxreg/localcat.py", "old": "    if claim == \"sha256\" and ref == own:", "new": "    if False:", "note": "a version documents its own hash"},
+    {"id": "LC05", "file": "clxreg/localcat.py", "old": "    if ref not in versions:", "new": "    if False:", "note": "basis citing a version that is not in the spec"},
+    {"id": "LC06", "file": "clxreg/localcat.py", "old": "                if not hit or hit[0].get(\"sha256\") != v[\"sha256\"]:", "new": "                if False:", "note": "protected manifest entry not required"},
+    {"id": "LC07", "file": "clxreg/localcat.py", "old": "            if not p.is_file():", "new": "            if False:", "note": "missing file not reported as such"},
+    {"id": "LC08", "file": "clxreg/localcat.py", "old": "                p.relative_to(base)\n            except ValueError:", "new": "                pass\n            except ValueError:", "note": "location may leave its root"},
+    {"id": "LC09", "file": "clxreg/localcat.py", "old": "            if (s[\"key\"], v[\"id\"]) in seen:", "new": "            if False:", "note": "version listed twice"},
+    {"id": "LC10", "file": "clxreg/localcat.py", "old": "                elif c == {\"protected_manifest\": True} and claim == \"sha256\":", "new": "                elif c == {\"protected_manifest\": True}:", "note": "protected manifest documents a status"},
+    {"id": "LC11", "file": "clxreg/localcat.py", "old": "    if blocking(bad):\n        raise SpecError", "new": "    if False:\n        raise SpecError", "note": "catalog rules not enforced on the build"},
+    {"id": "LC12", "file": "clxreg/localcat.py", "old": "            if canon.dumps(cat) != canon.dumps(built):", "new": "            if False:", "note": "a catalog that differs from the spec is accepted"},
+    {"id": "LC13", "file": "clxreg/localcat.py", "old": "findings += namespaces.check_authorities(ns, cat, roots, require_quote=True)", "new": "findings += namespaces.check_authorities(ns, cat, roots)", "note": "namespace without a quote accepted"},
+    {"id": "LC14", "file": "clxreg/localcat.py", "old": "            findings += sources.validate_catalog(cat)", "new": "            pass", "note": "catalog rules not checked by check"},
+    {"id": "LC15", "file": "clxreg/localcat.py", "old": "            canon.write_record(Path(a.out), built)", "new": "            canon.write_record(Path(a.out), built, overwrite=True)", "note": "an existing catalog overwritten"},
+    {"id": "LC16", "file": "clxreg/localcat.py", "old": "        return 1 if blocking(findings) else 0", "new": "        return 0", "note": "check exits 0 on data errors"},
+    {"id": "LC17", "file": "clxreg/localcat.py", "old": "        if spec is None or f1:", "new": "        if spec is None:", "note": "non-canonical spec accepted"}
+  ]
+}

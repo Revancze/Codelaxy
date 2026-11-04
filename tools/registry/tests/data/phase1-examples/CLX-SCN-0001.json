@@ -1,0 +1,45 @@
+{
+  "definition": "DEFINED",
+  "expected": "failed = 0 and the result (passed, failed, skipped, total) is recorded.",
+  "id": "CLX-SCN-0001",
+  "independence_required": "none",
+  "lifecycle": "ACTIVE",
+  "method": "test",
+  "observation_required": false,
+  "origin": {
+    "anchor": "M1 gate analysis",
+    "source": "micromap-r2",
+    "version": "ratified-bytes"
+  },
+  "platforms_required": [
+    "windows"
+  ],
+  "procedure": "From a clean working tree of the target commit, run the solution's tests from PowerShell and record the GATE-RECORD fields.",
+  "procedure_origin": "paraphrase",
+  "revision": 1,
+  "revisions": [
+    {
+      "change_class": "INITIAL",
+      "digest": "ce70691acab698c4b5951bd43e051bd61812bc7871c9e434aa55491036ffed52",
+      "n": 1
+    }
+  ],
+  "schema_version": 1,
+  "scope_paths": [],
+  "title": "Full test suite run from PowerShell on a clean checkout",
+  "type": "SCN",
+  "verifies": [
+    {
+      "acceptance": "AC-1",
+      "adequacy": "ACCEPTED",
+      "basis": {
+        "anchor": "M1 gate analysis",
+        "quote": "GATE-RECORD — what the owner is asked to accept for GA and GB.",
+        "source": "micromap-r2",
+        "version": "ratified-bytes"
+      },
+      "requirement": "CLX-REQ-0005",
+      "requirement_revision": 1
+    }
+  ]
+}

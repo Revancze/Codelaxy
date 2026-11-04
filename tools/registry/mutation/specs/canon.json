@@ -1,0 +1,20 @@
+{
+  "tests": ["tests.test_canon"],
+  "mutants": [
+    {"id": "C01", "file": "clxreg/canon.py", "old": "return json.dumps(obj, sort_keys=True, indent=2, ensure_ascii=False) + \"\\n\"", "new": "return json.dumps(obj, sort_keys=False, indent=2, ensure_ascii=False) + \"\\n\"", "note": "file form: keys not sorted"},
+    {"id": "C02", "file": "clxreg/canon.py", "old": "indent=2, ensure_ascii=False) + \"\\n\"", "new": "indent=2, ensure_ascii=True) + \"\\n\"", "note": "file form: non-ASCII escaped"},
+    {"id": "C03", "file": "clxreg/canon.py", "old": "separators=(\",\", \":\"), ensure_ascii=False)", "new": "separators=(\", \", \": \"), ensure_ascii=False)", "note": "compact form with spaces"},
+    {"id": "C04", "file": "clxreg/canon.py", "old": "parse_float=_reject, ", "new": "", "note": "floats accepted by the reader's parse hook", "equivalent": "defence in depth: a float that passes the parse hook is still rejected by _check() right after (same exception type, different message); C07 covers the writer side"},
+    {"id": "C05", "file": "clxreg/canon.py", "old": "object_pairs_hook=_no_duplicates, ", "new": "", "note": "duplicate keys accepted"},
+    {"id": "C06", "file": "clxreg/canon.py", "old": "if text.startswith(\"﻿\"):", "new": "if False:", "note": "BOM accepted by our own check", "equivalent": "defence in depth: json.loads itself refuses a leading BOM (ValueError, converted to CanonError); the explicit check only gives a clearer message"},
+    {"id": "C07", "file": "clxreg/canon.py", "old": "    if isinstance(o, int):\n        return", "new": "    if isinstance(o, (int, float)):\n        return", "note": "writer accepts floats"},
+    {"id": "C08", "file": "clxreg/canon.py", "old": "\"REQ\": (\"statement\", \"acceptance\", \"applies_to\")", "new": "\"REQ\": (\"statement\", \"acceptance\")", "note": "REQ digest ignores applies_to"},
+    {"id": "C09", "file": "clxreg/canon.py", "old": "\"SCN\": (\"procedure\", \"expected\", \"platforms_required\")", "new": "\"SCN\": (\"procedure\", \"platforms_required\")", "note": "SCN digest ignores expected"},
+    {"id": "C10", "file": "clxreg/canon.py", "old": "    if t == \"SCN\" and \"mutant\" in rec:", "new": "    if False:", "note": "SCN digest ignores mutant"},
+    {"id": "C11", "file": "clxreg/canon.py", "old": "\"w\" if overwrite else \"x\"", "new": "\"w\"", "note": "write_record overwrites silently"},
+    {"id": "C12", "file": "clxreg/canon.py", "old": "encoding=\"utf-8\", newline=\"\\n\") as fh:", "new": "encoding=\"utf-8\") as fh:", "note": "platform line endings (kills on Windows only)", "platform_specific": {"survives_on": ["linux"], "reason": "the platform newline is already LF on Linux, so the mutant changes nothing there; it is killed on Windows"}},
+    {"id": "C13", "file": "clxreg/canon.py", "old": "        return dumps(loads(text)) == text", "new": "        return True", "note": "is_canonical always true"},
+    {"id": "C14", "file": "clxreg/canon.py", "old": "            o.encode(\"utf-8\")\n", "new": "            pass\n", "note": "lone surrogate accepted"},
+    {"id": "C15", "file": "clxreg/canon.py", "old": "            if not isinstance(k, str):", "new": "            if False:", "note": "non-string keys accepted"}
+  ]
+}

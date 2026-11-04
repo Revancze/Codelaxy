@@ -1,0 +1,63 @@
+{
+  "mutants": [
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL01",
+      "new": "if False:",
+      "note": "invalid ledger accepted",
+      "old": "if any(f.cls=='DATA_ERROR' for f in errors) or not ledger_obj.get('complete'):"
+    },
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL02",
+      "new": "if False: pass",
+      "note": "invented namespace",
+      "old": "if ns not in spaces: raise PilotError('resolver namespace is absent; no namespace is invented')"
+    },
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL03",
+      "new": "if False: pass",
+      "note": "ledger/source hash mismatch ignored",
+      "old": "if version['sha256']!=e['sha256']: raise PilotError('ledger/source identity differs')"
+    },
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL04",
+      "new": "if False:",
+      "note": "ledger coordinate mismatch ignored",
+      "old": "if line[e['column']-1:e['column']-1+e['length']]!=e['text']:"
+    },
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL05",
+      "new": "'status':'ACTIVE'",
+      "note": "RT2 silently activated",
+      "old": "'status':'ACTIVE' if n!=2 else 'IMPLIED_BY_RANGE'"
+    },
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL06",
+      "new": "'definition':'DEFINED'",
+      "note": "missing RT definition invented",
+      "old": "'definition':'UNRESOLVED'"
+    },
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL07",
+      "new": "'resolved':True",
+      "note": "unknown RT acceptance resolved",
+      "old": "'resolved':False"
+    },
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL08",
+      "new": "if False: pass",
+      "note": "exclusive pilot output disabled",
+      "old": "if out.exists(): raise PilotError('pilot output already exists')"
+    }
+  ],
+  "tests": [
+    "tests.test_pilot"
+  ]
+}

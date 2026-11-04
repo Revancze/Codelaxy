@@ -1,0 +1,253 @@
+{
+ "tests": [
+  "tests.test_testrun"
+ ],
+ "mutants": [
+  {
+   "id": "TR01",
+   "file": "clxreg/testrun.py",
+   "old": "    if b\"<!DOCTYPE\" in data.upper():",
+   "new": "    if False:",
+   "note": "a document type declaration accepted"
+  },
+  {
+   "id": "TR02",
+   "file": "clxreg/testrun.py",
+   "old": "    if root.tag != _NS + \"TestRun\":",
+   "new": "    if False:",
+   "note": "a foreign XML file read as a TRX"
+  },
+  {
+   "id": "TR03",
+   "file": "clxreg/testrun.py",
+   "old": "    if results is None:",
+   "new": "    if False:",
+   "note": "a TRX without Results accepted"
+  },
+  {
+   "id": "TR04",
+   "file": "clxreg/testrun.py",
+   "old": "        if not name or not outcome:",
+   "new": "        if False:",
+   "note": "a result without a name or outcome accepted"
+  },
+  {
+   "id": "TR05",
+   "file": "clxreg/testrun.py",
+   "old": "\"total\" not in counters or counters[\"total\"] == total",
+   "new": "True",
+   "note": "counters never compared with the results"
+  },
+  {
+   "id": "TR06",
+   "file": "clxreg/testrun.py",
+   "old": "    if not m:\n        raise RecordError",
+   "new": "    if False:\n        raise RecordError",
+   "note": "a non-record accepted"
+  },
+  {
+   "id": "TR07",
+   "file": "clxreg/testrun.py",
+   "old": "                if len(cells) != 7:",
+   "new": "                if False:",
+   "note": "evidence rows of any width"
+  },
+  {
+   "id": "TR08",
+   "file": "clxreg/testrun.py",
+   "old": "        if key not in head:",
+   "new": "        if False:",
+   "note": "missing header lines accepted"
+  },
+  {
+   "id": "TR09",
+   "file": "clxreg/testrun.py",
+   "old": "    if not _HEAD.fullmatch(head[\"HEAD\"]):",
+   "new": "    if False:",
+   "note": "a short HEAD accepted"
+  },
+  {
+   "id": "TR10",
+   "file": "clxreg/testrun.py",
+   "old": "    if not rows:",
+   "new": "    if False:",
+   "note": "a record without evidence rows accepted"
+  },
+  {
+   "id": "TR11",
+   "file": "clxreg/testrun.py",
+   "old": "else \"CLEAN\" if tw.lower().startswith(\"clean\") else \"UNKNOWN\"",
+   "new": "else \"CLEAN\"",
+   "note": "an unknown tree state read as clean"
+  },
+  {
+   "id": "TR12",
+   "file": "clxreg/testrun.py",
+   "old": "state = \"DIRTY\" if tw.upper().startswith(\"DIRTY\")",
+   "new": "state = \"CLEAN\" if tw.upper().startswith(\"DIRTY\")",
+   "note": "dirty and clean swapped"
+  },
+  {
+   "id": "TR13",
+   "file": "clxreg/testrun.py",
+   "old": "ellipsis or len(names) < int(g.group(1))",
+   "new": "ellipsis",
+   "note": "a short list not taken as truncated"
+  },
+  {
+   "id": "TR14",
+   "file": "clxreg/testrun.py",
+   "old": "body[:-3].rstrip() if ellipsis else body",
+   "new": "body",
+   "note": "the ellipsis kept in the last name"
+  },
+  {
+   "id": "TR15",
+   "file": "clxreg/testrun.py",
+   "old": "        if c == \"(\":\n            depth += 1",
+   "new": "        if c == \"(\":\n            depth += 0",
+   "note": "commas inside parameters split a name"
+  },
+  {
+   "id": "TR16",
+   "file": "clxreg/testrun.py",
+   "old": "    if guard is not None and name in guard.names:",
+   "new": "    if False:",
+   "note": "a guarded test not recognised"
+  },
+  {
+   "id": "TR17",
+   "file": "clxreg/testrun.py",
+   "old": "    if guard is not None and guard.truncated:",
+   "new": "    if False:",
+   "note": "a truncated list taken as complete"
+  },
+  {
+   "id": "TR18",
+   "file": "clxreg/testrun.py",
+   "old": "    if not results:",
+   "new": "    if False:",
+   "note": "a test missing from the TRX not reported"
+  },
+  {
+   "id": "TR19",
+   "file": "clxreg/testrun.py",
+   "old": "    if \"Failed\" in results:",
+   "new": "    if False:",
+   "note": "a failed result ignored"
+  },
+  {
+   "id": "TR20",
+   "file": "clxreg/testrun.py",
+   "old": "    elif all(r == \"NotExecuted\" for r in results):",
+   "new": "    elif False:",
+   "note": "not executed read as unverified"
+  },
+  {
+   "id": "TR21",
+   "file": "clxreg/testrun.py",
+   "old": "{\"LISTED\": \"ABSENT\",",
+   "new": "{\"LISTED\": \"PASS\",",
+   "note": "a guarded test passes"
+  },
+  {
+   "id": "TR22",
+   "file": "clxreg/testrun.py",
+   "old": "\"NOT_LISTED_TRUNCATED_LIST\": \"UNVERIFIED\"",
+   "new": "\"NOT_LISTED_TRUNCATED_LIST\": \"PASS\"",
+   "note": "a test not shown to have run passes"
+  },
+  {
+   "id": "TR23",
+   "file": "clxreg/testrun.py",
+   "old": "    if _read(path) != a:",
+   "new": "    if False:",
+   "note": "a file changing while read accepted"
+  },
+  {
+   "id": "TR24",
+   "file": "clxreg/testrun.py",
+   "old": "else \"PASS\" if outs and all(o == \"PASS\" for o in outs) else \"INCONCLUSIVE\"",
+   "new": "else \"PASS\" if all(o == \"PASS\" for o in outs) else \"INCONCLUSIVE\"",
+   "note": "no observed test is a PASS"
+  },
+  {
+   "id": "TR25",
+   "file": "clxreg/testrun.py",
+   "old": "result = \"FAIL\" if \"FAIL\" in outs else",
+   "new": "result = \"PASS\" if outs and all(o == \"PASS\" for o in outs) else \"FAIL\" if \"FAIL\" in outs else",
+   "note": "FAIL no longer tested first",
+   "equivalent": "FAIL and all-PASS exclude each other, so the order of the two tests does not change any result"
+  },
+  {
+   "id": "TR26",
+   "file": "clxreg/testrun.py",
+   "old": "        availability = \"UNLOCATED\"",
+   "new": "        availability = \"AVAILABLE\"",
+   "note": "a missing TRX reported as available"
+  },
+  {
+   "id": "TR27",
+   "file": "clxreg/testrun.py",
+   "old": "            integrity = \"HASH_CHECKED\"",
+   "new": "            integrity = \"NOT_CHECKED\"",
+   "note": "integrity never claimed"
+  },
+  {
+   "id": "TR28",
+   "file": "clxreg/testrun.py",
+   "old": "\"name\": \"gitrun audit\", \"independence\": \"author\"}",
+   "new": "\"name\": \"gitrun audit\", \"independence\": \"independent\"}",
+   "note": "the tool's own record called independent"
+  },
+  {
+   "id": "TR29",
+   "file": "clxreg/testrun.py",
+   "old": "    if out.exists():",
+   "new": "    if False:",
+   "note": "candidates written into an existing directory"
+  },
+  {
+   "id": "TR30",
+   "file": "clxreg/testrun.py",
+   "old": "\"provenance\": {\"assessed\": False} if provenance is None else {\"assessed\": True, **provenance}",
+   "new": "\"provenance\": {\"assessed\": True, \"proven\": True}",
+   "note": "provenance assumed"
+  },
+  {
+   "id": "TR31",
+   "file": "clxreg/testrun.py",
+   "old": "    if has_git:",
+   "new": "    if False:",
+   "note": "the head of a git copy not read"
+  },
+  {
+   "id": "TR32",
+   "file": "clxreg/testrun.py",
+   "old": "    if exists and manifest_at_run is not None and manifest_at_run.get(\"kind\") == \"tree\":",
+   "new": "    if False:",
+   "note": "the copy never re-measured"
+  },
+  {
+   "id": "TR33",
+   "file": "clxreg/testrun.py",
+   "old": "    if row is None:",
+   "new": "    if False:",
+   "note": "a platform without an evidence row"
+  },
+  {
+   "id": "TR34",
+   "file": "clxreg/testrun.py",
+   "old": "        counts[outcome] = counts.get(outcome, 0) + 1",
+   "new": "        pass",
+   "note": "outcomes not counted"
+  },
+  {
+   "id": "TR35",
+   "file": "clxreg/testrun.py",
+   "old": "        tests.setdefault(name, []).append(outcome)",
+   "new": "        tests[name] = [outcome]",
+   "note": "repeated results of one test collapse to the last"
+  }
+ ]
+}
