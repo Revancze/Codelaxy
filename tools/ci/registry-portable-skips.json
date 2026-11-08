@@ -1,7 +1,7 @@
 {
   "schema": "clx.registry-skip-policy/1",
   "profile": "portable",
-  "expected_tests": 770,
+  "expected_tests": 852,
   "allowed_skips": 30,
   "groups": [
     {
@@ -18,7 +18,7 @@
     },
     {
       "class": "tests.test_real_ledger.RealLedgerTests",
-      "reason_contains": "machine-local, not part of any patch",
+      "reason_contains": "is not a directory on this machine",
       "tests": [
         "test_a_dry_run_of_candidates_from_the_real_sources_in_a_scratch_store",
         "test_counts_equal_an_independent_count_straight_from_the_bytes",
@@ -32,7 +32,7 @@
     },
     {
       "class": "tests.test_sources.RealSourcesTests",
-      "reason_contains": "machine-local, not part of any patch",
+      "reason_contains": "is not a directory on this machine",
       "tests": [
         "test_documented_hashes",
         "test_quote_in_both_ratified_versions",

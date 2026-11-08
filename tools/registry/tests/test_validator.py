@@ -81,6 +81,73 @@ class ValidatorTests(unittest.TestCase):
     def test_cycle_is_rejected(self):
         self.records[R]['depends_on']=[{'target':R}]
         self.assertIn('DE-04',self.codes(self.model()))
+    def test_initial_cannot_bypass_revision_approval(self):
+        base = copy.deepcopy(self.records)
+
+        requirement = self.records[R]
+        requirement["statement"] = "Changed normative requirement"
+        requirement["revision"] = 2
+        requirement["revisions"].append({
+            "n": 2,
+            "change_class": "INITIAL",
+            "digest": canon.normative_digest(requirement),
+        })
+
+        model = self.model(base_records=base)
+
+        self.assertIn("DE-08", self.codes(model), model["findings"])
+        self.assertFalse(v.gate(model, R)["passed"])
+
+    def test_initial_cannot_bypass_scenario_revision_approval(self):
+        base = copy.deepcopy(self.records)
+
+        scenario = self.records[S]
+        scenario["procedure"] = "Changed normative procedure"
+        scenario["revision"] = 2
+        scenario["revisions"].append({
+            "n": 2,
+            "change_class": "INITIAL",
+            "digest": canon.normative_digest(scenario),
+        })
+
+        model = self.model(base_records=base)
+
+        self.assertIn("DE-08", self.codes(model), model["findings"])
+        self.assertFalse(v.gate(model, R)["passed"])
+
+    def test_revision_history_cannot_be_rolled_back(self):
+        for rid in (R, S):
+            with self.subTest(record_id=rid):
+                base = complete_records()
+                record = base[rid]
+
+                # Valid second revision, editorial only.
+                record["revision"] = 2
+                record["revisions"].append({
+                    "n": 2,
+                    "change_class": "EDITORIAL",
+                    "digest": record["revisions"][0]["digest"],
+                })
+
+                current = copy.deepcopy(base)
+
+                # Roll back revision and erase its history.
+                current[rid]["revision"] = 1
+                current[rid]["revisions"] = (
+                    current[rid]["revisions"][:1]
+                )
+
+                model = self.model(
+                    current,
+                    base_records=base,
+                )
+
+                self.assertIn(
+                    "DE-08",
+                    self.codes(model),
+                    model["findings"],
+                )
+
     def test_revision_and_pinned_quote_cannot_be_forged(self):
         base=copy.deepcopy(self.records);self.records[R]['statement']='changed';self.records[R]['origin']['quote']='not present'
         m=self.model(base_records=base);self.assertTrue({'DE-08','DE-08b','DE-13'}<=self.codes(m))

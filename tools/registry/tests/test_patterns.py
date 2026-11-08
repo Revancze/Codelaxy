@@ -61,6 +61,24 @@ class CompileTests(unittest.TestCase):
 
 
 class LabelTests(unittest.TestCase):
+    def test_zero_width_namespace_match_is_rejected(self):
+        cat = {
+            "schema": namespaces.SCHEMA,
+            "namespaces": [
+                ns("probe", r"RT[1-3]|(?=!)"),
+            ],
+        }
+
+        # Normal match must remain valid.
+        self.assertEqual(
+            view(scan("RT2", cat)),
+            [("RT2", "LABEL", ("probe",))],
+        )
+
+        # The zero-width alternative must fail closed.
+        with self.assertRaisesRegex(ValueError, "zero-width"):
+            scan("RT1 !", cat)
+
     def test_a_single_namespace_label(self):
         ms = scan("see RT1 here")
         self.assertEqual(view(ms), [("RT1", "LABEL", ("micromap-resolver-gaps",))])

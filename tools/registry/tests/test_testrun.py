@@ -456,7 +456,10 @@ class RealRecordTests(unittest.TestCase):
         facts = testrun.gather_facts(rec, "win", testrun.parse_trx(trx_path.read_bytes()), trx_path, PILOT, copy_dir=copy if copy.is_dir() else None)
         a = provenance.assess(facts)
         self.assertFalse(a.proven)
-        self.assertEqual(set(a.unmet), {"run-identity", "head", "manifest-at-run", "copy-unchanged", "test-executed"})        # run identity and platform do hold
+        expected = {"run-identity", "head", "manifest-at-run", "copy-unchanged", "test-executed"}
+        if not copy.is_dir():
+            expected.add("platform-environment")
+        self.assertEqual(set(a.unmet), expected)
         self.assertFalse(facts["copy"]["has_git"])
 
     def test_the_existing_linux_run_is_unbound_and_its_copy_is_not_treated_as_verified(self):

@@ -155,7 +155,7 @@ def check_skip_policy(records, policy_path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--expected-tests", type=int, default=770)
+    parser.add_argument("--expected-tests", type=int, default=852)
     parser.add_argument("--expected-skips", type=int, default=0)
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--skip-policy", type=Path)

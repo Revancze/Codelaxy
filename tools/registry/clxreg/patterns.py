@@ -21,6 +21,14 @@ _GENERIC = re.compile(r"[A-Z][A-Z0-9]{0,5}-?[0-9]+[a-z]?")
 _RANGE = re.compile(r"([A-Z]{1,4})([0-9]+)([ab]?)[ \t]*(?:[–—…]|\.\.|-(?=\1))[ \t]*(\1)?([0-9]+)([ab]?)")
 
 
+class ZeroWidthMatch(ValueError):
+    """A namespace regex matched no characters in actual source text."""
+
+    def __init__(self, offset):
+        self.offset = offset
+        super().__init__(f"zero-width namespace match at offset {offset}")
+
+
 @dataclass(frozen=True)
 class Match:
     start: int
@@ -57,6 +65,8 @@ def boundary_matches(rx, text):
         if not m:
             return out
         s, e = m.span()
+        if s == e:
+            raise ZeroWidthMatch(s)
         if not (s > 0 and textsource.is_word(text[s - 1])) and not (e < len(text) and textsource.is_word(text[e])):
             out.append(m)
             pos = e

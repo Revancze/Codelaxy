@@ -105,4 +105,72 @@ S2 audit repairs normalize offset-bearing timestamps to UTC and require an expli
 
 For CONTINUOUS/UNSPECIFIED requirements, Q8 is established only by live Git measurements from the explicitly configured `repo`/`ref`. Supplied `freshness` and equivalent-revision maps are never authoritative, including through CLI `--context`. Without usable Git evidence these requirements cannot become VERIFIED; ONCE retains its separate schema semantics.
 
+## What a ledger does and does not prove
+
+`validate_ledger()`, `complete: true` and `ledger verify` **without `--run`** check structure and the stated locations only. A success there does **not** prove that the inventory is complete: a ledger with an occurrence or a whole source removed can pass them. Only a rebuild (`ledger verify --run ...`) compares the ledger with a fresh import, and that proof is only as strong as the origin of the run, catalog, namespaces, ambiguity and mapping given to it; the digests stored in the ledger are claims of the ledger.
+
+`pilot.build` has no unverified mode. It requires `run`, and explicit `ambiguity` and `mapping` (`None` only when the trusted import used none), and refuses a ledger that differs from their fresh import.
+
+`export --ledger` remains usable as a view, but states what it is. The `REGISTRY-METADATA` rows `import_ledger_verification` (`NOT_VERIFIED`, or `REBUILD_MATCHED` when `--ledger-run`, `--ledger-ambiguity`, `--ledger-mapping`, `--catalog` and `--namespaces` are given; ambiguity and mapping take a path or `NONE`), `import_ledger_rebuild_inputs`, `import_ledger_complete`, `import_ledger_problems` and `import_ledger_sources_not_processed` are appended after the existing rows. A proven difference exits 4 without writing, a source the ledger claims as processed that cannot be read also exits 4 but is reported as unavailable, and missing or invalid verification inputs exit 1. An unreadable input file keeps the general exit 4.
+
 Exit codes of the integrated CLI: 0 success, 1 invalid data, 2 unsatisfied gate, 3 refused overwrite, 4 missing/tampered/unreadable source. A valid unresolved pilot can pass `check` while failing `gate`; validation does not claim that unresolved requirements are fulfilled. Generated views are deterministic FODS/TSV outputs and never modify the original ODS. Their reference commit is a baseline, not a claim that these uncommitted registry files existed in it. The delivery manifest identifies actual bytes.
+
+
+O1 audit correction: exports append two additional metadata keys after
+all existing rows. `import_ledger_problem_details` is a canonical JSON array of
+the complete ledger problem strings. `import_ledger_source_details` is a canonical
+JSON array of non-processed source rows with their original SOURCE entries,
+including reasons and exclusion decisions. Both are empty strings without a
+ledger. This is an additive machine-readable output contract change; consumers
+must accept additional metadata keys. Existing metadata positions are preserved.
+
+Export publication writes and flushes a sibling temporary file, then atomically
+creates the target using a hard link without replacement. A concurrent target
+wins and is left unchanged. Unsupported filesystems fail safely without a target;
+there is no overwrite-capable fallback. Disk write/flush failures leave no target
+and the temporary file is removed. This does not claim power-loss durability of
+the directory entry or defend against a hostile process replacing parent paths.
+
+
+## Final ledger and scanner contracts
+
+A source marked PROBLEM must carry at least one recorded problem. Incomplete
+inventories are reported explicitly; structural verification without a trusted
+run still does not prove that all expected sources and occurrences were included.
+Malformed diff ledgers and source catalogs are rejected before unsafe field
+access. Each CLI emits each ledger finding once. SOURCE changes have an explicit
+source-level display instead of meaningless unit/column placeholders.
+
+The two established CLI entry points retain their separate exit-code contracts:
+
+| Situation | `python -m clxreg.ledger` | Integrated `python -m clxreg` |
+|---|---:|---:|
+| Clean verification | 0 | 0 |
+| Malformed ledger/catalog structure (DE-02) | 1 | 1 |
+| Missing/incomplete source inventory (AD-04 only) | 2 | 4 |
+| Proven rebuild difference | 1 | 4 |
+| Unusable input/JSON/IO | 3 | 1 for invalid data, 4 for unavailable IO/source |
+| Existing output | 3 | 3 |
+
+A diff returns 1 for a valid difference and 0 for equality; malformed diff inputs
+are refused with 3 in the standalone CLI and 1 in the integrated CLI. Therefore
+callers must select one documented interface rather than assume global numeric
+interchangeability. In particular incomplete standalone verification no longer
+returns 0: it prints INCOMPLETE and returns 2.
+
+The scanner raises `patterns.ZeroWidthMatch(ValueError)` with an `offset` for a
+zero-length match encountered in real input. Ledger import catches this type;
+unrelated ValueError exceptions are not classified by matching their text.
+Real scanner regressions run in bounded child processes. The mutation runner
+rejects non-finite, nonpositive, boolean and None timeout values before work;
+its CLI reports invalid timeout arguments as usage errors (exit 2).
+
+Pilot input-shape failures use PilotError. A failed pilot directory write cleans
+up only its own newly-created output directory; existing outputs are refused.
+This cleanup is not atomic directory publication. Export file publication has
+the stronger no-partial-target behavior documented above.
+
+Portable CI deliberately points CLX_WORKSPACE_ROOT to an unavailable directory.
+The real-source test helper reports that explicit condition before checking
+machine-local catalogs, so a fresh clone and a local portable run have identical
+precise skip reasons. The approved skip identities/count remain unchanged.

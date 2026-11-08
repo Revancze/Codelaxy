@@ -6,7 +6,8 @@ import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 
-from clxreg import export
+from clxreg import export, ledger, sources
+from tests import ledger_forgery as forge
 from tests.test_ledger import Fx
 from tests.test_units import ods, row, cell, p
 
@@ -139,6 +140,133 @@ class CoverageTests(Fx):
         after['summary']['entries'] += 1
         with self.assertRaises(export.ExportError):
             export.tables(model(), registry_commit=H, import_ledger=after)
+
+
+class LedgerTrustTests(unittest.TestCase):
+    LEGACY_METADATA = ['key', 'schema version', 'registry commit', 'registry_commit_role', 'registry_records_sha256', 'import_ledger_sha256', 'ODS sha256', 'ledger occurrences']
+    ROWS = ['import_ledger_verification', 'import_ledger_rebuild_inputs', 'import_ledger_complete', 'import_ledger_problems', 'import_ledger_sources_not_processed', 'import_ledger_problem_details', 'import_ledger_source_details']
+    FORGED = (('K1', forge.WITH_RT2, None, forge.k1_processed_to_excluded),
+              ('K2', forge.WITH_RT2, None, forge.k2_drop_rt2),
+              ('K3', forge.CLEAN, None, forge.k3_problem_without_problems),
+              ('K4', forge.CLEAN, None, forge.k4_processed_to_missing),
+              ('K5', forge.CLEAN, None, forge.k5_fabricated_alias),
+              ('K6', forge.CLEAN, forge.AMBIGUOUS_RT1, forge.k6_erase_ambiguity),
+              ('K7', forge.WITH_RT2, None, forge.k7_omit_source))
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.count = 0
+
+    def scenario(self, second=forge.CLEAN, ambiguity=None):
+        self.count += 1
+        directory = Path(self.tmp.name) / str(self.count)
+        directory.mkdir()
+        return forge.Scenario(directory, second, ambiguity)
+
+    def meta(self, led=None, inputs=None):
+        return dict(export.tables(model(), registry_commit=H, import_ledger=led, ledger_inputs=inputs)['REGISTRY-METADATA'])
+
+    def test_new_rows_follow_the_existing_ones_and_are_empty_without_a_ledger(self):
+        rows = export.tables(model(), registry_commit=H)['REGISTRY-METADATA']
+        self.assertEqual([r[0] for r in rows], self.LEGACY_METADATA + self.ROWS)
+        self.assertEqual([r[1] for r in rows[-len(self.ROWS):]], [''] * len(self.ROWS))
+
+    def test_ledger_alone_is_labelled_not_verified(self):
+        s = self.scenario()
+        meta = self.meta(s.honest())
+        self.assertEqual(meta['import_ledger_verification'], 'NOT_VERIFIED')
+        self.assertEqual(meta['import_ledger_rebuild_inputs'], '')
+        self.assertEqual((meta['import_ledger_complete'], meta['import_ledger_problems'], meta['import_ledger_sources_not_processed']), ('true', '0', ''))
+
+    def test_honest_ledger_with_trusted_inputs_is_rebuild_matched(self):
+        s = self.scenario(ambiguity=forge.AMBIGUOUS_RT1)
+        led = s.honest()
+        meta = self.meta(led, s.export_inputs())
+        self.assertEqual(meta['import_ledger_verification'], 'REBUILD_MATCHED')
+        self.assertIn('run=' + led['inputs']['run_digest'], meta['import_ledger_rebuild_inputs'])
+        self.assertIn('ambiguity=' + led['inputs']['ambiguity_digest'], meta['import_ledger_rebuild_inputs'])
+        self.assertIn('mapping=none', meta['import_ledger_rebuild_inputs'])
+
+    def test_both_modes_reach_both_output_formats(self):
+        s = self.scenario()
+        for inputs, label in ((None, b'NOT_VERIFIED'), (s.export_inputs(), b'REBUILD_MATCHED')):
+            for extension in ('tsv', 'fods'):
+                path = Path(self.tmp.name) / (label.decode() + '.' + extension)
+                result = export.write(path, model(), registry_commit=H, import_ledger=s.honest(), ledger_inputs=inputs)
+                self.assertEqual(result['import_ledger_verification'], label.decode())
+                self.assertIn(label, path.read_bytes())
+
+    def test_forgeries_are_refused_with_trusted_inputs_and_nothing_is_written(self):
+        for name, second, ambiguity, forgery in self.FORGED:
+            s = self.scenario(second, ambiguity)
+            forged = forgery(s.honest())
+            if name == 'K3':
+                self.assertTrue(ledger.validate_ledger(forged))
+            else:
+                self.assertEqual(ledger.validate_ledger(forged), [], name)
+            path = Path(self.tmp.name) / (name + '.tsv')
+            with self.subTest(name):
+                with self.assertRaises(export.ExportError if name == 'K3' else ledger.RebuildMismatch):
+                    export.write(path, model(), registry_commit=H, import_ledger=forged, ledger_inputs=s.export_inputs())
+                self.assertFalse(path.exists())
+
+    def test_forgeries_without_trusted_inputs_are_never_called_verified(self):
+        for name, second, ambiguity, forgery in self.FORGED:
+            s = self.scenario(second, ambiguity)
+            with self.subTest(name):
+                if name == 'K3':
+                    with self.assertRaises(export.ExportError):
+                        self.meta(forgery(s.honest()))
+                else:
+                    self.assertEqual(self.meta(forgery(s.honest()))['import_ledger_verification'], 'NOT_VERIFIED')
+
+    def test_forged_non_processed_sources_stay_visible_without_trusted_inputs(self):
+        s = self.scenario()
+        cases = ((forge.k1_processed_to_excluded, 'doc/v2=EXCLUDED', 'true'), (forge.k4_processed_to_missing, 'doc/v2=MISSING', 'false'))
+        for forgery, row, complete in cases:
+            with self.subTest(row):
+                meta = self.meta(forgery(s.honest()))
+                self.assertEqual((meta['import_ledger_sources_not_processed'], meta['import_ledger_complete']), (row, complete))
+
+    def test_honest_incomplete_ledgers_are_exported_truthfully(self):
+        s = self.scenario()
+        (s.ws / 'b.md').unlink()
+        meta = self.meta(s.honest(), s.export_inputs())
+        self.assertEqual(meta['import_ledger_verification'], 'REBUILD_MATCHED')
+        self.assertEqual((meta['import_ledger_complete'], meta['import_ledger_problems'], meta['import_ledger_sources_not_processed']), ('false', '0', 'doc/v2=MISSING'))
+        s = self.scenario()
+        (s.ws / 'b.md').write_bytes(b'changed\n')
+        meta = self.meta(s.honest(), s.export_inputs())
+        self.assertEqual((meta['import_ledger_complete'], meta['import_ledger_problems'], meta['import_ledger_sources_not_processed']), ('false', '1', 'doc/v2=PROBLEM'))
+
+    def test_unavailable_source_is_not_reported_as_a_forgery(self):
+        s = self.scenario()
+        led = s.honest()
+        (s.ws / 'b.md').unlink()
+        path = Path(self.tmp.name) / 'out.tsv'
+        with self.assertRaises(sources.SourceError):
+            export.write(path, model(), registry_commit=H, import_ledger=led, ledger_inputs=s.export_inputs())
+        self.assertFalse(path.exists())
+
+    def test_unusable_verification_inputs_are_export_errors(self):
+        s = self.scenario()
+        led = s.honest()
+        good = s.export_inputs()
+        without = {k: v for k, v in good.items() if k != 'ambiguity'}
+        for name, inputs in (('omitted ambiguity', without), ('not a dict', ['run']), ('extra', {**good, 'x': 1}), ('no run', {**good, 'run': None}), ('no catalog', {**good, 'catalog': None}), ('no namespaces', {**good, 'namespaces': None}), ('no roots', {**good, 'roots': None}), ('invalid run', {**good, 'run': {'schema': 'bad'}})):
+            with self.subTest(name), self.assertRaises(export.ExportError):
+                self.meta(led, inputs)
+        with self.assertRaises(export.ExportError):
+            self.meta(None, good)
+
+    def test_refused_export_leaves_an_existing_output_untouched(self):
+        s = self.scenario(forge.WITH_RT2)
+        path = Path(self.tmp.name) / 'kept.tsv'
+        path.write_bytes(b'kept')
+        with self.assertRaises(FileExistsError):
+            export.write(path, model(), registry_commit=H, import_ledger=forge.k2_drop_rt2(s.honest()), ledger_inputs=s.export_inputs())
+        self.assertEqual(path.read_bytes(), b'kept')
 
 
 if __name__ == '__main__':

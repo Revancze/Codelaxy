@@ -12,6 +12,7 @@ import subprocess
 from unittest import mock
 
 from clxreg import canon, cli, sources
+from tests import ledger_forgery as forge
 from tests.test_ledger import Fx
 
 
@@ -243,6 +244,127 @@ class ValidatorIntegrationTests(unittest.TestCase):
             for command in ('check', 'gate', 'dump-model'):
                 with redirect_stdout(io.StringIO()):
                     self.assertEqual(cli.main(['--registry-root', str(root), command, *common]), 4)
+
+
+class ExportLedgerTrustTests(unittest.TestCase):
+    call = CommandTests.call
+    stub = CommandTests.stub
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.d = Path(self.temp.name)
+        self.root = self.d / 'registry'
+        self.root.mkdir()
+        self.fixture = json.loads(GOLDEN.read_text(encoding='utf-8'))
+        self.out = self.d / 'view.tsv'
+
+    def prepare(self, second=forge.CLEAN, ambiguity=None, forgery=None):
+        s = forge.Scenario(self.d, second, ambiguity)
+        led = s.honest()
+        paths = {name: self.d / (name + '.json') for name in ('catalog', 'namespaces', 'run', 'ledger')}
+        values = {'catalog': s.src, 'namespaces': s.ns, 'run': s.run, 'ledger': forgery(led) if forgery else led}
+        for name, path in paths.items():
+            canon.write_record(path, values[name])
+        self.base = ['export', '--registry-commit', H, '--out', str(self.out), '--catalog', str(paths['catalog']), '--namespaces', str(paths['namespaces']),
+                     '--source-root', 'ws=' + str(s.ws), '--ledger', str(paths['ledger'])]
+        self.proof = ['--ledger-run', str(paths['run']), '--ledger-ambiguity', 'NONE', '--ledger-mapping', 'NONE']
+        return s, paths
+
+    def export(self, *extra):
+        with self.stub():
+            return self.call([*self.base, *extra])
+
+    def test_without_trusted_inputs_the_export_succeeds_as_not_verified(self):
+        self.prepare()
+        code, text, _ = self.export()
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(text)['import_ledger_verification'], 'NOT_VERIFIED')
+        self.assertIn(b'NOT_VERIFIED', self.out.read_bytes())
+
+    def test_honest_ledger_with_trusted_inputs_is_rebuild_matched(self):
+        self.prepare()
+        code, text, _ = self.export(*self.proof)
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(text)['import_ledger_verification'], 'REBUILD_MATCHED')
+        self.assertIn(b'REBUILD_MATCHED', self.out.read_bytes())
+
+    def test_honest_ledger_with_a_real_ambiguity_catalog_is_rebuild_matched(self):
+        self.prepare(ambiguity=forge.AMBIGUOUS_RT1)
+        path = self.d / 'ambiguity.json'
+        canon.write_record(path, forge.AMBIGUOUS_RT1)
+        self.proof[3] = str(path)
+        self.assertEqual(self.export(*self.proof)[0], 0)
+
+    def test_leaving_out_the_ambiguity_it_was_built_with_is_a_mismatch(self):
+        self.prepare(ambiguity=forge.AMBIGUOUS_RT1)
+        self.assertEqual(self.export(*self.proof)[0], 4)
+        self.assertFalse(self.out.exists())
+
+    def test_proven_mismatch_is_exit_4_and_writes_nothing(self):
+        self.prepare(forge.WITH_RT2, forgery=forge.k2_drop_rt2)
+        code, _, err = self.export(*self.proof)
+        self.assertEqual(code, 4)
+        self.assertIn('differs from a fresh import', err)
+        self.assertFalse(self.out.exists())
+
+    def test_unavailable_source_is_exit_4_but_not_called_a_forgery(self):
+        s, _ = self.prepare()
+        (s.ws / 'b.md').unlink()
+        code, _, err = self.export(*self.proof)
+        self.assertEqual(code, 4)
+        self.assertIn('source unavailable', err)
+        self.assertNotIn('differs', err)
+        self.assertFalse(self.out.exists())
+
+    def test_incomplete_verification_arguments_are_invalid_data(self):
+        self.prepare()
+        for name, drop in (('ambiguity', 2), ('mapping', 4)):
+            args = [*self.proof[:drop], *self.proof[drop + 2:]]
+            with self.subTest(name):
+                self.assertEqual(self.export(*args)[0], 1)
+                self.assertFalse(self.out.exists())
+        at = self.base.index('--ledger')
+        self.base = self.base[:at]
+        self.assertEqual(self.export(*self.proof)[0], 1)
+        self.assertFalse(self.out.exists())
+
+    def test_catalog_and_namespaces_are_required_for_verification(self):
+        top = self.d
+        for flag in ('--catalog', '--namespaces'):
+            self.d = top / flag.strip('-')
+            self.d.mkdir()
+            self.out = self.d / 'view.tsv'
+            self.prepare()
+            at = self.base.index(flag)
+            del self.base[at:at + 2]
+            with self.subTest(flag):
+                self.assertEqual(self.export(*self.proof)[0], 1)
+                self.assertFalse(self.out.exists())
+
+    def test_input_failures_keep_the_cli_contract(self):
+        self.prepare()
+        malformed = self.d / 'malformed.json'
+        malformed.write_text('{broken', encoding='utf-8')
+        self.proof[1] = str(malformed)
+        self.assertEqual(self.export(*self.proof)[0], 1)
+        self.proof[1] = str(self.d / 'absent.json')
+        self.assertEqual(self.export(*self.proof)[0], 4)
+        self.assertFalse(self.out.exists())
+
+    def test_invalid_trusted_run_is_invalid_data_not_a_forgery(self):
+        _, paths = self.prepare()
+        canon.write_record(paths['run'], {'schema': 'bad'}, overwrite=True)
+        code, _, err = self.export(*self.proof)
+        self.assertEqual(code, 1)
+        self.assertNotIn('differs', err)
+        self.assertFalse(self.out.exists())
+
+    def test_refused_overwrite_keeps_the_existing_file(self):
+        self.prepare(forge.WITH_RT2, forgery=forge.k2_drop_rt2)
+        self.out.write_bytes(b'kept')
+        self.assertEqual(self.export(*self.proof)[0], 3)
+        self.assertEqual(self.out.read_bytes(), b'kept')
 
 
 if __name__ == '__main__':

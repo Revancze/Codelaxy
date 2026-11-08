@@ -1,0 +1,50 @@
+{
+  "tests": [
+    "tests.test_finalization_safety",
+    "tests.test_portable_environment"
+  ],
+  "mutants": [
+    {
+      "id": "FS01",
+      "file": "clxreg/pilot.py",
+      "old": "if not isinstance(namespace_catalog,dict) or not isinstance(namespace_catalog.get('namespaces'),list):",
+      "new": "if False:",
+      "note": "malformed namespace input leaks a raw error"
+    },
+    {
+      "id": "FS02",
+      "file": "clxreg/export.py",
+      "old": "            os.close(fd)",
+      "new": "            pass",
+      "note": "raw descriptor stays open when fdopen fails"
+    },
+    {
+      "id": "FS03",
+      "file": "mutation/run_mutants.py",
+      "old": "if not math.isfinite(number) or number <= 0:",
+      "new": "if False:",
+      "note": "non-finite or nonpositive timeout accepted"
+    },
+    {
+      "id": "FS04",
+      "file": "mutation/run_mutants.py",
+      "old": "if isinstance(value, bool):",
+      "new": "if False:",
+      "note": "boolean timeout accepted as duration"
+    },
+    {
+      "id": "FS05",
+      "file": "clxreg/pilot.py",
+      "old": "        shutil.rmtree(out)",
+      "new": "        pass",
+      "note": "failed candidate write leaves partial output directory"
+    },
+    {
+      "id": "FS06",
+      "file": "tests/test_sources.py",
+      "old": "if configured and not Path(configured).is_dir():",
+      "new": "if False:",
+      "note": "explicit missing workspace loses the portable CI skip reason when catalogs are absent"
+    }
+  ]
+}

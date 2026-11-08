@@ -1,15 +1,18 @@
 """Targeted mutation check (standard library only).
 
-    python -B mutation/run_mutants.py mutation/specs/protect.json [--json results.json]
+    python -B mutation/run_mutants.py mutation/specs/protect.json [--json results.json] [--timeout SECONDS]
 
 A spec lists single textual mutants of clxreg modules and the test modules that must kill them. Each mutant is applied to a COPY of
 tools/registry (the working tree is never touched), exactly once, and the tests run in the copy. Exit 0 only if every mutant is KILLED or
 is declared `equivalent` with a reason and SURVIVES (or declares `platform_specific: {"survives_on": ["linux"], "reason": ...}` and survives on one of those
 platforms); a mutant whose pattern is not found exactly once is an error. With --json the result of EVERY mutant is written as data (the inventory is built from it).
+Every test run is bounded by --timeout: a mutant that hangs is reported as KILLED-TIMEOUT, a baseline that hangs makes the whole result meaningless (exit 2).
 """
 from __future__ import annotations
 
 import json
+import argparse
+import math
 import os
 import shutil
 import subprocess
@@ -18,9 +21,32 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_TIMEOUT = 600
 
 
-def run(spec_path: Path, json_out: Path | None = None) -> int:
+def _timeout(value):
+    if isinstance(value, bool):
+        raise ValueError('timeout must be a finite positive number')
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError('timeout must be a finite positive number') from exc
+    if not math.isfinite(number) or number <= 0:
+        raise ValueError('timeout must be a finite positive number')
+    return number
+
+
+def _run_tests(command, cwd, env, timeout):
+    """The finished process, or None when it exceeded `timeout` seconds and was killed."""
+    timeout = _timeout(timeout)
+    try:
+        return subprocess.run(command, cwd=cwd, capture_output=True, text=True, encoding="utf-8", env=env, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return None
+
+
+def run(spec_path: Path, json_out: Path | None = None, timeout: float = DEFAULT_TIMEOUT) -> int:
+    timeout = _timeout(timeout)
     spec = json.loads(spec_path.read_text(encoding="utf-8"))
     platform = "windows" if os.name == "nt" else "linux"
     results = []
@@ -31,8 +57,10 @@ def run(spec_path: Path, json_out: Path | None = None) -> int:
     base = Path(tempfile.mkdtemp(prefix="clx-mut-base-"))
     try:
         shutil.copytree(ROOT, base / "registry", ignore=shutil.ignore_patterns("__pycache__", "local", ".git"))
-        p0 = subprocess.run([sys.executable, "-B", "-X", "utf8", "-m", "unittest"] + spec["tests"], cwd=base / "registry", capture_output=True,
-                            text=True, encoding="utf-8", env=env)
+        p0 = _run_tests([sys.executable, "-B", "-X", "utf8", "-m", "unittest"] + spec["tests"], base / "registry", env, timeout)
+        if p0 is None:
+            print(f"BASELINE TIMED OUT after {timeout}s - mutation result would be meaningless")
+            return 2
         if p0.returncode != 0:
             print("BASELINE FAILS - mutation result would be meaningless:\n" + (p0.stderr or p0.stdout)[-800:])
             return 2
@@ -52,8 +80,12 @@ def run(spec_path: Path, json_out: Path | None = None) -> int:
                 bad += 1
                 continue
             target.write_text(text.replace(m["old"], m["new"]), encoding="utf-8", newline="\n")
-            p = subprocess.run([sys.executable, "-B", "-X", "utf8", "-m", "unittest"] + spec["tests"], cwd=work, capture_output=True, text=True,
-                               encoding="utf-8", env=env)
+            p = _run_tests([sys.executable, "-B", "-X", "utf8", "-m", "unittest"] + spec["tests"], work, env, timeout)
+            if p is None:
+                print(f'{m["id"]:<5} KILLED-TIMEOUT (over {timeout}s)  {m["note"]}')
+                results.append({"id": m["id"], "status": "KILLED-TIMEOUT"})
+                killed += 1
+                continue
             survived = p.returncode == 0
             if survived and "equivalent" in m:
                 print(f'{m["id"]:<5} SURVIVED (declared equivalent: {m["equivalent"]})  {m["note"]}')
@@ -81,6 +113,9 @@ def run(spec_path: Path, json_out: Path | None = None) -> int:
 
 
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    out = Path(args[args.index("--json") + 1]) if "--json" in args else None
-    sys.exit(run(Path(args[0]), out))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('spec', type=Path)
+    parser.add_argument('--json', type=Path)
+    parser.add_argument('--timeout', type=_timeout, default=DEFAULT_TIMEOUT)
+    args = parser.parse_args()
+    sys.exit(run(args.spec, args.json, args.timeout))

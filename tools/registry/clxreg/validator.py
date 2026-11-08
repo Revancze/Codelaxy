@@ -435,6 +435,8 @@ def _history(run):
             if not isinstance(v,dict): continue
             if v.get('change_class') not in ('INITIAL','EDITORIAL','REFINEMENT'):
                 run.add('DE-02',rid,'unknown revision change class')
+            if v.get('change_class')=='INITIAL' and index!=0:
+                run.add('DE-08',rid,'INITIAL is permitted only for the first revision')
             if v.get('change_class')=='REFINEMENT' and not run.decision(rid,effect='revised',revision=v.get('n')):
                 run.add('DE-08',rid,'REFINEMENT requires accepted revision decision')
             if v.get('change_class')=='EDITORIAL' and (index==0 or not isinstance(history[index-1],dict) or v.get('digest')!=history[index-1].get('digest')):
@@ -442,6 +444,23 @@ def _history(run):
         if run.base is not None and rid in run.base:
             old=run.base[rid]
             oldhistory={v.get('n'):v.get('digest') for v in _list(old.get('revisions')) if isinstance(v,dict)}
+            old_revision=old.get('revision')
+            if _positive(old_revision) and (
+                not _positive(rev) or rev<old_revision
+            ):
+                run.add(
+                    'DE-08',rid,
+                    'revision number decreased compared to Git base'
+                )
+            current_numbers={
+                v['n'] for v in history
+                if isinstance(v,dict) and type(v.get('n')) is int
+            }
+            if set(oldhistory)-current_numbers:
+                run.add(
+                    'DE-08',rid,
+                    'historical revisions from Git base were removed'
+                )
             if any(v.get('n') in oldhistory and v.get('digest')!=oldhistory[v['n']] for v in history if isinstance(v,dict)):
                 run.add('DE-08b',rid,'an existing revision digest was changed')
             try: changed=canon.normative_digest(old)!=digest

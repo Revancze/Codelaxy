@@ -32,6 +32,9 @@ def parser():
             p.add_argument('--ledger', help='canonical import ledger to include every disposition and occurrence')
             p.add_argument('--mapping', help='canonical clx.roadmap-mapping/1 mapping')
             p.add_argument('--ods', help='read-only source ODS; mandatory with mapping')
+            p.add_argument('--ledger-run', help='trusted run config: prove --ledger by a fresh import; without it the export says NOT_VERIFIED')
+            p.add_argument('--ledger-ambiguity', help='trusted ambiguity catalog of that import, or NONE; required with --ledger-run')
+            p.add_argument('--ledger-mapping', help='trusted ledger mapping of that import, or NONE; required with --ledger-run')
     p = sub.add_parser('next-id')
     p.add_argument('type', choices=store.STORED_TYPES)
     p.add_argument('--registry-root', default=argparse.SUPPRESS)
@@ -99,6 +102,22 @@ def _model(args):
     return model
 
 
+def _ledger_inputs(args):
+    """Trusted inputs for proving --ledger; None means an explicitly unverified export."""
+    named = (args.ledger_run, args.ledger_ambiguity, args.ledger_mapping)
+    if not any(named):
+        return None
+    if not (all(named) and args.catalog and args.namespaces):
+        raise export.ExportError('ledger verification requires --ledger-run, --ledger-ambiguity and --ledger-mapping (a path or NONE), --catalog and --namespaces')
+
+    def optional(path, name):
+        return None if path == 'NONE' else _load(path, name)
+
+    return {'run': _load(args.ledger_run, 'run'), 'catalog': _load(args.catalog, 'sources'), 'namespaces': _load(args.namespaces, 'namespaces'),
+            'ambiguity': optional(args.ledger_ambiguity, 'ambiguity'), 'mapping': optional(args.ledger_mapping, 'mapping'),
+            'roots': sources.parse_roots(args.source_root)}
+
+
 def _data_exit(model):
     # Unavailable/tampered pinned sources are explicit failures of this execution.
     if any((f.get('code') == 'AD-04' and ('not available' in f.get('message', '') or 'skipped' in f.get('message', '')))
@@ -144,8 +163,8 @@ def main(argv=None):
                 if not args.ledger:
                     raise export.ExportError('ledger verify requires --ledger')
                 value = _load(args.ledger, 'ledger')
-                findings = ledger.validate_ledger(value) + ledger.verify_ledger(value, catalog, roots)
-                if args.run:
+                findings = ledger.verify_ledger(value, catalog, roots)
+                if args.run and not any(f.cls == 'DATA_ERROR' for f in findings):
                     if not args.namespaces:
                         raise export.ExportError('rebuild verification requires --namespaces')
                     findings += ledger.compare_with_rebuild(value, _load(args.run, 'run'), catalog, _load(args.namespaces, 'namespaces'), _load(args.ambiguity, 'ambiguity') if args.ambiguity else None, _load(args.mapping, 'mapping') if args.mapping else None, roots)
@@ -179,12 +198,16 @@ def main(argv=None):
             _outside(args.out, args.registry_root)
             result = export.write(args.out, model, registry_commit=args.registry_commit,
                                   import_ledger=_load(args.ledger, 'ledger') if args.ledger else None,
-                                  mapping=_load(args.mapping, 'mapping') if args.mapping else None, ods_path=args.ods)
+                                  mapping=_load(args.mapping, 'mapping') if args.mapping else None, ods_path=args.ods,
+                                  ledger_inputs=_ledger_inputs(args))
             print(canon.dumps(result), end='')
             return _data_exit(model)
     except FileExistsError as e:
         print(str(e), file=sys.stderr)
         return 3
+    except ledger.RebuildMismatch as e:
+        print(f'registry: ledger refused, no output written: {e}', file=sys.stderr)
+        return 4
     except (sources.SourceError, OSError) as e:
         print(f'registry: source unavailable or unreadable: {e}', file=sys.stderr)
         return 4

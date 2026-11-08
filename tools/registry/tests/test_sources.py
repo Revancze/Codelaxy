@@ -584,6 +584,9 @@ class CliTests(Workspace):
 # --- the real sources (machine-local; NOT RUN elsewhere) ------------------------------------------------------------------------
 def _real_skip_reason():
     """None when the machine-local data is here; otherwise the concrete reason the real-source tests are NOT RUN."""
+    configured = os.environ.get("CLX_WORKSPACE_ROOT")
+    if configured and not Path(configured).is_dir():
+        return f"NOT RUN: the workspace root {configured!r} is not a directory on this machine (set CLX_WORKSPACE_ROOT to where the sources are, e.g. /mnt/c/... in WSL)"
     m = LOCAL / "protected-manifest.json"
     if not m.is_file():
         return f"NOT RUN: {m} is not present (machine-local, not part of any patch)"

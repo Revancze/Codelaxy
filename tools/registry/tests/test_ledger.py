@@ -380,6 +380,268 @@ class OdsSourceTests(Fx):
 
 
 class ValidateAndVerifyTests(Fx):
+
+    def test_excluded_source_requires_matching_source_entry(self):
+        run = copy.deepcopy(self.run)
+        run["include"] = [
+            {"source": "doc", "version": "v2"}
+        ]
+        run["excluded"] = [{
+            "source": "doc",
+            "version": "v1",
+            "reason": "owner review",
+            "decision": "explicit exclusion",
+        }]
+
+        good = self.build(run=run)
+
+        self.assertEqual(ledger.validate_ledger(good), [])
+        self.assertEqual(
+            ledger.verify_ledger(good, self.src, self.roots),
+            [],
+        )
+
+        def source_entry(value):
+            return next(
+                e for e in value["entries"]
+                if e["class"] == "SOURCE"
+                and e["source"] == "doc"
+                and e["version"] == "v1"
+            )
+
+        mutations = (
+            (
+                "deleted",
+                lambda value: value["entries"].remove(
+                    source_entry(value)
+                ),
+            ),
+            (
+                "wrong disposition",
+                lambda value: source_entry(value).update(
+                    disposition="SOURCE_MISSING"
+                ),
+            ),
+            (
+                "wrong hash",
+                lambda value: source_entry(value).update(
+                    sha256="0" * 64
+                ),
+            ),
+            (
+                "missing decision",
+                lambda value: source_entry(value).pop(
+                    "decision"
+                ),
+            ),
+        )
+
+        for name, mutate in mutations:
+            with self.subTest(case=name):
+                bad = copy.deepcopy(good)
+                mutate(bad)
+                self.recount(bad)
+
+                for findings in (
+                    ledger.validate_ledger(bad),
+                    ledger.verify_ledger(
+                        bad, self.src, self.roots
+                    ),
+                ):
+                    self.assertTrue(
+                        any(
+                            f.cls == "DATA_ERROR"
+                            for f in findings
+                        ),
+                        f"{name}: {findings}",
+                    )
+
+        # An incomplete source cannot claim complete=True.
+        bad = copy.deepcopy(good)
+        row = next(
+            s for s in bad["sources"]
+            if s["version"] == "v1"
+        )
+        row["status"] = "MISSING"
+
+        source_entry(bad)["disposition"] = "SOURCE_MISSING"
+        self.recount(bad)
+
+        for findings in (
+            ledger.validate_ledger(bad),
+            ledger.verify_ledger(bad, self.src, self.roots),
+        ):
+            self.assertTrue(
+                any(f.code == "DE-02" for f in findings),
+                findings,
+            )
+
+    def test_duplicate_source_inventory_rows_are_rejected(self):
+        bad = copy.deepcopy(self.build())
+        bad["sources"].append(copy.deepcopy(bad["sources"][0]))
+        bad["summary"]["sources"] = len(bad["sources"])
+
+        for findings in (
+            ledger.validate_ledger(bad),
+            ledger.verify_ledger(bad, self.src, self.roots),
+        ):
+            self.assertTrue(
+                any(f.code == "DE-01" for f in findings),
+                findings,
+            )
+
+    def test_duplicate_row_cannot_expose_unvalidated_source_entry(self):
+        # A SOURCE entry has no location fields. If the last duplicate row
+        # hides the PROCESSED one, it must not reach the re-location loop.
+        bad = copy.deepcopy(self.build())
+        row = bad["sources"][0]
+        ref = (row["source"], row["version"])
+        bad["entries"] = [
+            e for e in bad["entries"]
+            if (e["source"], e["version"]) != ref
+        ]
+        bad["entries"].append({
+            "class": "SOURCE",
+            "disposition": "SOURCE_MISSING",
+            "source": ref[0],
+            "version": ref[1],
+            "sha256": row["sha256"],
+            "reason": "forged",
+            "unit": "L2",
+            "line": 2,
+        })
+        bad["sources"].insert(1, {
+            "source": ref[0],
+            "version": ref[1],
+            "sha256": row["sha256"],
+            "status": "MISSING",
+        })
+        bad["summary"]["sources"] = len(bad["sources"])
+        bad["complete"] = False
+        self.recount(bad)
+
+        findings = ledger.verify_ledger(bad, self.src, self.roots)
+
+        self.assertTrue(
+            any(f.code == "DE-01" for f in findings),
+            findings,
+        )
+
+    def test_malformed_ledger_fails_closed(self):
+        cases = (
+            ("sources null", lambda l: l.update(sources=None)),
+            ("sources object", lambda l: l.update(sources={})),
+            ("row null", lambda l: l["sources"].__setitem__(0, None)),
+            ("missing version", lambda l: l["sources"][0].pop("version")),
+            ("missing sha256", lambda l: l["sources"][0].pop("sha256")),
+            ("missing status", lambda l: l["sources"][0].pop("status")),
+            ("entries null", lambda l: l.update(entries=None)),
+            ("entry null", lambda l: l["entries"].__setitem__(0, None)),
+            ("source list", lambda l: l["entries"][0].update(source=["doc"])),
+            ("class list", lambda l: l["entries"][0].update(**{"class": []})),
+            ("disposition list", lambda l: l["entries"][0].update(disposition=[])),
+            ("unit list", lambda l: l["entries"][0].update(unit=[])),
+            ("column boolean", lambda l: l["entries"][0].update(column=True)),
+            ("contained null", lambda l: l["entries"][0].update(contained=None)),
+            ("contained invalid", lambda l: l["entries"][0].update(contained=[{}])),
+            ("status list", lambda l: l["sources"][0].update(status=[]),),
+            ("status object", lambda l: l["sources"][0].update(status={}),),
+        )
+
+        for name, change in cases:
+            with self.subTest(case=name):
+                bad = copy.deepcopy(self.build())
+                change(bad)
+
+                for findings in (
+                    ledger.validate_ledger(bad),
+                    ledger.verify_ledger(bad, self.src, self.roots),
+                ):
+                    self.assertTrue(
+                        any(f.cls == "DATA_ERROR" for f in findings),
+                        findings,
+                    )
+
+        for invalid in (None, [], "invalid"):
+            with self.subTest(top_level=repr(invalid)):
+                for findings in (
+                    ledger.validate_ledger(invalid),
+                    ledger.verify_ledger(
+                        invalid, self.src, self.roots
+                    ),
+                ):
+                    self.assertTrue(
+                        any(f.code == "DE-02" for f in findings),
+                        findings,
+                    )
+
+    def test_malformed_ledger_cli_returns_failure(self):
+        from clxreg import cli
+
+        bad = copy.deepcopy(self.build())
+        bad["sources"][0].pop("sha256")
+
+        ledger_file = self.d / "invalid-ledger.json"
+        catalog_file = self.d / "catalog.json"
+
+        canon.write_record(ledger_file, bad)
+        canon.write_record(catalog_file, self.src)
+
+        output, errors = io.StringIO(), io.StringIO()
+
+        with redirect_stdout(output), redirect_stderr(errors):
+            code = cli.main([
+                "ledger", "verify",
+                "--ledger", str(ledger_file),
+                "--catalog", str(catalog_file),
+                "--source-root", f"ws={self.ws}",
+            ])
+
+        self.assertEqual(
+            code, 1, (output.getvalue(), errors.getvalue())
+        )
+        self.assertIn(
+            "DE-02", output.getvalue() + errors.getvalue()
+        )
+
+    def test_orphan_ledger_entries_are_rejected(self):
+        led = self.build()
+        bad = copy.deepcopy(led)
+
+        # Remove the v1 inventory row, but retain its entries.
+        bad["sources"] = [
+            s for s in bad["sources"]
+            if (s["source"], s["version"]) != ("doc", "v1")
+        ]
+        self.assertEqual(len(bad["sources"]), 1)
+        bad["summary"]["sources"] = len(bad["sources"])
+
+        # A retained orphan entry contains an invalid location.
+        entry = next(
+            e for e in bad["entries"]
+            if (e["source"], e["version"]) == ("doc", "v1")
+            and "column" in e
+        )
+        entry["column"] = 999999
+
+        checks = {
+            "structure": (
+                ledger.validate_ledger(bad),
+                "DE-02",
+            ),
+            "verification": (
+                ledger.verify_ledger(bad, self.src, self.roots),
+                "DE-02",
+            ),
+        }
+
+        for name, (findings, expected_code) in checks.items():
+            with self.subTest(check=name):
+                self.assertTrue(
+                    any(f.code == expected_code for f in findings),
+                    f"{name}: orphan entries were accepted: {findings}",
+                )
+
     def test_a_good_ledger_verifies_against_its_sources(self):
         led = self.build()
         self.assertEqual(ledger.verify_ledger(led, self.src, self.roots), [])
@@ -635,6 +897,23 @@ class CliTests(Fx):
         self.assertEqual((full["run_digest"], full["catalog_digest"], full["namespaces_digest"]), (base["run_digest"], base["catalog_digest"], base["namespaces_digest"]))
         self.assertEqual(base["catalog_digest"], canon.digest(self.src))
 
+
+    def test_zero_width_regex_returns_3_without_output(self):
+        out = self.d / "zero-width.json"
+
+        with mock.patch.object(
+            ledger.patterns,
+            "scan_text",
+            side_effect=ledger.patterns.ZeroWidthMatch(4),
+        ):
+            code, stdout, stderr = self.cli(*self.args(out))
+
+        self.assertEqual(code, 3, (stdout, stderr))
+        self.assertIn("zero-width", stderr)
+        self.assertIn("doc/v1", stderr)
+        self.assertFalse(out.exists())
+
+
     def test_unusable_inputs_exit_3(self):
         self.run["include"] = []
         self.assertEqual(self.cli(*self.args(self.d / "x.json"))[0], 3)
@@ -675,6 +954,25 @@ class CliTests(Fx):
         code, o, _ = self.cli("diff", str(out), str(other))
         self.assertEqual(code, 1)
         self.assertIn("changed: 1", o)
+
+    def test_diff_reports_added_and_removed_source_entries(self):
+        full = self.d / "full.json"
+        self.assertEqual(self.cli(*self.args(full))[0], 0)
+        (self.ws / "b.md").unlink()
+        gone = self.d / "gone.json"
+        self.assertEqual(self.cli(*self.args(gone))[0], 2)
+
+        for before, after, source_kind, label_kind in (
+            (full, gone, "added   ", "removed "),
+            (gone, full, "removed ", "added   "),
+        ):
+            with self.subTest(source_kind=source_kind):
+                code, out, err = self.cli("diff", str(before), str(after))
+
+                self.assertEqual(code, 1, err)
+                lines = out.splitlines()
+                self.assertIn(f"{source_kind} doc/v2 SOURCE SOURCE_MISSING", lines)
+                self.assertIn(f"{label_kind} doc/v2 L1 col 1 'R1'", lines)
 
 
 if __name__ == "__main__":

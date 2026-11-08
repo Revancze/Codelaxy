@@ -34,6 +34,10 @@ class LedgerInputError(RuntimeError):
     """The inputs cannot be used (invalid catalog, run or mapping); no ledger is produced."""
 
 
+class RebuildMismatch(RuntimeError):
+    """The ledger is proven not to be the import of the trusted inputs."""
+
+
 def _s(x):
     return isinstance(x, str) and x != ""
 
@@ -229,7 +233,18 @@ def build_ledger(run, src_cat, ns_obj, amb_obj, mapping, roots) -> dict:
 
 
 def _scan_unit(u, ref, sha, compiled, amb_obj, tokens, st) -> list:
-    items = [(m.start, m.end, _CLASS_ORDER[m.cls], m) for m in patterns.scan_text(u.text, compiled)]
+
+    try:
+        items = [
+            (m.start, m.end, _CLASS_ORDER[m.cls], m)
+            for m in patterns.scan_text(u.text, compiled)
+        ]
+    except patterns.ZeroWidthMatch as exc:
+        raise LedgerInputError(
+            f"invalid namespace regex while scanning "
+            f"{ref[0]}/{ref[1]} unit {u.id}: {exc}"
+        ) from exc
+
     items += [(m.start, m.end, _CLASS_ORDER[m.cls], m) for m in literals.scan_literals(u.text)]
     items.sort(key=lambda i: (i[0], i[1], i[2]))
     out = []
@@ -290,8 +305,245 @@ def _coverage(us, with_entries) -> dict:
 
 
 # --- checks on a ledger ------------------------------------------------------------------------------------------------------------------
+def _ledger_structure(led):
+    """Check ledger shape before any unsafe field access."""
+    findings = []
+    unsafe = False
+    def err(code, record, message, fatal=False):
+        nonlocal unsafe
+        findings.append(data_error(code, record, message))
+        if fatal:
+            unsafe = True
+        return findings, True
+
+    if not isinstance(led, dict):
+        return [
+            data_error(
+                "DE-02",
+                "ledger",
+                "a ledger must be a JSON object",
+            )
+        ], True
+
+    rows = led.get("sources")
+    entries = led.get("entries")
+    counts = {}
+    statuses = {}
+    if not isinstance(rows, list):
+        err("DE-02", "ledger", "sources must be a list", True)
+    else:
+        for i, row in enumerate(rows, 1):
+            rec = f"ledger:sources#{i}"
+            if not isinstance(row, dict):
+                err("DE-02", rec, "inventory row must be an object", True)
+                continue
+            source = row.get("source")
+            version = row.get("version")
+            if not (_s(source) and _s(version)):
+                err("DE-02", rec, "invalid source or version", True)
+                continue
+            ref = (source, version)
+            counts[ref] = counts.get(ref, 0) + 1
+            statuses[ref] = row.get("status")
+            if counts[ref] == 2:
+                err("DE-01", rec, "duplicate source inventory row", True)
+            if not _s(row.get("sha256")):
+                err("DE-02", rec, "missing source sha256", True)
+            if row.get("status") not in (
+                "PROCESSED", "MISSING", "UNSUPPORTED",
+                "PROBLEM", "EXCLUDED"
+            ):
+                err("DE-02", rec, "invalid source status", True)
+
+    if not isinstance(entries, list):
+        err("DE-02", "ledger", "entries must be a list", True)
+    else:
+        missing = set()
+
+        for i, entry in enumerate(entries, 1):
+            rec = f"ledger:#{i}"
+
+            if not isinstance(entry, dict):
+                err("DE-02", rec, "entry must be an object", True)
+                continue
+
+            for field in (
+                "source", "version", "sha256",
+                "class", "disposition", "reason"
+            ):
+                if not _s(entry.get(field)):
+                    err("DE-02", rec, f"invalid {field}", True)
+
+            source = entry.get("source")
+            version = entry.get("version")
+
+            if _s(source) and _s(version) and isinstance(rows, list):
+                ref = (source, version)
+
+                if counts.get(ref, 0) == 0 and ref not in missing:
+                    missing.add(ref)
+                    err("DE-02", rec, "entry has no source inventory row")
+
+                status = statuses.get(ref)
+                cls = entry.get("class")
+
+                if status == "PROCESSED" and cls == "SOURCE":
+                    err("DE-02", rec, "source entry in processed source", True)
+
+                if (
+                    status in ("MISSING", "UNSUPPORTED", "PROBLEM", "EXCLUDED")
+                    and cls != "SOURCE"
+                ):
+                    err("DE-02", rec, "ordinary entry in nonprocessed source", True)
+
+            if entry.get("class") == "SOURCE":
+                continue
+
+            if not _s(entry.get("unit")):
+                err("DE-02", rec, "invalid unit", True)
+
+            if not _s(entry.get("text")):
+                err("DE-02", rec, "invalid text", True)
+
+            for field in ("column", "length"):
+                value = entry.get(field)
+                if type(value) is not int or value < 1:
+                    err("DE-02", rec, f"invalid {field}", True)
+
+            if "contained" in entry:
+                children = entry["contained"]
+
+                if not isinstance(children, list):
+                    err("DE-02", rec, "contained must be a list", True)
+                else:
+                    for child in children:
+                        if (
+                            not isinstance(child, dict)
+                            or not _s(child.get("text"))
+                            or type(child.get("column")) is not int
+                            or child["column"] < 1
+                        ):
+                            err("DE-02", rec, "invalid contained match", True)
+
+    # Every nonprocessed source must have its provenance entry.
+    source_entries = {}
+
+    if isinstance(entries, list):
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            if entry.get("class") != "SOURCE":
+                continue
+
+            source = entry.get("source")
+            version = entry.get("version")
+
+            if _s(source) and _s(version):
+                ref = (source, version)
+                source_entries.setdefault(ref, []).append(entry)
+
+    if isinstance(rows, list) and isinstance(entries, list):
+        required_dispositions = {
+            "MISSING": "SOURCE_MISSING",
+            "UNSUPPORTED": "UNSUPPORTED",
+            "EXCLUDED": "EXCLUDED",
+        }
+
+        for i, row in enumerate(rows, 1):
+            if not isinstance(row, dict):
+                continue
+
+            source = row.get("source")
+            version = row.get("version")
+
+            if not (_s(source) and _s(version)):
+                continue
+
+            ref = (source, version)
+            rec = f"ledger:sources#{i}"
+            status = row.get("status")
+            expected = (
+                required_dispositions.get(status)
+                if isinstance(status, str)
+                else None
+            )
+            matching = source_entries.get(ref, [])
+
+            if expected is None:
+                if matching:
+                    err(
+                        "DE-02", rec,
+                        "PROCESSED or PROBLEM source "
+                        "must not carry a SOURCE entry"
+                    )
+                continue
+
+            if len(matching) != 1:
+                err(
+                    "DE-02", rec,
+                    f"{status} requires exactly one SOURCE entry"
+                )
+                continue
+
+            entry = matching[0]
+
+            if entry.get("disposition") != expected:
+                err(
+                    "DE-02", rec,
+                    f"{status} requires disposition {expected}"
+                )
+
+            if entry.get("sha256") != row.get("sha256"):
+                err(
+                    "DE-13", rec,
+                    "SOURCE entry hash differs "
+                    "from source inventory"
+                )
+
+            if status == "EXCLUDED" and not _s(
+                entry.get("decision")
+            ):
+                err(
+                    "DE-02", rec,
+                    "EXCLUDED requires a source decision"
+                )
+
+    problems = led.get("problems")
+
+    if not isinstance(problems, list):
+        err("DE-02", "ledger", "problems must be a list", True)
+
+    if isinstance(rows, list) and isinstance(problems, list):
+        if any(isinstance(row, dict) and row.get("status") == "PROBLEM" for row in rows) and not problems:
+            err("DE-02", "ledger", "PROBLEM source requires a recorded problem")
+        expected_complete = not problems and all(
+            isinstance(row, dict)
+            and row.get("status") in ("PROCESSED", "EXCLUDED")
+            for row in rows
+        )
+
+        if (
+            type(led.get("complete")) is not bool
+            or led["complete"] != expected_complete
+        ):
+            err(
+                "DE-02", "ledger",
+                "complete contradicts source statuses or problems"
+            )
+
+    return sorted(
+        findings,
+        key=lambda f: (f.record, f.code, f.message)
+    ), unsafe
+
+
 def validate_ledger(led) -> list:
-    out = []
+    return _validate_ledger(led, *_ledger_structure(led))
+
+
+def _validate_ledger(led, out, unsafe) -> list:
+    if unsafe:
+        return out
 
     def err(code, rec, msg):
         out.append(data_error(code, rec, msg))
@@ -323,10 +575,6 @@ def validate_ledger(led) -> list:
             if not _s(e.get(f)):
                 err("DE-02", rec, f"missing or empty {f}")
         if c == "SOURCE":
-            if d not in _SOURCE_DISPOSITIONS:
-                err("DE-02", rec, "a source-level entry is UNSUPPORTED, SOURCE_MISSING or EXCLUDED")
-            if d == "EXCLUDED" and not _s(e.get("decision")):
-                err("DE-02", rec, "EXCLUDED needs the decision that excluded the source")
             continue
         if d in _SOURCE_DISPOSITIONS:
             err("DE-02", rec, f"{d} belongs to a source-level entry")
@@ -361,14 +609,17 @@ def validate_ledger(led) -> list:
     n_sources = len(led["sources"]) if isinstance(led.get("sources"), list) else None
     if summary != {"entries": len(entries), "sources": n_sources, "dispositions": by_disp, "classes": by_cls}:
         err("DE-02", "ledger", "the summary does not match the entries")
-    if led.get("problems") and led.get("complete") is not False:
-        err("DE-02", "ledger", "a ledger with problems cannot be complete")
     return sorted(out, key=lambda f: (f.record, f.code, f.message))
 
 
 def verify_ledger(led, src_cat, roots) -> list:
     """Re-locate every entry in the verified bytes of its source; re-derive the coverage map."""
-    out = []
+    out, unsafe = _ledger_structure(led)
+    out = _validate_ledger(led, out, unsafe)
+    catalog_findings = sources.validate_catalog(src_cat)
+    out += catalog_findings
+    if unsafe or blocking(catalog_findings):
+        return sorted(out, key=lambda f: (f.record, f.code, f.message))
     problems = led.get("problems") if isinstance(led, dict) else None
     if problems:
         out.append(data_error("DE-13", "ledger", f"the ledger itself records {len(problems)} problem(s)"))
@@ -387,6 +638,8 @@ def verify_ledger(led, src_cat, roots) -> list:
             out.append(data_error("DE-13", rec, "the ledger names another hash than the catalog pins"))
             continue
         if s["status"] != "PROCESSED":
+            if s["status"] != "EXCLUDED":
+                out.append(advisory("AD-04", rec, f"source inventory is {s['status']}; the inventory is incomplete"))
             continue
         try:
             data = sources.read_verified(src_cat, roots, *ref)
@@ -427,7 +680,32 @@ def compare_with_rebuild(led, run, src_cat, ns_obj, amb_obj, mapping, roots) -> 
     return []
 
 
+def require_rebuild_match(led, run, src_cat, ns_obj, amb_obj, mapping, roots) -> None:
+    """Return only if `led` is byte for byte what the caller's trusted inputs produce.
+
+    The digests stored in the ledger are claims of the ledger and prove nothing; the
+    proof is only as strong as the origin of the inputs given here.
+
+    Raises RebuildMismatch for a proven difference, LedgerInputError for inputs that
+    are themselves invalid, and sources.SourceError when a source the ledger claims
+    as PROCESSED cannot be read and verified here (that says nothing about forgery).
+    """
+    findings = compare_with_rebuild(led, run, src_cat, ns_obj, amb_obj, mapping, roots)
+    if not findings:
+        return
+    claimed = {(s["source"], s["version"]): s["status"] for s in led["sources"]}
+    for item in run["include"]:
+        ref = (item["source"], item["version"])
+        if claimed.get(ref) == "PROCESSED":
+            sources.read_verified(src_cat, roots, *ref)
+    raise RebuildMismatch(findings[0].message)
+
+
 def diff_ledgers(a, b) -> dict:
+    for label, value in (("before", a), ("after", b)):
+        findings, _ = _ledger_structure(value)
+        if findings:
+            raise LedgerInputError(f"invalid {label} ledger: " + "; ".join(f.line() for f in findings))
     def index(led):
         return {tuple(json.dumps(e.get(k), sort_keys=True) for k in _ENTRY_KEY): e for e in led.get("entries", [])}
 
@@ -481,8 +759,14 @@ def main(argv=None) -> int:
             print(f"added: {len(r['added'])}, removed: {len(r['removed'])}, changed: {len(r['changed'])}, sources changed: {len(r['sources_changed'])}")
             for k in ("added", "removed"):
                 for e in r[k]:
+                    if e.get("class") == "SOURCE":
+                        print(f"{k:<8} {e['source']}/{e['version']} SOURCE {e['disposition']}")
+                        continue
                     print(f"{k:<8} {e['source']}/{e['version']} {e['unit']} col {e['column']} {e['text']!r}")
             for c in r["changed"]:
+                if c["class"] == "SOURCE":
+                    print(f"changed  {c['source']}/{c['version']} SOURCE: {c['before']} -> {c['after']}")
+                    continue
                 print(f"changed  {c['source']}/{c['version']} {c['unit']} col {c['column']} {c['text']!r}: {c['before']} -> {c['after']}")
             if not (r["added"] or r["removed"] or r["changed"] or r["sources_changed"]):
                 print("no difference")
@@ -492,15 +776,19 @@ def main(argv=None) -> int:
         catalog = load_input(a.catalog, "sources")
         if a.cmd == "verify":
             led = load_input(a.ledger, "ledger")
-            findings = validate_ledger(led) + verify_ledger(led, catalog, roots)
+            findings = verify_ledger(led, catalog, roots)
             if a.run:
-                if not a.namespaces:
-                    raise LedgerInputError("--run needs --namespaces to rebuild")
-                findings += compare_with_rebuild(led, load_input(a.run, "run"), catalog, load_input(a.namespaces, "namespaces"),
-                                                 load_input(a.ambiguity, "ambiguity") if a.ambiguity else None, load_input(a.mapping, "mapping") if a.mapping else None, roots)
+                if not blocking(findings):
+                    if not a.namespaces:
+                        raise LedgerInputError("--run needs --namespaces to rebuild")
+                    findings += compare_with_rebuild(led, load_input(a.run, "run"), catalog, load_input(a.namespaces, "namespaces"),
+                                                     load_input(a.ambiguity, "ambiguity") if a.ambiguity else None, load_input(a.mapping, "mapping") if a.mapping else None, roots)
             for f in findings:
                 print(f.line())
-            print(f"verify: {'FAIL' if blocking(findings) else 'OK'} ({len(findings)} findings)")
+            incomplete = any(f.code == "AD-04" for f in findings)
+            print(f"verify: {'FAIL' if blocking(findings) else 'INCOMPLETE' if incomplete else 'OK'} ({len(findings)} findings)")
+            if incomplete and not blocking(findings):
+                return 2
             return 1 if blocking(findings) else 0
         led = build_ledger(load_input(a.run, "run"), catalog, load_input(a.namespaces, "namespaces"), load_input(a.ambiguity, "ambiguity") if a.ambiguity else None,
                            load_input(a.mapping, "mapping") if a.mapping else None, roots)
