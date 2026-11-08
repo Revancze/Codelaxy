@@ -333,16 +333,27 @@ def _references(run):
         for ref in refs:
             if ref is not None and (not isinstance(ref,str) or ref not in ids):
                 run.add('DE-03',rid,'unknown record reference '+repr(ref))
-        for field in RELATIONS:
-            stack=[(rid,())]
+    for field in RELATIONS:
+        completed=set()
+        for rid in run.records:
+            if rid in completed: continue
+            stack=[(rid,False)]
+            path=set()
+            trail=[]
             while stack:
-                node,path=stack.pop()
+                node,exiting=stack.pop()
+                if exiting:
+                    path.remove(node);trail.pop();completed.add(node)
+                    continue
                 if node in path:
-                    run.add('DE-04',rid,'cycle in '+field+': '+' -> '.join(path+(node,)))
-                    break
-                for v in _list(run.records.get(node,{}).get(field)):
+                    run.add('DE-04',rid,'cycle in '+field+': '+' -> '.join(trail+[node]))
+                    continue
+                if node in completed: continue
+                path.add(node);trail.append(node)
+                stack.append((node,True))
+                for v in reversed(_list(run.records.get(node,{}).get(field))):
                     ref=_target(v)
-                    if isinstance(ref,str) and ref in ids: stack.append((ref,path+(node,)))
+                    if isinstance(ref,str) and ref in ids: stack.append((ref,False))
 
 def _sources(run):
     if run.catalog is not None:

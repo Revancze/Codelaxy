@@ -139,7 +139,7 @@ def tables(model, *, registry_commit, import_ledger=None, mapping=None, ods_path
         state = derived.get(r['id'], {})
         asserted = sorted({str(x.get('status')) for x in r.get('asserted_status', []) if isinstance(x, dict) and x.get('status')})
         effective = str(state.get('effective_status', ''))
-        drift = 'CLAIM_DIFFERS' if asserted and any(s != effective for s in asserted) else ''
+        drift = 'CLAIM_DIFFERS' if asserted and any(s != (str(state.get('verification', '')) if s == 'VERIFIED' else effective) for s in asserted) else ''
         roadmap.append([r['id'], str(r.get('title', '')), str(r.get('type', '')), str(state.get('verification', '')), effective, ', '.join(asserted), drift, *mapped.get(r['id'], ('', '', ''))])
     summary = [['source', 'version', 'disposition', 'count']]
     detail = [['source', 'version', 'disposition', 'unit', 'column', 'text', 'record']]

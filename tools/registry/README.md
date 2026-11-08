@@ -174,3 +174,12 @@ Portable CI deliberately points CLX_WORKSPACE_ROOT to an unavailable directory.
 The real-source test helper reports that explicit condition before checking
 machine-local catalogs, so a fresh clone and a local portable run have identical
 precise skip reasons. The approved skip identities/count remain unchanged.
+
+
+Accepted scenario adequacy must name the current requirement revision or a revision
+whose editorial equivalence is established by the validator. An accepted old normative
+binding cannot approve new merely asserted coverage. Relation-cycle detection visits
+completed subgraphs once; detected cycles still block the global gate. In roadmap
+exports, VERIFIED assertions use verification state and DONE assertions use effective
+status, so a verified requirement can also be effectively DONE or BLOCKED without a
+false disagreement about its verification.

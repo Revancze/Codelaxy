@@ -155,7 +155,7 @@ def qualify(evd: dict, scn: dict, ctx: dict) -> Qualification:
         failed.append("Q4: the evidence does not bind this requirement revision and condition")
     ver = [v for v in (s.get("verifies") or []) if isinstance(v, dict)]
     if not (e.get("scenario_revision") in ctx.get("scenario_revisions", ()) and any(
-            v.get("requirement") == ctx.get("requirement") and v.get("acceptance") == ctx.get("acceptance") and v.get("adequacy") == "ACCEPTED" and v.get("basis") for v in ver)):
+            v.get("requirement") == ctx.get("requirement") and v.get("acceptance") == ctx.get("acceptance") and v.get("adequacy") == "ACCEPTED" and v.get("basis") and v.get("requirement_revision") in ctx.get("revisions", ()) for v in ver)):
         failed.append("Q5: the scenario is not accepted as adequate (or its revision is not current)")
     if _d(e.get("platform")).get("os") != ctx.get("platform"):
         failed.append("Q6: the evidence is from another platform")

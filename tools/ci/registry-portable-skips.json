@@ -1,7 +1,7 @@
 {
   "schema": "clx.registry-skip-policy/1",
   "profile": "portable",
-  "expected_tests": 852,
+  "expected_tests": 859,
   "allowed_skips": 30,
   "groups": [
     {

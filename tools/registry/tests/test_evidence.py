@@ -25,6 +25,8 @@ def scn(**o):
     s = {"revision": 1, "method": "test", "observation_required": True, "implementation": [{"test": "T.One"}],
          "verifies": [{"requirement": REQ, "acceptance": "AC-1", "adequacy": "ACCEPTED", "basis": "CLX-DEC-0001"}]}
     s.update(o)
+    if isinstance(s.get("verifies"), list):
+        s["verifies"] = [{"requirement_revision": 1, **v} if isinstance(v, dict) else v for v in s["verifies"]]
     return s
 
 

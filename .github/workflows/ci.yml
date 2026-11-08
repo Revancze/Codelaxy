@@ -68,6 +68,6 @@ jobs:
           CLX_TESTRUN_ROOT: ${{ runner.temp }}/codelaxy-no-testrun
         run: >-
           python -B -X utf8 -W error tools/ci/registry_gate.py
-          --expected-tests 852
+          --expected-tests 859
           --expected-skips 30
           --skip-policy tools/ci/registry-portable-skips.json

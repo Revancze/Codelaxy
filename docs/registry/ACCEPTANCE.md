@@ -1,7 +1,7 @@
-# RoadmapRegistry acceptance — 2026-11-08
+# RoadmapRegistry acceptance â€” 2026-11-08
 
 The registry is an internal development tool, not a change to the Codelaxy application core.
-This change closes O1–O9 while retaining the existing ledger/model schemas and the two
+This change closes O1â€“O9 while retaining the existing ledger/model schemas and the two
 explicit CLI contracts. A separate local auditor reviewed the runtime implementation,
 rehash-verified all 114 release files, and issued GO with no remaining source blocker.
 The reviewed manifest SHA-256 is
@@ -37,11 +37,11 @@ external consumers.
 
 ## Verification
 
-- Windows CPython 3.14.10: full registry gate **852 PASS, 0 SKIP**, no failures/errors.
-- Ubuntu on actual WSL2 Linux, CPython 3.14.4: portable gate **822 PASS, 30 approved SKIP**,
+- Windows CPython 3.14.10: full registry gate **859 PASS, 0 SKIP**, no failures/errors.
+- Ubuntu on actual WSL2 Linux, CPython 3.14.4: portable gate **829 PASS, 30 approved SKIP**,
   no failures/errors. Skip identities and reasons are checked exactly; none were added.
-- The 852 count was saved in CI/gate/policy only after a real passing 852-test run.
-- The complete shipped mutation catalog has 28 specs / 699 IDs. The release coordinator
+- The 859 count was saved in CI/gate/policy only after a real passing 859-test run.
+- The complete shipped mutation catalog has 29 specs / 704 IDs. The release coordinator
   retains per-ID JSON, baseline results and spec hashes; declared equivalent and
   platform-specific outcomes are reported separately from killed mutants.
 - The final code received independent targeted checks (94 tests), an independent final
@@ -54,7 +54,7 @@ external consumers.
 Reproduce the portable CI check with Python 3.12 and .NET from global.json installed:
 
 ```sh
-python -B -X utf8 -W error tools/ci/registry_gate.py --expected-tests 852 --expected-skips 30 --skip-policy tools/ci/registry-portable-skips.json
+python -B -X utf8 -W error tools/ci/registry_gate.py --expected-tests 859 --expected-skips 30 --skip-policy tools/ci/registry-portable-skips.json
 ```
 
 Set CLX_WORKSPACE_ROOT and CLX_TESTRUN_ROOT to unavailable paths for that profile.
@@ -79,3 +79,28 @@ ledger digests alone are claims. Verification without --run does not establish i
 completeness. NOT_VERIFIED exports remain views, not proof. Old historical evidence is
 not retroactively upgraded by these changes. Local WSL testing is not GitHub Actions;
 merge requires successful Windows and Ubuntu CI on the actual pushed commit.
+
+
+## Incremental follow-up to the post-push review
+
+A second, focused independent review covered the follow-up to commit c76af33;
+it did not repeat the completed implementation audit. The three new findings were
+reproduced on that commit and fixed incrementally:
+
+- Q5 now requires accepted scenario adequacy for the evidenced current or explicitly
+  editorial-equivalent requirement revision. Approval for an older normative revision
+  cannot qualify a newer merely asserted link. Full-model positive/negative refinement
+  tests and the existing editorial-equivalence positive remain passing.
+- Cycle detection records completed nodes separately from the active path for each
+  relation. Shared DAGs do not expand exponentially; cycles still produce DE-04 and
+  block the gate. A separate cycle oracle agreed on 4,100 graphs; an independent
+  10,000-node overlapping DAG check completed in about 0.047 seconds on the audit host.
+  Cycle diagnostics may be consolidated rather than repeated for every reachable root.
+- VERIFIED claims compare with derived verification; DONE and other effective-status
+  claims compare with effective status. Both export formats use the corrected table.
+
+Seven permanent regression tests and five bounded mutants were added. The original
+three regressions fail on c76af33 (including the bounded DAG watchdog). The focused
+independent auditor ran eight checks and issued GO with no remaining blocker. The
+original runtime manifest above identifies the earlier audited baseline, not these
+subsequent incremental changes. The final catalog contains 29 specs and 704 IDs.
