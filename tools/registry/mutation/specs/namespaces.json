@@ -1,0 +1,24 @@
+{
+  "tests": ["tests.test_aliases"],
+  "mutants": [
+    {"id": "N01", "file": "clxreg/namespaces.py", "old": "if obj.get(\"schema\") != SCHEMA:", "new": "if False:", "note": "schema not checked"},
+    {"id": "N02", "file": "clxreg/namespaces.py", "old": "for k in sorted(set(obj) - {\"schema\", \"namespaces\"}):", "new": "for k in []:", "note": "unknown top-level field"},
+    {"id": "N03", "file": "clxreg/namespaces.py", "old": "if counts[key] > 1:", "new": "if counts[key] > 2:", "note": "duplicate namespace key tolerated"},
+    {"id": "N04", "file": "clxreg/namespaces.py", "old": "if re.fullmatch(pat, \"\") is not None:", "new": "if False:", "note": "pattern may match the empty string"},
+    {"id": "N05", "file": "clxreg/namespaces.py", "old": "if not (_s(pat) and pat):", "new": "if False:", "note": "pattern type not checked"},
+    {"id": "N06", "file": "clxreg/namespaces.py", "old": "if \"status\" in n and n[\"status\"] not in STATUSES:", "new": "if False:", "note": "status enum"},
+    {"id": "N07", "file": "clxreg/namespaces.py", "old": "if \"maps_to\" in n and n[\"maps_to\"] not in MAPS_TO:", "new": "if False:", "note": "maps_to enum"},
+    {"id": "N08", "file": "clxreg/namespaces.py", "old": "elif x not in keys:", "new": "elif False:", "note": "distinct_from names an unknown namespace"},
+    {"id": "N09", "file": "clxreg/namespaces.py", "old": "if x == key:", "new": "if False:", "note": "namespace distinct from itself"},
+    {"id": "N10", "file": "clxreg/namespaces.py", "old": "elif sup not in keys:", "new": "elif False:", "note": "supersedes an unknown namespace"},
+    {"id": "N11", "file": "clxreg/namespaces.py", "old": "elif sup == key:", "new": "elif False:", "note": "namespace supersedes itself"},
+    {"id": "N12", "file": "clxreg/namespaces.py", "old": "elif source_catalog is not None:", "new": "elif False:", "note": "authority not resolved against the source catalog"},
+    {"id": "N13", "file": "clxreg/namespaces.py", "old": "_REF_REQUIRED <= set(a) <= _REF_FIELDS and ", "new": "_REF_REQUIRED <= set(a) and ", "note": "unknown authority fields"},
+    {"id": "N14", "file": "clxreg/namespaces.py", "old": "all(_s(a[k]) and a[k] for k in a)", "new": "True", "note": "authority values not checked"},
+    {"id": "N15", "file": "clxreg/namespaces.py", "old": "if isinstance(a, dict) and \"quote\" in a and", "new": "if isinstance(a, dict) and False and", "note": "authority quotes never checked"},
+    {"id": "N16", "file": "clxreg/namespaces.py", "old": "_KEY = re.compile(r\"[a-z0-9][a-z0-9.-]*\")", "new": "_KEY = re.compile(r\"[A-Za-z0-9][A-Za-z0-9.-]*\")", "note": "upper-case keys"},
+    {"id": "N17", "file": "clxreg/namespaces.py", "old": "if \"meaning\" in n and not (_s(n[\"meaning\"]) and n[\"meaning\"]):", "new": "if False:", "note": "empty meaning"},
+    {"id": "N18", "file": "clxreg/namespaces.py", "old": "if \"note\" in n and not _s(n[\"note\"]):", "new": "if False:", "note": "note type"},
+    {"id": "N19", "file": "clxreg/namespaces.py", "old": "if not (isinstance(df, list) and all(_s(x) for x in df)):", "new": "if False:", "note": "distinct_from type"}
+  ]
+}

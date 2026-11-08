@@ -1,0 +1,13 @@
+{
+  "rules": [
+    {
+      "basis": "ratified MICROMAP rev. 2, section Naming: Written without the `P1.2-` prefix, \"M1\" is ambiguous; the P1.2 steps have no relation to the superseded M0–M6 roadmap of `my-cpu-router`",
+      "meanings": [
+        "a sub-step of P1.2 written without the prefix",
+        "a step of the superseded M0–M6 roadmap of my-cpu-router"
+      ],
+      "namespace": "bare-step-label"
+    }
+  ],
+  "schema": "clx.ambiguity/1"
+}

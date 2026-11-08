@@ -1,0 +1,22 @@
+{
+  "tests": ["tests.test_literals"],
+  "mutants": [
+    {"id": "LT01", "file": "clxreg/literals.py", "old": "[0-9a-f]{7,64}", "new": "[0-9a-f]{7,40}", "note": "content hashes (64) not recorded"},
+    {"id": "LT02", "file": "clxreg/literals.py", "old": "(?=[0-9a-f]*[0-9])", "new": "", "note": "pure-letter words read as hashes"},
+    {"id": "LT03", "file": "clxreg/literals.py", "old": "(?=[0-9a-f]*[a-f])", "new": "", "note": "pure-digit numbers read as hashes"},
+    {"id": "LT04", "file": "clxreg/literals.py", "old": "re.compile(r\"[0-9]{7}\")", "new": "re.compile(r\"[0-9]{7,}\")", "note": "any long number read as a hash"},
+    {"id": "LT05", "file": "clxreg/literals.py", "old": "#[0-9]{1,5}", "new": "#[0-9]{1,3}", "note": "long PR numbers lost"},
+    {"id": "LT06", "file": "clxreg/literals.py", "old": "run [0-9]{8,}", "new": "run [0-9]{7,}", "note": "short numbers read as CI runs"},
+    {"id": "LT07", "file": "clxreg/literals.py", "old": "|sdoc|ods)", "new": "|sdoc)", "note": "ODS file:line lost"},
+    {"id": "LT08", "file": "clxreg/literals.py", "old": "Tests?(?:", "new": "Tests(?:", "note": "singular test class names lost"},
+    {"id": "LT09", "file": "clxreg/literals.py", "old": "PASS(?:ED)?", "new": "PASS", "note": "PASSED lost"},
+    {"id": "LT10", "file": "clxreg/literals.py", "old": "FAIL(?:ED)?", "new": "FAIL", "note": "FAILED lost"},
+    {"id": "LT11", "file": "clxreg/literals.py", "old": "(?:-[0-9]+)?\"))", "new": "\"))", "note": "line ranges in file references cut"},
+    {"id": "LT12", "file": "clxreg/literals.py", "old": "|test_[a-z0-9_]+", "new": "", "note": "test_ function names lost"},
+    {"id": "LT13", "file": "clxreg/literals.py", "old": "found.setdefault((m.start(), m.end(), cls), set()).add(name)", "new": "found[(m.start(), m.end(), cls)] = {name}", "note": "second pattern of a span overwrites the first"},
+    {"id": "LT14", "file": "clxreg/literals.py", "old": "(?:PR )?#", "new": "#", "note": "PR prefix lost from the literal"},
+    {"id": "LT15", "file": "clxreg/literals.py", "old": "(?:CI )?run ", "new": "run ", "note": "CI prefix lost from the literal"},
+    {"id": "LT16", "file": "clxreg/literals.py", "old": "\"NOT RUN\")", "new": "\"NOT-RUN\")", "note": "NOT RUN state not recorded"},
+    {"id": "LT17", "file": "clxreg/literals.py", "old": "\"SUPERSEDED\", \"WITHDRAWN\", ", "new": "", "note": "two lifecycle states not recorded"}
+  ]
+}

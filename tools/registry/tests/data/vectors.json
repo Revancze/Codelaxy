@@ -1,0 +1,65 @@
+{
+ "_comment": "Generated with the plain stdlib recipe json.dumps(sort_keys=True, separators=(',',':'), ensure_ascii=False) + sha256 of UTF-8; read by the Python implementation and by the C# cross-check.",
+ "vectors": [
+  {
+   "name": "empty-object",
+   "input": "{}",
+   "expect_compact": "{}",
+   "expect_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  {
+   "name": "empty-array",
+   "input": "[]",
+   "expect_compact": "[]",
+   "expect_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "name": "scalars",
+   "input": "{\"b\": true, \"a\": null, \"c\": false, \"n\": 0, \"m\": -7}",
+   "expect_compact": "{\"a\":null,\"b\":true,\"c\":false,\"m\":-7,\"n\":0}",
+   "expect_sha256": "6ec6749bebd2f37ead88dcef75205133e7777ff04066aabcde326947641bf71e"
+  },
+  {
+   "name": "key-order",
+   "input": "{\"b\": 1, \"a\": 2, \"B\": 3, \"aa\": 4, \"\": 5}",
+   "expect_compact": "{\"\":5,\"B\":3,\"a\":2,\"aa\":4,\"b\":1}",
+   "expect_sha256": "8377e487da74c9b86ca265a04aa7bd0e1b02eb36f14bb991692a4260a1c98c9f"
+  },
+  {
+   "name": "key-order-astral-vs-bmp",
+   "input": "{\"\\ud83d\\ude00\": 1, \"\\uffff\": 2, \"z\": 3}",
+   "expect_compact": "{\"z\":3,\"￿\":2,\"😀\":1}",
+   "expect_sha256": "ee0448f401397e05098248a25cb0c638fdf6002cdf69edda02986c02f2c6ed15"
+  },
+  {
+   "name": "nested",
+   "input": "{\"x\": [3, 1, {\"b\": [], \"a\": {}}], \"w\": {\"z\": [true, null]}}",
+   "expect_compact": "{\"w\":{\"z\":[true,null]},\"x\":[3,1,{\"a\":{},\"b\":[]}]}",
+   "expect_sha256": "dd82c5395de7b1f2179b0a0324f7a660b227f6c5f58e86d1d6c9a60edf7033d0"
+  },
+  {
+   "name": "unicode-not-escaped",
+   "input": "{\"dash\": \"RT1\\u2013RT3\", \"cz\": \"ř\\u011bš\\u010d\", \"emoji\": \"\\ud83d\\ude00\"}",
+   "expect_compact": "{\"cz\":\"řěšč\",\"dash\":\"RT1–RT3\",\"emoji\":\"😀\"}",
+   "expect_sha256": "d45cc4aa4185fbd62e2fb70d12cce61068277afb9ac9a4c5cf034ef49734efbd"
+  },
+  {
+   "name": "escapes",
+   "input": "{\"q\": \"a\\\"b\", \"bs\": \"a\\\\b\", \"nl\": \"a\\nb\", \"tab\": \"a\\tb\", \"cr\": \"a\\rb\", \"bf\": \"\\b\\f\", \"c1f\": \"\\u001f\", \"c00\": \"\\u0000\", \"del\": \"\\u007f\", \"ls\": \"\\u2028\"}",
+   "expect_compact": "{\"bf\":\"\\b\\f\",\"bs\":\"a\\\\b\",\"c00\":\"\\u0000\",\"c1f\":\"\\u001f\",\"cr\":\"a\\rb\",\"del\":\"\",\"ls\":\" \",\"nl\":\"a\\nb\",\"q\":\"a\\\"b\",\"tab\":\"a\\tb\"}",
+   "expect_sha256": "3c1a982a12760f510edaaae19c9d41e20d46a4d9460da182cfb0b9fd1a9ec993"
+  },
+  {
+   "name": "big-int",
+   "input": "{\"n\": 9007199254740993}",
+   "expect_compact": "{\"n\":9007199254740993}",
+   "expect_sha256": "4ac8309cc76123ef6c5325ef925fc873e9b5856ec4f844ef1462f9303960378a"
+  },
+  {
+   "name": "record-like",
+   "input": "{\"statement\": \"Item RT1 of the range RT1\\u2013RT3 must be killed (gate M3d).\", \"acceptance\": [{\"id\": \"AC-1\", \"kind\": \"evidence\", \"resolved\": false}], \"applies_to\": {\"platforms\": [], \"notes\": \"x\"}}",
+   "expect_compact": "{\"acceptance\":[{\"id\":\"AC-1\",\"kind\":\"evidence\",\"resolved\":false}],\"applies_to\":{\"notes\":\"x\",\"platforms\":[]},\"statement\":\"Item RT1 of the range RT1–RT3 must be killed (gate M3d).\"}",
+   "expect_sha256": "ad8ffa273dcffe4773d7925c757502fa0b237a4250b45f41f5d4c4de437d8bf6"
+  }
+ ]
+}

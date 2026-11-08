@@ -1,0 +1,49 @@
+{
+  "tests": [
+    "tests.test_export_publication"
+  ],
+  "mutants": [
+    {
+      "id": "OA01",
+      "file": "clxreg/export.py",
+      "old": "    _publish_exclusive(path, data)",
+      "new": "    pass",
+      "note": "publication silently omitted"
+    },
+    {
+      "id": "OA02",
+      "file": "clxreg/export.py",
+      "old": "        os.link(temporary, path)",
+      "new": "        os.replace(temporary, path)",
+      "note": "concurrent output may be overwritten"
+    },
+    {
+      "id": "OA03",
+      "file": "clxreg/export.py",
+      "old": "            os.fsync(fh.fileno())",
+      "new": "            pass",
+      "note": "flush failure ignored"
+    },
+    {
+      "id": "OA04",
+      "file": "clxreg/export.py",
+      "old": "        os.unlink(temporary)",
+      "new": "        pass",
+      "note": "temporary files left behind after failure"
+    },
+    {
+      "id": "OA05",
+      "file": "clxreg/export.py",
+      "old": "canon.dumps_compact(import_ledger['problems'])",
+      "new": "canon.dumps_compact([])",
+      "note": "full defect reasons discarded"
+    },
+    {
+      "id": "OA06",
+      "file": "clxreg/export.py",
+      "old": "if s['status'] != 'PROCESSED'])]]",
+      "new": "if False])]]",
+      "note": "nonprocessed source details discarded"
+    }
+  ]
+}

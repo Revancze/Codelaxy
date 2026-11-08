@@ -1,0 +1,84 @@
+{
+  "tests": [
+    "tests.test_pilot"
+  ],
+  "mutants": [
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL09",
+      "new": "    if False: raise PilotError(",
+      "note": "a pilot without the trusted run is not refused",
+      "old": "    if run is None: raise PilotError("
+    },
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL10",
+      "new": "    if mapping is _UNSET: raise",
+      "note": "the ambiguity input can be silently left out",
+      "old": "    if ambiguity is _UNSET or mapping is _UNSET: raise"
+    },
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL11",
+      "new": "    if ambiguity is _UNSET: raise",
+      "note": "the mapping input can be silently left out",
+      "old": "    if ambiguity is _UNSET or mapping is _UNSET: raise"
+    },
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL12",
+      "new": "        pass",
+      "note": "the forged ledger is never compared with a rebuild",
+      "old": "        ledger.require_rebuild_match(ledger_obj,run,source_catalog,namespace_catalog,ambiguity,mapping,source_roots)"
+    },
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL13",
+      "new": "namespace_catalog,None,mapping,source_roots)",
+      "note": "the trusted ambiguity catalog is ignored by the rebuild",
+      "old": "namespace_catalog,ambiguity,mapping,source_roots)"
+    },
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL14",
+      "new": "namespace_catalog,ambiguity,None,source_roots)",
+      "note": "the trusted mapping is ignored by the rebuild",
+      "old": "namespace_catalog,ambiguity,mapping,source_roots)"
+    },
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL15",
+      "new": "    except KeyError as exc:",
+      "note": "a proven mismatch escapes as a non-pilot error",
+      "old": "    except ledger.RebuildMismatch as exc:"
+    },
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL16",
+      "new": "    except KeyError as exc:",
+      "note": "unusable inputs escape as a non-pilot error",
+      "old": "    except (ledger.LedgerInputError,sources.SourceError) as exc:"
+    },
+    {
+      "file": "clxreg/ledger.py",
+      "id": "PL17",
+      "new": "    return",
+      "note": "a proven difference from the rebuild is ignored",
+      "old": "    raise RebuildMismatch(findings[0].message)"
+    },
+    {
+      "file": "clxreg/ledger.py",
+      "id": "PL18",
+      "new": "        if False:",
+      "note": "an unavailable source is reported as a forgery",
+      "old": "        if claimed.get(ref) == \"PROCESSED\":"
+    },
+    {
+      "file": "clxreg/pilot.py",
+      "id": "PL19",
+      "new": "        pass",
+      "note": "a literal RT2 no longer refuses the pilot",
+      "old": "        raise PilotError('RT2 literal occurrence requires owner review; pilot assumption changed')"
+    }
+  ]
+}

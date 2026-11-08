@@ -1,0 +1,232 @@
+{
+  "tests": [
+    "tests.test_export",
+    "tests.test_cli"
+  ],
+  "mutants": [
+    {
+      "id": "EX01",
+      "file": "clxreg/export.py",
+      "old": "        raise FileExistsError(f'refusing to overwrite {path}')",
+      "new": "        return {'findings': []}",
+      "note": "an existing output is silently accepted instead of refused"
+    },
+    {
+      "id": "EX02",
+      "file": "clxreg/export.py",
+      "old": "    if not isinstance(registry_commit, str) or not re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', registry_commit):",
+      "new": "    if False:",
+      "note": "the export labels a partial or missing registry commit as provenance"
+    },
+    {
+      "id": "EX03",
+      "file": "clxreg/export.py",
+      "old": "    return sorted(records, key=lambda r: r['id'])",
+      "new": "    return records",
+      "note": "export bytes depend on input record ordering"
+    },
+    {
+      "id": "EX04",
+      "file": "clxreg/export.py",
+      "old": "            summary.append([*key, str(count)])",
+      "new": "            summary.append([*key, '0'])",
+      "note": "coverage summary hides imported occurrences"
+    },
+    {
+      "id": "EX05",
+      "file": "clxreg/export.py",
+      "old": "        if len(found) != 1:",
+      "new": "        if False:",
+      "note": "missing or ambiguous ODS row identifiers are not reported"
+    },
+    {
+      "id": "EX06",
+      "file": "clxreg/export.py",
+      "old": "    if not isinstance(model, dict) or model.get('schema') != 'model/1':",
+      "new": "    if not isinstance(model, dict):",
+      "note": "unknown model versions are accepted by the export"
+    },
+    {
+      "id": "CL01",
+      "file": "clxreg/cli.py",
+      "old": "    if output == source or source in output.parents:",
+      "new": "    if False:",
+      "note": "generated outputs may be written inside the input registry"
+    },
+    {
+      "id": "CL02",
+      "file": "clxreg/cli.py",
+      "old": "    model['external_findings'] = external",
+      "new": "    model['external_findings'] = external\n    model['findings'] = model['findings'] + external",
+      "note": "external reports become authoritative validator findings"
+    },
+    {
+      "id": "CL03",
+      "file": "clxreg/cli.py",
+      "old": "            return status if status else 0 if outcome['passed'] else 2",
+      "new": "            return status if status else 0",
+      "note": "an unmet gate returns successful exit status"
+    },
+    {
+      "id": "CL04",
+      "file": "clxreg/cli.py",
+      "old": "        raise export.ExportError('; '.join(f.line() for f in findings))",
+      "new": "        raise sources.SourceError('; '.join(f.line() for f in findings))",
+      "note": "malformed JSON is misclassified as a missing source"
+    },
+    {
+      "id": "CL05",
+      "file": "clxreg/cli.py",
+      "old": "           or (f.get('code') == 'EM-04' and f.get('message', '').startswith('artifact could not be located and hash-verified:'))\n",
+      "new": "",
+      "note": "an unreadable or tampered evidence artifact loses the source-failure exit code"
+    },
+    {
+      "id": "CL06",
+      "file": "clxreg/cli.py",
+      "old": "        context['artifact_root'] = args.artifact_root",
+      "new": "        pass",
+      "note": "explicit artifact proof root is not forwarded to the validator"
+    },
+    {
+      "id": "EX07",
+      "file": "clxreg/export.py",
+      "old": "        return 'NOT_VERIFIED'",
+      "new": "        return 'REBUILD_MATCHED'",
+      "note": "an unverified ledger is labelled as proven"
+    },
+    {
+      "id": "EX08",
+      "file": "clxreg/export.py",
+      "old": "        ledger.require_rebuild_match(import_ledger, inputs['run'], inputs['catalog'], inputs['namespaces'], inputs['ambiguity'], inputs['mapping'], inputs['roots'])",
+      "new": "        pass",
+      "note": "trusted inputs are accepted but the rebuild never runs"
+    },
+    {
+      "id": "EX09",
+      "file": "clxreg/export.py",
+      "old": "inputs['namespaces'], inputs['ambiguity'], inputs['mapping'], inputs['roots'])",
+      "new": "inputs['namespaces'], None, inputs['mapping'], inputs['roots'])",
+      "note": "the trusted ambiguity catalog is ignored by the rebuild"
+    },
+    {
+      "id": "EX10",
+      "file": "clxreg/export.py",
+      "old": "    if not isinstance(inputs, dict) or set(inputs) != set(_LEDGER_INPUTS):",
+      "new": "    if not isinstance(inputs, dict):",
+      "note": "an omitted ambiguity or mapping input is not refused"
+    },
+    {
+      "id": "EX11",
+      "file": "clxreg/export.py",
+      "old": "    if any(inputs[k] is None for k in _LEDGER_INPUTS_REQUIRED):",
+      "new": "    if False:",
+      "note": "a verification without a run is not refused as unusable input"
+    },
+    {
+      "id": "EX12",
+      "file": "clxreg/export.py",
+      "old": "    except ledger.LedgerInputError as exc:",
+      "new": "    except KeyError as exc:",
+      "note": "invalid trusted inputs escape as a non-export error"
+    },
+    {
+      "id": "EX13",
+      "file": "clxreg/export.py",
+      "old": "    if ledger_inputs is not None and import_ledger is None:",
+      "new": "    if False:",
+      "note": "verification inputs without a ledger are silently ignored"
+    },
+    {
+      "id": "EX14",
+      "file": "clxreg/export.py",
+      "old": "'true' if import_ledger['complete'] else 'false'",
+      "new": "'true'",
+      "note": "an incomplete ledger is exported as complete"
+    },
+    {
+      "id": "EX15",
+      "file": "clxreg/export.py",
+      "old": "str(len(import_ledger['problems']))",
+      "new": "'0'",
+      "note": "ledger problems are hidden from the export"
+    },
+    {
+      "id": "EX16",
+      "file": "clxreg/export.py",
+      "old": "for s in import_ledger['sources'] if s['status'] != 'PROCESSED')",
+      "new": "for s in import_ledger['sources'] if False)",
+      "note": "non-processed sources are hidden from the export"
+    },
+    {
+      "id": "EX17",
+      "file": "clxreg/export.py",
+      "old": "    if verification == 'REBUILD_MATCHED':",
+      "new": "    if True:",
+      "note": "digests self-asserted by an unverified ledger are shown as proven inputs"
+    },
+    {
+      "id": "EX18",
+      "file": "clxreg/export.py",
+      "old": "        verification = _verify_ledger(import_ledger, ledger_inputs)",
+      "new": "        verification = _verify_ledger(import_ledger, None)",
+      "note": "verification inputs do not reach the rebuild"
+    },
+    {
+      "id": "EX19",
+      "file": "clxreg/export.py",
+      "old": "ods_path=ods_path, ledger_inputs=ledger_inputs)",
+      "new": "ods_path=ods_path)",
+      "note": "write() drops the verification inputs and exports an unproven ledger"
+    },
+    {
+      "id": "EX20",
+      "file": "clxreg/export.py",
+      "old": "dict(sheet_tables['REGISTRY-METADATA'])['import_ledger_verification']}",
+      "new": "'REBUILD_MATCHED'}",
+      "note": "write() reports a verification that did not happen"
+    },
+    {
+      "id": "CL07",
+      "file": "clxreg/cli.py",
+      "old": "                                  ledger_inputs=_ledger_inputs(args))",
+      "new": "                                  ledger_inputs=None)",
+      "note": "the CLI exports a forged ledger although trusted inputs were given"
+    },
+    {
+      "id": "CL08",
+      "file": "clxreg/cli.py",
+      "old": "        print(f'registry: ledger refused, no output written: {e}', file=sys.stderr)\n        return 4",
+      "new": "        print(f'registry: ledger refused, no output written: {e}', file=sys.stderr)\n        return 1",
+      "note": "a proven mismatch loses the tampered-source exit code"
+    },
+    {
+      "id": "CL09",
+      "file": "clxreg/cli.py",
+      "old": "        return None if path == 'NONE' else _load(path, name)",
+      "new": "        return _load(path, name)",
+      "note": "the explicit NONE declaration is treated as a file path"
+    },
+    {
+      "id": "CL10",
+      "file": "clxreg/cli.py",
+      "old": "    if not (all(named) and args.catalog and args.namespaces):",
+      "new": "    if not (all(named) and args.namespaces):",
+      "note": "verification proceeds without the trusted catalog"
+    },
+    {
+      "id": "CL11",
+      "file": "clxreg/cli.py",
+      "old": "    if not (all(named) and args.catalog and args.namespaces):",
+      "new": "    if not (args.ledger_run and args.catalog and args.namespaces):",
+      "note": "ambiguity or mapping can be silently left out of the verification"
+    },
+    {
+      "id": "CL12",
+      "file": "clxreg/cli.py",
+      "old": "'roots': sources.parse_roots(args.source_root)}",
+      "new": "'roots': {}}",
+      "note": "the verification does not use the given source roots"
+    }
+  ]
+}

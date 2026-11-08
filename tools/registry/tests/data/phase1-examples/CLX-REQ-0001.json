@@ -1,0 +1,115 @@
+{
+  "acceptance": [
+    {
+      "id": "AC-1",
+      "kind": "evidence",
+      "resolved": false,
+      "text": "RT1 is 'killed' (the meaning of 'killed' for this item is not defined in any located source)."
+    }
+  ],
+  "aliases": [
+    {
+      "namespace": "micromap-resolver-gaps",
+      "source": {
+        "anchor": "Naming",
+        "quote": "resolver test gaps (renamed from \"R1–R3\" of revision 1, proposal MO4)",
+        "source": "micromap-r2",
+        "version": "ratified-bytes"
+      },
+      "status": "ACTIVE",
+      "value": "RT1"
+    },
+    {
+      "namespace": "plan-resolver-gaps-v1",
+      "note": "Renamed to RT1 by MO4. The mapping R1->RT1 is positional; the sources rename the range as a whole.",
+      "source": {
+        "anchor": "tabulka nálezů, řádek T3 + R1–R3",
+        "quote": "T3 + R1–R3 resolver: metriky a mezery v testech",
+        "source": "plan-2026-10-12",
+        "version": "v1"
+      },
+      "status": "HISTORICAL",
+      "value": "R1"
+    },
+    {
+      "namespace": "audit-c-runner-mutants",
+      "note": "Different object: mutant of the runner stdin write path. No located source binds it to RT1.",
+      "source": {
+        "anchor": "2. Vlastní běhy / Mutanty",
+        "quote": "R1 `InputFailure` ignorováno",
+        "source": "audit-c-pr17",
+        "version": "v1"
+      },
+      "status": "REJECTED",
+      "value": "R1"
+    }
+  ],
+  "applies_to": {
+    "notes": "platforms not stated by the source",
+    "platforms": []
+  },
+  "asserted_status": [
+    {
+      "as_of": "ab71863 (evidence snapshot 2026-10-24)",
+      "source": {
+        "anchor": "Findings tracked by this plan, joint row 'T3, RT1–RT3'",
+        "quote": "RT1–RT3 not re-verified",
+        "source": "micromap-r2",
+        "version": "ratified-bytes"
+      },
+      "status": "OPEN"
+    }
+  ],
+  "assigned_to": {
+    "basis": {
+      "anchor": "Steps table, row P1.2-M3d; Gates M3d",
+      "fragment": "RT1",
+      "quote": "security tests unchanged; RT1–RT3 killed",
+      "source": "micromap-r2",
+      "version": "ratified-bytes"
+    },
+    "milestone": "CLX-MIL-0001"
+  },
+  "definition": "UNRESOLVED",
+  "definition_note": "The sources name this item only as 'RT1' inside the range 'RT1–RT3' ('resolver test gaps'). No located document defines what it is, how it is tested, or what 'killed' means for it (INVENTORY 7). The definition is not inferred here.",
+  "id": "CLX-REQ-0001",
+  "kind": "gate-condition",
+  "lifecycle": "ACTIVE",
+  "open_questions": [
+    {
+      "decision": "CLX-DEC-0003",
+      "text": "What is RT1 (object, expected observation, meaning of 'killed')?"
+    }
+  ],
+  "origin": {
+    "anchor": "Steps table, row P1.2-M3d; Gates M3d",
+    "fragment": "RT1",
+    "quote": "security tests unchanged; RT1–RT3 killed",
+    "source": "micromap-r2",
+    "version": "ratified-bytes"
+  },
+  "persistence": "UNSPECIFIED",
+  "ratification": {
+    "source": {
+      "anchor": "Steps table, row P1.2-M3d; Gates M3d",
+      "fragment": "RT1",
+      "quote": "security tests unchanged; RT1–RT3 killed",
+      "source": "micromap-r2",
+      "version": "ratified-bytes"
+    },
+    "state": "RATIFIED"
+  },
+  "revision": 1,
+  "revisions": [
+    {
+      "change_class": "INITIAL",
+      "digest": "55e731f0c9d00844a7fa9d2a2773ca23b0164843bc3013033dee7261b6dc9bf7",
+      "n": 1
+    }
+  ],
+  "schema_version": 1,
+  "statement": "Item 'RT1' of the range 'RT1–RT3' must be killed (gate M3d).",
+  "statement_origin": "derived-from-range",
+  "title": "RT1 (resolver test gap) must be killed (gate M3d)",
+  "type": "REQ"
+}

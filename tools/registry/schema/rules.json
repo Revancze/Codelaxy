@@ -1,0 +1,210 @@
+{
+  "rules": [
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-00",
+      "handler": "validate"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-01",
+      "handler": "store.load"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-01b",
+      "handler": "_structure"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-02",
+      "handler": "_structure"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-03",
+      "handler": "_references"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-04",
+      "handler": "_references"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-05",
+      "handler": "aliases.check_aliases"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-06",
+      "handler": "store.check_against_base"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-07",
+      "handler": "_history"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-08",
+      "handler": "_history"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-08b",
+      "handler": "_history"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-09",
+      "handler": "evidence.validate_evd"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-10",
+      "handler": "_bindings"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-11",
+      "handler": "_structure"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-12",
+      "handler": "_structure"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-13",
+      "handler": "_sources"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-14",
+      "handler": "_sources"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-15",
+      "handler": "_bindings"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-16",
+      "handler": "_structure"
+    },
+    {
+      "class": "DATA_ERROR",
+      "code": "DE-17",
+      "handler": "_sources"
+    },
+    {
+      "class": "EVIDENCE_MISSING",
+      "code": "EM-01",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "EVIDENCE_MISSING",
+      "code": "EM-02",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "EVIDENCE_MISSING",
+      "code": "EM-03",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "EVIDENCE_MISSING",
+      "code": "EM-04",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "EVIDENCE_MISSING",
+      "code": "EM-05",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "EVIDENCE_MISSING",
+      "code": "EM-06",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "EVIDENCE_MISSING",
+      "code": "EM-07",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "EVIDENCE_MISSING",
+      "code": "EM-08",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "EVIDENCE_MISSING",
+      "code": "EM-09",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "EVIDENCE_MISSING",
+      "code": "EM-10",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "EVIDENCE_MISSING",
+      "code": "EM-11",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "EVIDENCE_MISSING",
+      "code": "EM-12",
+      "handler": "evidence.derive"
+    },
+    {
+      "class": "ADVISORY",
+      "code": "AD-01",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "ADVISORY",
+      "code": "AD-02",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "ADVISORY",
+      "code": "AD-03",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "ADVISORY",
+      "code": "AD-04",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "ADVISORY",
+      "code": "AD-05",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "ADVISORY",
+      "code": "AD-06",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "ADVISORY",
+      "code": "AD-07",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "ADVISORY",
+      "code": "AD-08",
+      "handler": "_diagnostics"
+    },
+    {
+      "class": "ADVISORY",
+      "code": "AD-09",
+      "handler": "_diagnostics"
+    }
+  ],
+  "schema": "clx.rules/1"
+}

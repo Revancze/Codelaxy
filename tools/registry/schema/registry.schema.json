@@ -1,0 +1,1356 @@
+{
+  "$comment": "Python stdlib validator adds cross-record, pinned-byte, artifact and Git-baseline checks. DEC is not a stored entity.",
+  "$defs": {
+    "acceptance": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "decision",
+            "evidence",
+            "requirement"
+          ]
+        },
+        "requires": {
+          "$ref": "#/$defs/requires"
+        },
+        "resolved": {
+          "type": "boolean"
+        },
+        "text": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "resolved",
+        "text"
+      ],
+      "type": "object"
+    },
+    "aliases": {
+      "additionalProperties": false,
+      "properties": {
+        "ambiguous_with": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "namespace": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "note": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "range_source": {
+          "$ref": "#/$defs/source_ref"
+        },
+        "source": {
+          "$ref": "#/$defs/source_ref"
+        },
+        "status": {
+          "enum": [
+            "ACTIVE",
+            "AMBIGUOUS",
+            "HISTORICAL",
+            "IMPLIED_BY_RANGE",
+            "REJECTED"
+          ]
+        },
+        "value": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "namespace",
+        "source",
+        "status",
+        "value"
+      ],
+      "type": "object"
+    },
+    "applies_to": {
+      "additionalProperties": false,
+      "properties": {
+        "notes": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "platforms": {
+          "items": {
+            "enum": [
+              "any",
+              "linux",
+              "macos",
+              "windows"
+            ]
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "platforms"
+      ],
+      "type": "object"
+    },
+    "artifacts": {
+      "additionalProperties": false,
+      "properties": {
+        "locator": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "role": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "locator",
+        "role",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "asserted_status": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/source_ref"
+        },
+        "status": {
+          "enum": [
+            "BLOCKED",
+            "DONE",
+            "OPEN",
+            "PARTIAL",
+            "PLANNED",
+            "UNKNOWN",
+            "UNVERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "required": [
+        "as_of",
+        "status"
+      ],
+      "type": "object"
+    },
+    "assigned_to": {
+      "additionalProperties": false,
+      "properties": {
+        "basis": {
+          "oneOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/source_ref"
+            }
+          ]
+        },
+        "milestone": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "source_kind": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "basis",
+        "milestone"
+      ],
+      "type": "object"
+    },
+    "blocked": {
+      "additionalProperties": false,
+      "properties": {
+        "by": {
+          "items": {
+            "oneOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/source_ref"
+              }
+            ]
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "note": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "since": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "by",
+        "note"
+      ],
+      "type": "object"
+    },
+    "conflicts_with": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "OPEN",
+            "RESOLVED"
+          ]
+        },
+        "target": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "target"
+      ],
+      "type": "object"
+    },
+    "counts": {
+      "additionalProperties": false,
+      "properties": {
+        "failed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "passed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "skipped": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "failed",
+        "passed",
+        "skipped",
+        "total"
+      ],
+      "type": "object"
+    },
+    "depends_on": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/source_ref"
+        },
+        "source_kind": {
+          "enum": [
+            "documented",
+            "inferred"
+          ]
+        },
+        "target": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_kind",
+        "target"
+      ],
+      "type": "object"
+    },
+    "evidences": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "requirement": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "requirement_revision": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "acceptance",
+        "requirement",
+        "requirement_revision"
+      ],
+      "type": "object"
+    },
+    "executor": {
+      "additionalProperties": false,
+      "properties": {
+        "independence": {
+          "enum": [
+            "author",
+            "independent",
+            "owner"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "agent",
+            "ci",
+            "human"
+          ]
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "session": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "independence",
+        "kind",
+        "name"
+      ],
+      "type": "object"
+    },
+    "finding": {
+      "additionalProperties": false,
+      "properties": {
+        "class": {
+          "enum": [
+            "DEBT",
+            "DEFECT",
+            "GAP"
+          ]
+        },
+        "proven": {
+          "type": "boolean"
+        },
+        "severity": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "class",
+        "proven"
+      ],
+      "type": "object"
+    },
+    "implementation": {
+      "additionalProperties": false,
+      "properties": {
+        "commit": {
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "path": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "test": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "commit",
+        "path"
+      ],
+      "type": "object"
+    },
+    "mutant": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline_required": {
+          "type": "boolean"
+        },
+        "description": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "target": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "baseline_required",
+        "description",
+        "target"
+      ],
+      "type": "object"
+    },
+    "observations": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "ABSENT",
+            "FAIL",
+            "PASS",
+            "SKIP",
+            "UNVERIFIED"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "outcome"
+      ],
+      "type": "object"
+    },
+    "open_questions": {
+      "additionalProperties": false,
+      "properties": {
+        "decision": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "type": "object"
+    },
+    "platform": {
+      "additionalProperties": false,
+      "properties": {
+        "ci": {
+          "type": "boolean"
+        },
+        "environment": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "os": {
+          "enum": [
+            "linux",
+            "macos",
+            "windows"
+          ]
+        },
+        "os_version": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "shell": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "tools": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "os"
+      ],
+      "type": "object"
+    },
+    "points": {
+      "additionalProperties": false,
+      "properties": {
+        "basis": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "holds": {
+          "type": "boolean"
+        },
+        "n": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "basis",
+        "holds",
+        "n",
+        "name"
+      ],
+      "type": "object"
+    },
+    "provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "assessed": {
+          "type": "boolean"
+        },
+        "points": {
+          "items": {
+            "$ref": "#/$defs/points"
+          },
+          "type": "array"
+        },
+        "proven": {
+          "type": "boolean"
+        },
+        "unmet": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "assessed"
+      ],
+      "type": "object"
+    },
+    "ratification": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/source_ref"
+        },
+        "state": {
+          "enum": [
+            "DRAFT",
+            "HISTORICAL",
+            "PROPOSED",
+            "RATIFIED"
+          ]
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "type": "object"
+    },
+    "requires": {
+      "additionalProperties": false,
+      "properties": {
+        "decision_kind": {
+          "enum": [
+            "acceptance",
+            "disposition",
+            "planning",
+            "process",
+            "ratification",
+            "revision",
+            "waiver",
+            "withdrawal"
+          ]
+        },
+        "independence": {
+          "enum": [
+            "independent",
+            "none",
+            "owner"
+          ]
+        },
+        "platforms": {
+          "items": {
+            "enum": [
+              "any",
+              "linux",
+              "macos",
+              "windows"
+            ]
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "requirements": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "revisions": {
+      "additionalProperties": false,
+      "properties": {
+        "change_class": {
+          "enum": [
+            "EDITORIAL",
+            "INITIAL",
+            "REFINEMENT"
+          ]
+        },
+        "digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "n": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "change_class",
+        "digest",
+        "n"
+      ],
+      "type": "object"
+    },
+    "source": {
+      "additionalProperties": false,
+      "properties": {
+        "availability": {
+          "enum": [
+            "AVAILABLE",
+            "LOST",
+            "UNLOCATED"
+          ]
+        },
+        "claimed_by": {
+          "$ref": "#/$defs/source_ref"
+        },
+        "integrity": {
+          "enum": [
+            "HASH_CHECKED",
+            "NOT_CHECKED"
+          ]
+        }
+      },
+      "required": [
+        "availability",
+        "integrity"
+      ],
+      "type": "object"
+    },
+    "source_ref": {
+      "additionalProperties": false,
+      "properties": {
+        "anchor": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "fragment": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "quote": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "source": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "version"
+      ],
+      "type": "object"
+    },
+    "subject": {
+      "additionalProperties": false,
+      "properties": {
+        "branch": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "clean_tree": {
+          "type": "boolean"
+        },
+        "commit": {
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$",
+          "type": "string"
+        },
+        "fingerprint": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "repository": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "tree": {
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$",
+          "type": "string"
+        },
+        "tree_state": {
+          "enum": [
+            "CLEAN",
+            "DIRTY",
+            "UNKNOWN"
+          ]
+        }
+      },
+      "required": [
+        "commit",
+        "repository"
+      ],
+      "type": "object"
+    },
+    "supersedes": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "merge",
+            "replace",
+            "split"
+          ]
+        },
+        "target": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "target"
+      ],
+      "type": "object"
+    },
+    "verifies": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "adequacy": {
+          "enum": [
+            "ACCEPTED",
+            "ASSERTED"
+          ]
+        },
+        "basis": {
+          "oneOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/source_ref"
+            }
+          ]
+        },
+        "requirement": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "requirement_revision": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "acceptance",
+        "adequacy",
+        "requirement",
+        "requirement_revision"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance": {
+          "items": {
+            "$ref": "#/$defs/acceptance"
+          },
+          "type": "array"
+        },
+        "aliases": {
+          "items": {
+            "$ref": "#/$defs/aliases"
+          },
+          "type": "array"
+        },
+        "applies_to": {
+          "$ref": "#/$defs/applies_to"
+        },
+        "asserted_status": {
+          "items": {
+            "$ref": "#/$defs/asserted_status"
+          },
+          "type": "array"
+        },
+        "assigned_to": {
+          "$ref": "#/$defs/assigned_to"
+        },
+        "blocked": {
+          "$ref": "#/$defs/blocked"
+        },
+        "conflicts_with": {
+          "items": {
+            "$ref": "#/$defs/conflicts_with"
+          },
+          "type": "array"
+        },
+        "decision": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "definition": {
+          "enum": [
+            "DEFINED",
+            "UNRESOLVED"
+          ]
+        },
+        "definition_note": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "depends_on": {
+          "items": {
+            "$ref": "#/$defs/depends_on"
+          },
+          "type": "array"
+        },
+        "finding": {
+          "$ref": "#/$defs/finding"
+        },
+        "id": {
+          "pattern": "^CLX-REQ-[0-9]{4,}$",
+          "type": "string"
+        },
+        "inherits_evidence_from": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "kind": {
+          "enum": [
+            "constraint",
+            "exit-criterion",
+            "finding-closure",
+            "gate-condition",
+            "process-rule",
+            "test-obligation"
+          ]
+        },
+        "lifecycle": {
+          "enum": [
+            "ACTIVE",
+            "PROPOSED",
+            "SUPERSEDED",
+            "WITHDRAWN"
+          ]
+        },
+        "ms_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "note": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "open_questions": {
+          "items": {
+            "$ref": "#/$defs/open_questions"
+          },
+          "type": "array"
+        },
+        "origin": {
+          "$ref": "#/$defs/source_ref"
+        },
+        "persistence": {
+          "enum": [
+            "CONTINUOUS",
+            "ONCE",
+            "UNSPECIFIED"
+          ]
+        },
+        "ratification": {
+          "$ref": "#/$defs/ratification"
+        },
+        "refines": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "revision": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "revisions": {
+          "items": {
+            "$ref": "#/$defs/revisions"
+          },
+          "type": "array"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "statement": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "statement_origin": {
+          "enum": [
+            "authored",
+            "derived-from-range",
+            "quoted"
+          ]
+        },
+        "supersedes": {
+          "items": {
+            "$ref": "#/$defs/supersedes"
+          },
+          "type": "array"
+        },
+        "title": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "const": "REQ"
+        }
+      },
+      "required": [
+        "acceptance",
+        "applies_to",
+        "definition",
+        "id",
+        "kind",
+        "lifecycle",
+        "origin",
+        "persistence",
+        "ratification",
+        "revision",
+        "revisions",
+        "schema_version",
+        "statement",
+        "statement_origin",
+        "title",
+        "type"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "aliases": {
+          "items": {
+            "$ref": "#/$defs/aliases"
+          },
+          "type": "array"
+        },
+        "decision": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "definition": {
+          "enum": [
+            "DEFINED",
+            "UNRESOLVED"
+          ]
+        },
+        "definition_note": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "depends_on": {
+          "items": {
+            "$ref": "#/$defs/depends_on"
+          },
+          "type": "array"
+        },
+        "expected": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^CLX-SCN-[0-9]{4,}$",
+          "type": "string"
+        },
+        "implementation": {
+          "items": {
+            "$ref": "#/$defs/implementation"
+          },
+          "type": "array"
+        },
+        "independence_required": {
+          "enum": [
+            "independent",
+            "none",
+            "owner"
+          ]
+        },
+        "lifecycle": {
+          "enum": [
+            "ACTIVE",
+            "PROPOSED",
+            "SUPERSEDED",
+            "WITHDRAWN"
+          ]
+        },
+        "method": {
+          "enum": [
+            "change-record",
+            "ci-gate",
+            "inspection",
+            "measurement",
+            "mutation",
+            "probe",
+            "review",
+            "test"
+          ]
+        },
+        "mutant": {
+          "$ref": "#/$defs/mutant"
+        },
+        "note": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "observation_required": {
+          "type": "boolean"
+        },
+        "origin": {
+          "$ref": "#/$defs/source_ref"
+        },
+        "platforms_required": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "procedure": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "procedure_origin": {
+          "enum": [
+            "authored",
+            "paraphrase",
+            "quoted"
+          ]
+        },
+        "revision": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "revisions": {
+          "items": {
+            "$ref": "#/$defs/revisions"
+          },
+          "type": "array"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "scope_paths": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "supersedes": {
+          "items": {
+            "$ref": "#/$defs/supersedes"
+          },
+          "type": "array"
+        },
+        "title": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "const": "SCN"
+        },
+        "verifies": {
+          "items": {
+            "$ref": "#/$defs/verifies"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "definition",
+        "expected",
+        "id",
+        "lifecycle",
+        "method",
+        "platforms_required",
+        "procedure",
+        "procedure_origin",
+        "revision",
+        "revisions",
+        "schema_version",
+        "title",
+        "type",
+        "verifies"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "aliases": {
+          "items": {
+            "$ref": "#/$defs/aliases"
+          },
+          "type": "array"
+        },
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/artifacts"
+          },
+          "type": "array"
+        },
+        "baseline": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "counts": {
+          "$ref": "#/$defs/counts"
+        },
+        "decision": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "depends_on_revisions": {
+          "additionalProperties": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "type": "object"
+        },
+        "evidences": {
+          "items": {
+            "$ref": "#/$defs/evidences"
+          },
+          "type": "array"
+        },
+        "executor": {
+          "$ref": "#/$defs/executor"
+        },
+        "id": {
+          "pattern": "^CLX-EVD-[0-9]{4,}$",
+          "type": "string"
+        },
+        "lifecycle": {
+          "enum": [
+            "ACTIVE",
+            "PROPOSED",
+            "SUPERSEDED",
+            "WITHDRAWN"
+          ]
+        },
+        "note": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "observations": {
+          "items": {
+            "$ref": "#/$defs/observations"
+          },
+          "type": "array"
+        },
+        "origin": {
+          "$ref": "#/$defs/source_ref"
+        },
+        "performed_at": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "platform": {
+          "$ref": "#/$defs/platform"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        },
+        "result": {
+          "enum": [
+            "FAIL",
+            "INCONCLUSIVE",
+            "NOT_RUN",
+            "PASS"
+          ]
+        },
+        "scenario": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "scenario_revision": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "subject": {
+          "$ref": "#/$defs/subject"
+        },
+        "supersedes": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "title": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "const": "EVD"
+        }
+      },
+      "required": [
+        "evidences",
+        "executor",
+        "id",
+        "lifecycle",
+        "performed_at",
+        "platform",
+        "result",
+        "scenario",
+        "scenario_revision",
+        "schema_version",
+        "source",
+        "subject",
+        "title",
+        "type"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance": {
+          "items": {
+            "$ref": "#/$defs/acceptance"
+          },
+          "type": "array"
+        },
+        "aliases": {
+          "items": {
+            "$ref": "#/$defs/aliases"
+          },
+          "type": "array"
+        },
+        "decision": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^CLX-MIL-[0-9]{4,}$",
+          "type": "string"
+        },
+        "lifecycle": {
+          "enum": [
+            "ACTIVE",
+            "PROPOSED",
+            "SUPERSEDED",
+            "WITHDRAWN"
+          ]
+        },
+        "ms_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "note": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/source_ref"
+        },
+        "requirements": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "statement": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "const": "MIL"
+        }
+      },
+      "required": [
+        "id",
+        "schema_version",
+        "title",
+        "type"
+      ],
+      "type": "object"
+    }
+  ],
+  "title": "RoadmapRegistry record schema v1"
+}

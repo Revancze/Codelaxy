@@ -1,0 +1,9 @@
+# Portable source files
+*.py text eol=lf
+*.ps1 text eol=lf
+*.txt text eol=lf
+
+# Frozen v3 audit snapshot: preserve exact CRLF bytes
+schema/registry.schema.json -text !eol
+schema/rules.json -text !eol
+mutation/specs/pilot.json -text !eol

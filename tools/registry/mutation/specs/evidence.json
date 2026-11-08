@@ -1,0 +1,519 @@
+{
+ "tests": [
+  "tests.test_evidence",
+  "tests.test_s2_regressions"
+ ],
+ "mutants": [
+  {
+   "id": "EV01",
+   "file": "clxreg/evidence.py",
+   "old": "    if src.get(\"availability\") != \"AVAILABLE\":",
+   "new": "    if False:",
+   "note": "unavailable evidence not UNLOCATED"
+  },
+  {
+   "id": "EV02",
+   "file": "clxreg/evidence.py",
+   "old": "    if not (isinstance(arts, list) and arts):",
+   "new": "    if False:",
+   "note": "evidence without an artifact not UNLOCATED"
+  },
+  {
+   "id": "EV03",
+   "file": "clxreg/evidence.py",
+   "old": "    if src.get(\"integrity\") != \"HASH_CHECKED\":",
+   "new": "    if False:",
+   "note": "an unchecked hash is fine"
+  },
+  {
+   "id": "EV04",
+   "file": "clxreg/evidence.py",
+   "old": "        if not (isinstance(a.get(\"sha256\"), str) and _SHA.fullmatch(a[\"sha256\"]) and a.get(\"locator\") and a.get(\"role\")):",
+   "new": "        if False:",
+   "note": "an artifact without hash or locator is fine"
+  },
+  {
+   "id": "EV05",
+   "file": "clxreg/evidence.py",
+   "old": "    if not _d(evd.get(\"platform\")).get(\"os\"):",
+   "new": "    if False:",
+   "note": "no platform is fine"
+  },
+  {
+   "id": "EV06",
+   "file": "clxreg/evidence.py",
+   "old": "    if ex.get(\"kind\") not in (\"ci\", \"human\", \"agent\") or ex.get(\"independence\") not in (\"author\", \"independent\", \"owner\"):",
+   "new": "    if False:",
+   "note": "no executor is fine"
+  },
+  {
+   "id": "EV07",
+   "file": "clxreg/evidence.py",
+   "old": "    if evd.get(\"result\") not in RESULTS:",
+   "new": "    if False:",
+   "note": "any result is fine"
+  },
+  {
+   "id": "EV08",
+   "file": "clxreg/evidence.py",
+   "old": "    if state == \"CLEAN\":",
+   "new": "    if state in (\"CLEAN\", \"DIRTY\"):",
+   "note": "a DIRTY tree is commit-bound"
+  },
+  {
+   "id": "EV09",
+   "file": "clxreg/evidence.py",
+   "old": "return Classification(COMMIT_BOUND, ()) if commit_ok else Classification(UNBOUND, (\"the commit is not a full hash\",))",
+   "new": "return Classification(COMMIT_BOUND, ())",
+   "note": "a short commit is commit-bound"
+  },
+  {
+   "id": "EV10",
+   "file": "clxreg/evidence.py",
+   "old": "    if state != \"DIRTY\":",
+   "new": "    if False:",
+   "note": "an unknown tree state treated as dirty"
+  },
+  {
+   "id": "EV11",
+   "file": "clxreg/evidence.py",
+   "old": "    if not commit_ok:",
+   "new": "    if False:",
+   "note": "a dirty evidence with a short commit"
+  },
+  {
+   "id": "EV12",
+   "file": "clxreg/evidence.py",
+   "old": "    if not (isinstance(sub.get(\"fingerprint\"), str) and _SHA.fullmatch(sub[\"fingerprint\"])):",
+   "new": "    if False:",
+   "note": "no fingerprint is fine"
+  },
+  {
+   "id": "EV13",
+   "file": "clxreg/evidence.py",
+   "old": "    if pv.get(\"assessed\") is not True:",
+   "new": "    if False:",
+   "note": "unassessed provenance is fine"
+  },
+  {
+   "id": "EV14",
+   "file": "clxreg/evidence.py",
+   "old": "        if not (isinstance(points, list) and sorted(names) == sorted(provenance.POINT_NAMES.values())):",
+   "new": "        if False:",
+   "note": "missing provenance points are fine"
+  },
+  {
+   "id": "EV15",
+   "file": "clxreg/evidence.py",
+   "old": "        elif unproven:",
+   "new": "        elif False:",
+   "note": "a provenance point that does not hold is fine"
+  },
+  {
+   "id": "EV16",
+   "file": "clxreg/evidence.py",
+   "old": "        elif pv.get(\"proven\") is not True:",
+   "new": "        elif False:",
+   "note": "proven=False is fine"
+  },
+  {
+   "id": "EV17",
+   "file": "clxreg/evidence.py",
+   "old": "if why else Classification(PROVISIONAL, ())",
+   "new": "if why else Classification(COMMIT_BOUND, ())",
+   "note": "PROVISIONAL promoted to COMMIT_BOUND"
+  },
+  {
+   "id": "EV18",
+   "file": "clxreg/evidence.py",
+   "old": "return Classification(UNBOUND, tuple(why)) if why else Classification(PROVISIONAL, ())",
+   "new": "return Classification(PROVISIONAL, ())",
+   "note": "unproven dirty evidence is provisional"
+  },
+  {
+   "id": "EV19",
+   "file": "clxreg/evidence.py",
+   "old": "if isinstance(p, dict) and p.get(\"holds\") is not True]",
+   "new": "if isinstance(p, dict) and p.get(\"holds\") is False]",
+   "note": "a point that holds as a string counts"
+  },
+  {
+   "id": "EV20",
+   "file": "clxreg/evidence.py",
+   "old": "    out.setdefault(\"subject\", {})[\"fingerprint\"] = fingerprint",
+   "new": "    pass",
+   "note": "the fingerprint not recorded"
+  },
+  {
+   "id": "EV21",
+   "file": "clxreg/evidence.py",
+   "old": "\"proven\": assessment.proven,",
+   "new": "\"proven\": True,",
+   "note": "proven always recorded"
+  },
+  {
+   "id": "EV22",
+   "file": "clxreg/evidence.py",
+   "old": "        if not evd.get(f):",
+   "new": "        if False:",
+   "note": "missing evidence fields not reported"
+  },
+  {
+   "id": "EV23",
+   "file": "clxreg/evidence.py",
+   "old": "    if _d(evd.get(\"subject\")) and not _d(evd.get(\"subject\")).get(\"commit\"):",
+   "new": "    if False:",
+   "note": "missing commit not reported"
+  },
+  {
+   "id": "QF01",
+   "file": "clxreg/evidence.py",
+   "old": "    if cl.cls != COMMIT_BOUND:",
+   "new": "    if False:",
+   "note": "any class may qualify"
+  },
+  {
+   "id": "QF02",
+   "file": "clxreg/evidence.py",
+   "old": "    if e.get(\"result\") != \"PASS\" or (s.get(\"method\") == \"mutation\" and not e.get(\"baseline\")):",
+   "new": "    if e.get(\"result\") != \"PASS\":",
+   "note": "mutation without a baseline"
+  },
+  {
+   "id": "QF03",
+   "file": "clxreg/evidence.py",
+   "old": "    if e.get(\"result\") != \"PASS\" or (s.get(\"method\") == \"mutation\" and not e.get(\"baseline\")):",
+   "new": "    if (s.get(\"method\") == \"mutation\" and not e.get(\"baseline\")):",
+   "note": "a failed result qualifies"
+  },
+  {
+   "id": "QF04",
+   "file": "clxreg/evidence.py",
+   "old": "    if e.get(\"lifecycle\") != \"ACTIVE\" or ctx.get(\"newer_fail\"):",
+   "new": "    if e.get(\"lifecycle\") != \"ACTIVE\":",
+   "note": "a newer failure does not withdraw"
+  },
+  {
+   "id": "QF05",
+   "file": "clxreg/evidence.py",
+   "old": "    if e.get(\"lifecycle\") != \"ACTIVE\" or ctx.get(\"newer_fail\"):",
+   "new": "    if ctx.get(\"newer_fail\"):",
+   "note": "superseded evidence qualifies"
+  },
+  {
+   "id": "QF06",
+   "file": "clxreg/evidence.py",
+   "old": "    if src.get(\"availability\") != \"AVAILABLE\" or src.get(\"integrity\") != \"HASH_CHECKED\":",
+   "new": "    if False:",
+   "note": "Q3 not checked"
+  },
+  {
+   "id": "QF07",
+   "file": "clxreg/evidence.py",
+   "old": "x.get(\"requirement\") == ctx.get(\"requirement\") and x.get(\"acceptance\") == ctx.get(\"acceptance\") and x.get(\"requirement_revision\") in ctx.get(\"revisions\", ())",
+   "new": "x.get(\"acceptance\") == ctx.get(\"acceptance\") and x.get(\"requirement_revision\") in ctx.get(\"revisions\", ())",
+   "note": "evidence for another requirement"
+  },
+  {
+   "id": "QF08",
+   "file": "clxreg/evidence.py",
+   "old": "x.get(\"requirement\") == ctx.get(\"requirement\") and x.get(\"acceptance\") == ctx.get(\"acceptance\") and x.get(\"requirement_revision\") in ctx.get(\"revisions\", ())",
+   "new": "x.get(\"requirement\") == ctx.get(\"requirement\") and x.get(\"requirement_revision\") in ctx.get(\"revisions\", ())",
+   "note": "evidence for another condition"
+  },
+  {
+   "id": "QF09",
+   "file": "clxreg/evidence.py",
+   "old": "x.get(\"requirement\") == ctx.get(\"requirement\") and x.get(\"acceptance\") == ctx.get(\"acceptance\") and x.get(\"requirement_revision\") in ctx.get(\"revisions\", ())",
+   "new": "x.get(\"requirement\") == ctx.get(\"requirement\") and x.get(\"acceptance\") == ctx.get(\"acceptance\")",
+   "note": "evidence for another revision"
+  },
+  {
+   "id": "QF10",
+   "file": "clxreg/evidence.py",
+   "old": "e.get(\"scenario_revision\") in ctx.get(\"scenario_revisions\", ())",
+   "new": "True",
+   "note": "an outdated scenario revision"
+  },
+  {
+   "id": "QF11",
+   "file": "clxreg/evidence.py",
+   "old": "v.get(\"adequacy\") == \"ACCEPTED\"",
+   "new": "v.get(\"adequacy\") in (\"ACCEPTED\", \"ASSERTED\")",
+   "note": "an asserted adequacy counts"
+  },
+  {
+   "id": "QF12",
+   "file": "clxreg/evidence.py",
+   "old": " and v.get(\"basis\")",
+   "new": "",
+   "note": "an accepted adequacy without a basis"
+  },
+  {
+   "id": "QF13",
+   "file": "clxreg/evidence.py",
+   "old": "v.get(\"requirement\") == ctx.get(\"requirement\") and v.get(\"acceptance\") == ctx.get(\"acceptance\") and v.get(\"adequacy\")",
+   "new": "v.get(\"acceptance\") == ctx.get(\"acceptance\") and v.get(\"adequacy\")",
+   "note": "a scenario accepted for another requirement"
+  },
+  {
+   "id": "QF14",
+   "file": "clxreg/evidence.py",
+   "old": "v.get(\"requirement\") == ctx.get(\"requirement\") and v.get(\"acceptance\") == ctx.get(\"acceptance\") and v.get(\"adequacy\")",
+   "new": "v.get(\"requirement\") == ctx.get(\"requirement\") and v.get(\"adequacy\")",
+   "note": "a scenario accepted for another condition"
+  },
+  {
+   "id": "QF15",
+   "file": "clxreg/evidence.py",
+   "old": "    if _d(e.get(\"platform\")).get(\"os\") != ctx.get(\"platform\"):",
+   "new": "    if False:",
+   "note": "another platform qualifies"
+  },
+  {
+   "id": "QF16",
+   "file": "clxreg/evidence.py",
+   "old": ".get(\"independence\"), -1) < need:",
+   "new": ".get(\"independence\"), -1) <= need:",
+   "note": "independence one step too strict"
+  },
+  {
+   "id": "QF17",
+   "file": "clxreg/evidence.py",
+   "old": ".get(\"independence\"), -1) < need:",
+   "new": ".get(\"independence\"), -1) < 0:",
+   "note": "independence not checked"
+  },
+  {
+   "id": "QF18",
+   "file": "clxreg/evidence.py",
+   "old": ", _INDEPENDENCE.get(s.get(\"independence_required\", \"none\"), 0))",
+   "new": ", 0)",
+   "note": "the scenario's independence requirement ignored"
+  },
+  {
+   "id": "QF19",
+   "file": "clxreg/evidence.py",
+   "old": "ctx.get(\"persistence\") != \"ONCE\" and ctx.get(\"freshness\") != \"CURRENT\"",
+   "new": "ctx.get(\"persistence\") not in (\"ONCE\", \"UNSPECIFIED\") and ctx.get(\"freshness\") != \"CURRENT\"",
+   "note": "UNSPECIFIED persistence treated as once"
+  },
+  {
+   "id": "QF20",
+   "file": "clxreg/evidence.py",
+   "old": "ctx.get(\"persistence\") != \"ONCE\" and ctx.get(\"freshness\") != \"CURRENT\"",
+   "new": "ctx.get(\"persistence\") not in (\"ONCE\", None) and ctx.get(\"freshness\") != \"CURRENT\"",
+   "note": "unknown persistence treated as once"
+  },
+  {
+   "id": "QF21",
+   "file": "clxreg/evidence.py",
+   "old": "ctx.get(\"freshness\") != \"CURRENT\"",
+   "new": "ctx.get(\"freshness\") == \"STALE\"",
+   "note": "undetermined freshness counts as current"
+  },
+  {
+   "id": "QF22",
+   "file": "clxreg/evidence.py",
+   "old": "    if s.get(\"observation_required\") or s.get(\"method\") in (\"test\", \"mutation\"):",
+   "new": "    if s.get(\"observation_required\"):",
+   "note": "tests need no observation"
+  },
+  {
+   "id": "QF23",
+   "file": "clxreg/evidence.py",
+   "old": "        if not tests or any(obs.get(t) != \"PASS\" for t in tests):",
+   "new": "        if any(obs.get(t) != \"PASS\" for t in tests):",
+   "note": "no implementing tests needs no observation"
+  },
+  {
+   "id": "QF24",
+   "file": "clxreg/evidence.py",
+   "old": "        if not tests or any(obs.get(t) != \"PASS\" for t in tests):",
+   "new": "        if not tests or any(obs.get(t) in (\"FAIL\", None) for t in tests):",
+   "note": "an unverified observation counts"
+  },
+  {
+   "id": "QF25",
+   "file": "clxreg/evidence.py",
+   "old": "stale = bool(failed) and all(f.startswith(\"Q8\") for f in failed) and ctx.get(\"freshness\") == \"STALE\"",
+   "new": "stale = bool(failed) and ctx.get(\"freshness\") == \"STALE\"",
+   "note": "stale although something else is wrong"
+  },
+  {
+   "id": "QF26",
+   "file": "clxreg/evidence.py",
+   "old": "stale = bool(failed) and all(f.startswith(\"Q8\") for f in failed) and ctx.get(\"freshness\") == \"STALE\"",
+   "new": "stale = False",
+   "note": "staleness never reported"
+  },
+  {
+   "id": "DV01",
+   "file": "clxreg/evidence.py",
+   "old": "    if req.get(\"definition\") == \"UNRESOLVED\":",
+   "new": "    if False:",
+   "note": "an unresolved requirement can be verified"
+  },
+  {
+   "id": "DV02",
+   "file": "clxreg/evidence.py",
+   "old": "        if ac.get(\"kind\", \"evidence\") != \"evidence\":",
+   "new": "        if False:",
+   "note": "non-evidence conditions treated as evidence"
+  },
+  {
+   "id": "DV03",
+   "file": "clxreg/evidence.py",
+   "old": "        if ac.get(\"resolved\") is False:",
+   "new": "        if False:",
+   "note": "an unresolved condition is verifiable"
+  },
+  {
+   "id": "DV04",
+   "file": "clxreg/evidence.py",
+   "old": "\"FAILED\" if \"FAILED\" in states else ",
+   "new": "",
+   "note": "a failed platform does not fail the condition"
+  },
+  {
+   "id": "DV05",
+   "file": "clxreg/evidence.py",
+   "old": "else \"PARTIAL\" if \"SATISFIED\" in states else \"OPEN\"",
+   "new": "else \"OPEN\"",
+   "note": "a half-satisfied condition is open"
+  },
+  {
+   "id": "DV06",
+   "file": "clxreg/evidence.py",
+   "old": "    if not vals:",
+   "new": "    if False:",
+   "note": "a requirement without conditions is verified"
+  },
+  {
+   "id": "DV07",
+   "file": "clxreg/evidence.py",
+   "old": "    elif \"UNDETERMINED\" in vals:",
+   "new": "    elif False:",
+   "note": "undetermined conditions ignored"
+  },
+  {
+   "id": "DV08",
+   "file": "clxreg/evidence.py",
+   "old": "    elif \"FAILED\" in vals:",
+   "new": "    elif False:",
+   "note": "failed conditions ignored"
+  },
+  {
+   "id": "DV09",
+   "file": "clxreg/evidence.py",
+   "old": "    elif all(x == \"SATISFIED\" for x in vals):",
+   "new": "    elif any(x == \"SATISFIED\" for x in vals):",
+   "note": "one satisfied condition verifies"
+  },
+  {
+   "id": "DV10",
+   "file": "clxreg/evidence.py",
+   "old": "    elif \"SATISFIED\" in vals or \"PARTIAL\" in vals:",
+   "new": "    elif \"SATISFIED\" in vals:",
+   "note": "partial platforms not partially verified"
+  },
+  {
+   "id": "DV11",
+   "file": "clxreg/evidence.py",
+   "old": "    elif \"STALE\" in vals:",
+   "new": "    elif False:",
+   "note": "stale conditions ignored"
+  },
+  {
+   "id": "DV12",
+   "file": "clxreg/evidence.py",
+   "old": "\"VERIFIED\": \"DONE\"",
+   "new": "\"VERIFIED\": \"PARTIAL\"",
+   "note": "a verified requirement is not done"
+  },
+  {
+   "id": "DV13",
+   "file": "clxreg/evidence.py",
+   "old": "\"PARTIALLY_VERIFIED\": \"PARTIAL\"",
+   "new": "\"PARTIALLY_VERIFIED\": \"DONE\"",
+   "note": "partially verified counts as done"
+  },
+  {
+   "id": "DV14",
+   "file": "clxreg/evidence.py",
+   "old": "\"STALE\": \"UNVERIFIED\"",
+   "new": "\"STALE\": \"DONE\"",
+   "note": "stale counts as done"
+  },
+  {
+   "id": "PS01",
+   "file": "clxreg/evidence.py",
+   "old": "    if any(_d(evidences[eid]).get(\"result\") == \"FAIL\" and _d(evidences[eid]).get(\"lifecycle\") == \"ACTIVE\" for eid in relevant):",
+   "new": "    if False:",
+   "note": "a recorded failure does not block"
+  },
+  {
+   "id": "PS03",
+   "file": "clxreg/evidence.py",
+   "old": " and _d(evidences[eid]).get(\"lifecycle\") == \"ACTIVE\" for eid in relevant):",
+   "new": " for eid in relevant):",
+   "note": "a withdrawn failure still blocks"
+  },
+  {
+   "id": "PS04",
+   "file": "clxreg/evidence.py",
+   "old": "        if cl.cls == PROVISIONAL:",
+   "new": "        if False:",
+   "note": "provisional evidence not listed"
+  },
+  {
+   "id": "PS05",
+   "file": "clxreg/evidence.py",
+   "old": "        if q.qualifies:",
+   "new": "        if q.qualifies or cl.cls == PROVISIONAL:",
+   "note": "provisional evidence satisfies a condition"
+  },
+  {
+   "id": "PS06",
+   "file": "clxreg/evidence.py",
+   "old": "        if q.stale:",
+   "new": "        if False:",
+   "note": "stale evidence not reported as stale"
+  },
+  {
+   "id": "PS07",
+   "file": "clxreg/evidence.py",
+   "old": "    if not any_evd:",
+   "new": "    if False:",
+   "note": "missing evidence not reported"
+  },
+  {
+   "id": "PS08",
+   "file": "clxreg/evidence.py",
+   "old": "and (platform == \"any\" or _d(_d(evidences[eid]).get(\"platform\")).get(\"os\") in (platform, None))]",
+   "new": "]",
+   "note": "evidence of any platform counts for a platform"
+  },
+  {
+   "id": "GT01",
+   "file": "clxreg/evidence.py",
+   "old": "\"passed\": not failing and bool(requirements)",
+   "new": "\"passed\": not failing",
+   "note": "an empty gate passes"
+  },
+  {
+   "id": "GT02",
+   "file": "clxreg/evidence.py",
+   "old": "        if d.verification != \"VERIFIED\":",
+   "new": "        if d.verification not in (\"VERIFIED\", \"PARTIALLY_VERIFIED\"):",
+   "note": "a gate passes with partial verification"
+  },
+  {
+   "id": "GT03",
+   "file": "clxreg/evidence.py",
+   "old": "        provisional += [(req.get(\"id\"),) + p for p in d.provisional]",
+   "new": "        pass",
+   "note": "provisional evidence hidden from the gate report"
+  }
+ ]
+}

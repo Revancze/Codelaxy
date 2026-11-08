@@ -1,0 +1,230 @@
+{
+  "namespaces": [
+    {
+      "authority": {
+        "quote": "findings tracked by this plan (F9–F14 are new in revision 2)",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [],
+      "key": "micromap-findings-f",
+      "label_pattern": "F(?:1[0-4]|[1-9])",
+      "maps_to": "EXTERNAL",
+      "meaning": "findings F1…F14 tracked by the MICROMAP plan",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "test-infrastructure findings of revision 1",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [],
+      "key": "micromap-findings-t",
+      "label_pattern": "T[1-3]",
+      "maps_to": "EXTERNAL",
+      "meaning": "test-infrastructure findings T1…T3 of revision 1",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "structural findings of revision 1",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [],
+      "key": "micromap-findings-s",
+      "label_pattern": "S[12]",
+      "maps_to": "EXTERNAL",
+      "meaning": "structural findings S1, S2 of revision 1",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "resolver test gaps (renamed from \"R1–R3\" of revision 1, proposal MO4)",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [],
+      "key": "micromap-resolver-gaps",
+      "label_pattern": "RT[1-3]",
+      "maps_to": "EXTERNAL",
+      "meaning": "resolver test gaps RT1…RT3 (renamed from R1–R3 of revision 1)",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "decisions of revision 2 (below)",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [],
+      "key": "micromap-decisions",
+      "label_pattern": "MD(?:10|[1-9])",
+      "maps_to": "EXTERNAL",
+      "meaning": "decisions MD1…MD10 of revision 2",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "proposals awaiting ratification (below)",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [],
+      "key": "micromap-proposals",
+      "label_pattern": "MO[1-5]",
+      "maps_to": "EXTERNAL",
+      "meaning": "proposals MO1…MO5 awaiting ratification",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "test scenarios of step M2a",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [],
+      "key": "micromap-run-scenarios",
+      "label_pattern": "RUN-[1-5]",
+      "maps_to": "EXTERNAL",
+      "meaning": "test scenarios RUN-1…RUN-5 of step M2a",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "gate E1 of step M2",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [],
+      "key": "micromap-gates-e1",
+      "label_pattern": "E1-[1-8]",
+      "maps_to": "EXTERNAL",
+      "meaning": "gate E1 of step M2 (E1-1…E1-8)",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "E2 is its second gate",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [],
+      "key": "micromap-gate-e2",
+      "label_pattern": "E2",
+      "maps_to": "EXTERNAL",
+      "meaning": "the second gate of step M2",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "the PowerShell leg and the UCRT64-shell leg of the M1 gate",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [],
+      "key": "micromap-m1-gate-legs",
+      "label_pattern": "M1-G[AB]",
+      "maps_to": "EXTERNAL",
+      "meaning": "the PowerShell leg and the UCRT64-shell leg of the M1 gate",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "compatibility with a Git provided by MSYS2 (tracked item, below)",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [],
+      "key": "micromap-msys2-compat",
+      "label_pattern": "MSYS2-COMPAT",
+      "maps_to": "EXTERNAL",
+      "meaning": "compatibility with a Git provided by MSYS2 (tracked item)",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "audit mutants (below)",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [],
+      "key": "micromap-audit-mutants",
+      "label_pattern": "A-MUT-[1-3]",
+      "maps_to": "EXTERNAL",
+      "meaning": "audit mutants A-MUT-1…3",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "Steps are written `P1.2-M0` to `P1.2-M5`, with the new `P1.2-M2a`.",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [],
+      "key": "micromap-steps",
+      "label_pattern": "P1\\.2-M(?:[0-5]|2a)",
+      "maps_to": "EXTERNAL",
+      "meaning": "steps P1.2-M0…P1.2-M5 and P1.2-M2a",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "| P1.2-M3a | R3 | value objects; strict index parser and deserialization (F7) | PLANNED | — |",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [],
+      "key": "micromap-steps-m3",
+      "label_pattern": "P1\\.2-M3[a-d]",
+      "maps_to": "EXTERNAL",
+      "meaning": "sub-steps P1.2-M3a…M3d",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "Written without the `P1.2-` prefix, \"M1\" is ambiguous",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [],
+      "key": "bare-step-label",
+      "label_pattern": "M[0-5][a-d]?",
+      "maps_to": "EXTERNAL",
+      "meaning": "a step written without the P1.2- prefix (ambiguous by the document's own rule)",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "classes R0–R4 of docs/branching.md §6 keep their names",
+        "source": "micromap",
+        "version": "ratified-bytes"
+      },
+      "distinct_from": [
+        "plan-resolver-gaps-v1"
+      ],
+      "key": "branching-risk-classes",
+      "label_pattern": "R[0-4]",
+      "maps_to": "EXTERNAL",
+      "meaning": "risk classes R0…R4 of docs/branching.md §6",
+      "status": "LIVE"
+    },
+    {
+      "authority": {
+        "quote": "resolver tests R1–R3",
+        "source": "micromap",
+        "version": "revision-1"
+      },
+      "distinct_from": [
+        "branching-risk-classes"
+      ],
+      "key": "plan-resolver-gaps-v1",
+      "label_pattern": "R[1-3]",
+      "maps_to": "EXTERNAL",
+      "meaning": "resolver tests R1…R3 of revision 1 (historical; renamed RT1…RT3)",
+      "status": "FROZEN"
+    }
+  ],
+  "schema": "clx.namespaces/1"
+}
