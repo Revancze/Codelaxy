@@ -210,31 +210,11 @@ public sealed class GitProcessRunner
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (_gitExecutable is null)
-        {
-            return new GitCommandResult(
-                null,
-                string.Empty,
-                _gitResolutionDiagnostic ?? "Unable to locate Git executable.",
-                GitCommandFailureKind.LaunchFailure
-            );
-        }
+        var launchFailure = GetGitLaunchFailure(workingDirectory);
 
-        // A PATH-resolved executable must be verified again against the
-        // repository targeted by this command.
-        if (_gitExecutableResolvedFromPath)
+        if (launchFailure is not null)
         {
-            var refusal = GetGitLaunchRefusalDiagnostic(_gitExecutable, workingDirectory);
-
-            if (refusal is not null)
-            {
-                return new GitCommandResult(
-                    null,
-                    string.Empty,
-                    refusal,
-                    GitCommandFailureKind.LaunchFailure
-                );
-            }
+            return launchFailure;
         }
 
         var startInfo = CreateProcessStartInfo(workingDirectory, arguments, readOnly);
@@ -255,6 +235,16 @@ public sealed class GitProcessRunner
             );
         }
 
+        return await CaptureStartedProcessAsync(process, standardInput, timeout, cancellationToken);
+    }
+
+    private static async Task<GitCommandResult> CaptureStartedProcessAsync(
+        Process process,
+        byte[]? standardInput,
+        TimeSpan? timeout,
+        CancellationToken cancellationToken
+    )
+    {
         var standardOutputTask = ReadAllBytesAsync(process.StandardOutput.BaseStream);
         var standardErrorTask = ReadAllBytesAsync(process.StandardError.BaseStream);
 
@@ -356,6 +346,40 @@ public sealed class GitProcessRunner
         }
 
         return inputFailed;
+    }
+
+    private GitCommandResult? GetGitLaunchFailure(string workingDirectory)
+    {
+        if (_gitExecutable is null)
+        {
+            return new GitCommandResult(
+                null,
+                string.Empty,
+                _gitResolutionDiagnostic ?? "Unable to locate Git executable.",
+                GitCommandFailureKind.LaunchFailure
+            );
+        }
+
+        if (!_gitExecutableResolvedFromPath)
+        {
+            return null;
+        }
+
+        // A PATH-resolved executable must be verified again against the
+        // repository targeted by this command.
+        var refusal = GetGitLaunchRefusalDiagnostic(_gitExecutable, workingDirectory);
+
+        if (refusal is null)
+        {
+            return null;
+        }
+
+        return new GitCommandResult(
+            null,
+            string.Empty,
+            refusal,
+            GitCommandFailureKind.LaunchFailure
+        );
     }
 
     private string? GetGitLaunchRefusalDiagnostic(string gitExecutable, string workingDirectory)
@@ -532,15 +556,14 @@ public sealed class GitProcessRunner
 
         var inheritedVariables = startInfo.Environment.Keys.ToArray();
 
-        foreach (var variableName in inheritedVariables)
+        var configVariables = inheritedVariables.Where(variableName =>
+            variableName.StartsWith("GIT_CONFIG_KEY_", StringComparison.OrdinalIgnoreCase)
+            || variableName.StartsWith("GIT_CONFIG_VALUE_", StringComparison.OrdinalIgnoreCase)
+        );
+
+        foreach (var variableName in configVariables)
         {
-            if (
-                variableName.StartsWith("GIT_CONFIG_KEY_", StringComparison.OrdinalIgnoreCase)
-                || variableName.StartsWith("GIT_CONFIG_VALUE_", StringComparison.OrdinalIgnoreCase)
-            )
-            {
-                startInfo.Environment.Remove(variableName);
-            }
+            startInfo.Environment.Remove(variableName);
         }
     }
 
@@ -580,64 +603,21 @@ public sealed class GitProcessRunner
 
         var protectedRoots = RepositoryControlledPaths.GetProtectedRoots(absoluteCurrentDirectory);
 
-        var pathComparison = OperatingSystem.IsWindows()
-            ? StringComparison.OrdinalIgnoreCase
-            : StringComparison.Ordinal;
-
         foreach (var rawDirectory in pathVariable.Split(Path.PathSeparator))
         {
-            if (rawDirectory.Length == 0)
-            {
-                continue;
-            }
+            var fullDirectory = TryNormalizePathEntry(rawDirectory);
 
-            var directory = rawDirectory;
-
-            if (directory.Length >= 2 && directory[0] == '"' && directory[^1] == '"')
-            {
-                directory = directory[1..^1];
-            }
-
-            if (!Path.IsPathFullyQualified(directory))
-            {
-                continue;
-            }
-
-            string fullDirectory;
-
-            try
-            {
-                fullDirectory = Path.GetFullPath(directory);
-            }
-            catch (ArgumentException)
-            {
-                continue;
-            }
-            catch (NotSupportedException)
+            if (fullDirectory is null)
             {
                 continue;
             }
 
             if (
-                string.Equals(
-                    fullDirectory.TrimEnd(
-                        Path.DirectorySeparatorChar,
-                        Path.AltDirectorySeparatorChar
-                    ),
-                    absoluteCurrentDirectory.TrimEnd(
-                        Path.DirectorySeparatorChar,
-                        Path.AltDirectorySeparatorChar
-                    ),
-                    pathComparison
+                ShouldSkipGitSearchDirectory(
+                    fullDirectory,
+                    absoluteCurrentDirectory,
+                    protectedRoots
                 )
-            )
-            {
-                continue;
-            }
-
-            if (
-                !OperatingSystem.IsWindows()
-                && RepositoryControlledPaths.IsInsideAny(fullDirectory, protectedRoots)
             )
             {
                 continue;
@@ -650,16 +630,15 @@ public sealed class GitProcessRunner
                 continue;
             }
 
-            // On Windows the same check, with the same environment, as the launch guard.
-            var windowsRefusal = OperatingSystem.IsWindows()
-                ? GetWindowsLocationRefusal(candidate, absoluteCurrentDirectory, posixMounts)
-                : null;
-
-            var trusted = OperatingSystem.IsWindows()
-                ? windowsRefusal is null
-                : !RepositoryControlledPaths.IsInsideAny(candidate, protectedRoots);
-
-            if (trusted)
+            if (
+                IsTrustedGitCandidate(
+                    candidate,
+                    absoluteCurrentDirectory,
+                    posixMounts,
+                    protectedRoots,
+                    out var windowsRefusal
+                )
+            )
             {
                 return Path.GetFullPath(candidate);
             }
@@ -668,6 +647,85 @@ public sealed class GitProcessRunner
         }
 
         return null;
+    }
+
+    private static bool ShouldSkipGitSearchDirectory(
+        string fullDirectory,
+        string absoluteCurrentDirectory,
+        IReadOnlyList<string> protectedRoots
+    )
+    {
+        var pathComparison = OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
+        if (
+            string.Equals(
+                fullDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                absoluteCurrentDirectory.TrimEnd(
+                    Path.DirectorySeparatorChar,
+                    Path.AltDirectorySeparatorChar
+                ),
+                pathComparison
+            )
+        )
+        {
+            return true;
+        }
+
+        return !OperatingSystem.IsWindows()
+            && RepositoryControlledPaths.IsInsideAny(fullDirectory, protectedRoots);
+    }
+
+    private static bool IsTrustedGitCandidate(
+        string candidate,
+        string absoluteCurrentDirectory,
+        PosixMountTable? posixMounts,
+        IReadOnlyList<string> protectedRoots,
+        out string? windowsRefusal
+    )
+    {
+        // On Windows the same check, with the same environment, as the launch guard.
+        windowsRefusal = OperatingSystem.IsWindows()
+            ? GetWindowsLocationRefusal(candidate, absoluteCurrentDirectory, posixMounts)
+            : null;
+
+        return OperatingSystem.IsWindows()
+            ? windowsRefusal is null
+            : !RepositoryControlledPaths.IsInsideAny(candidate, protectedRoots);
+    }
+
+    private static string? TryNormalizePathEntry(string rawDirectory)
+    {
+        if (rawDirectory.Length == 0)
+        {
+            return null;
+        }
+
+        var directory = rawDirectory;
+
+        if (directory.Length >= 2 && directory[0] == '"' && directory[^1] == '"')
+        {
+            directory = directory[1..^1];
+        }
+
+        if (!Path.IsPathFullyQualified(directory))
+        {
+            return null;
+        }
+
+        try
+        {
+            return Path.GetFullPath(directory);
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+        catch (NotSupportedException)
+        {
+            return null;
+        }
     }
 
     private static async Task TerminateProcessTreeAsync(Process process)
