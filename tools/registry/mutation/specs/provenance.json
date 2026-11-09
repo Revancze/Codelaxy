@@ -1,0 +1,212 @@
+{
+ "tests": [
+  "tests.test_provenance",
+  "tests.test_s2_regressions"
+ ],
+ "mutants": [
+  {
+   "id": "PV01",
+   "file": "clxreg/provenance.py",
+   "old": "    if not (isinstance(rid, str) and rid and rid == rd.get(\"id\") == cp.get(\"id\")):",
+   "new": "    if False:",
+   "note": "run id may differ"
+  },
+  {
+   "id": "PV02",
+   "file": "clxreg/provenance.py",
+   "old": "    if not (isinstance(st, str) and st and st == rd.get(\"stamp\") == cp.get(\"stamp\")):",
+   "new": "    if False:",
+   "note": "stamp may differ"
+  },
+  {
+   "id": "PV03",
+   "file": "clxreg/provenance.py",
+   "old": "    if not (isinstance(pl, str) and pl and pl == rd.get(\"platform\") == cp.get(\"platform\")):",
+   "new": "    if False:",
+   "note": "platform of the names may differ"
+  },
+  {
+   "id": "PV04",
+   "file": "clxreg/provenance.py",
+   "old": "    if trx.get(\"present\") is not True:",
+   "new": "    if False:",
+   "note": "run without a TRX"
+  },
+  {
+   "id": "PV05",
+   "file": "clxreg/provenance.py",
+   "old": " or not start <= finish",
+   "new": "",
+   "note": "TRX finishing before it started"
+  },
+  {
+   "id": "PV06",
+   "file": "clxreg/provenance.py",
+   "old": " or finish.replace(microsecond=0) > written",
+   "new": "",
+   "note": "TRX finishing after the record was written"
+  },
+  {
+   "id": "PV07",
+   "file": "clxreg/provenance.py",
+   "old": " or written.date() != finish.date()",
+   "new": "",
+   "note": "record of another day"
+  },
+  {
+   "id": "PV08",
+   "file": "clxreg/provenance.py",
+   "old": "    if not (start and finish and written) or",
+   "new": "    if",
+   "note": "missing times accepted"
+  },
+  {
+   "id": "PV09",
+   "file": "clxreg/provenance.py",
+   "old": "    if not (isinstance(want, str) and _HEX_HEAD.fullmatch(want)):",
+   "new": "    if False:",
+   "note": "record without a full HEAD"
+  },
+  {
+   "id": "PV10",
+   "file": "clxreg/provenance.py",
+   "old": "    if not (isinstance(have, str) and _HEX_HEAD.fullmatch(have)):",
+   "new": "    if False:",
+   "note": "copy without any known HEAD"
+  },
+  {
+   "id": "PV11",
+   "file": "clxreg/provenance.py",
+   "old": "    return (have == want), (",
+   "new": "    return True, (",
+   "note": "different HEADs accepted"
+  },
+  {
+   "id": "PV12",
+   "file": "clxreg/provenance.py",
+   "old": "    if mar.get(\"kind\") not in (\"tree\", \"git-dirty\") or not (isinstance(dg, str) and _SHA.fullmatch(dg)):",
+   "new": "    if False:",
+   "note": "no manifest at run time accepted"
+  },
+  {
+   "id": "PV13",
+   "file": "clxreg/provenance.py",
+   "old": "    if not (cap and start) or cap > start:",
+   "new": "    if not (cap and start):",
+   "note": "manifest taken after the start accepted"
+  },
+  {
+   "id": "PV14",
+   "file": "clxreg/provenance.py",
+   "old": "    if cp.get(\"exists\") is not True:",
+   "new": "    if False:",
+   "note": "vanished copy accepted"
+  },
+  {
+   "id": "PV15",
+   "file": "clxreg/provenance.py",
+   "old": "    if not (isinstance(a, str) and _SHA.fullmatch(a) and isinstance(b, str) and _SHA.fullmatch(b)):",
+   "new": "    if False:",
+   "note": "missing manifests accepted for 'unchanged'"
+  },
+  {
+   "id": "PV16",
+   "file": "clxreg/provenance.py",
+   "old": "    if mar.get(\"kind\") != mnow.get(\"kind\") or mar.get(\"excludes\") != mnow.get(\"excludes\"):",
+   "new": "    if False:",
+   "note": "manifests under different rules compared"
+  },
+  {
+   "id": "PV17",
+   "file": "clxreg/provenance.py",
+   "old": "    return (a == b), (",
+   "new": "    return True, (",
+   "note": "a changed copy accepted"
+  },
+  {
+   "id": "PV18",
+   "file": "clxreg/provenance.py",
+   "old": "    if not (isinstance(pl, str) and pl in (\"win\", \"linux\") and pl == env.get(\"trx_prefix\") == rd.get(\"platform\") == cp.get(\"platform\")):",
+   "new": "    if False:",
+   "note": "platform mismatch accepted"
+  },
+  {
+   "id": "PV19",
+   "file": "clxreg/provenance.py",
+   "old": "    if not isinstance(text, str):",
+   "new": "    if False:",
+   "note": "missing environment accepted"
+  },
+  {
+   "id": "PV20",
+   "file": "clxreg/provenance.py",
+   "old": "    if pl == \"win\" and not text.startswith(\"Windows\"):",
+   "new": "    if False:",
+   "note": "non-Windows text for a win run"
+  },
+  {
+   "id": "PV21",
+   "file": "clxreg/provenance.py",
+   "old": "        if not (text.startswith(\"WSL\") or text.startswith(\"Linux\")):",
+   "new": "        if False:",
+   "note": "non-Linux text for a linux run"
+  },
+  {
+   "id": "PV22",
+   "file": "clxreg/provenance.py",
+   "old": "        if env.get(\"env_file_os\") != \"Linux\":",
+   "new": "        if False:",
+   "note": "Linux without the environment file"
+  },
+  {
+   "id": "PV23",
+   "file": "clxreg/provenance.py",
+   "old": "    if not (isinstance(name, str) and name):",
+   "new": "    if False:",
+   "note": "no test named"
+  },
+  {
+   "id": "PV24",
+   "file": "clxreg/provenance.py",
+   "old": "    if not (isinstance(results, list) and results and all(r == \"Passed\" for r in results)):",
+   "new": "    if False:",
+   "note": "test not passed in the TRX"
+  },
+  {
+   "id": "PV25",
+   "file": "clxreg/provenance.py",
+   "old": "    if test.get(\"guard\") != \"NOT_LISTED_COMPLETE_LIST\":",
+   "new": "    if False:",
+   "note": "guard list ignored"
+  },
+  {
+   "id": "PV26",
+   "file": "clxreg/provenance.py",
+   "old": "        return not self.unmet",
+   "new": "        return True",
+   "note": "proven although a point is unmet"
+  },
+  {
+   "id": "PV27",
+   "file": "clxreg/provenance.py",
+   "old": "        return tuple(p.name for p in self.points if not p.holds)",
+   "new": "        return ()",
+   "note": "unmet points not named"
+  },
+  {
+   "id": "PV28",
+   "file": "clxreg/provenance.py",
+   "old": "return value.astimezone(timezone.utc)",
+   "new": "return value.replace(tzinfo=timezone.utc)",
+   "note": "UTC offsets compared with local time"
+  },
+  {
+   "id": "PV29",
+   "file": "clxreg/provenance.py",
+   "old": "value = datetime.fromisoformat(_FRACTION.sub(r\"\\1\", s))",
+   "new": "value = datetime.fromisoformat(s)",
+   "note": "seven-digit fractions passed to the parser",
+   "equivalent": "Python 3.11 and later parse and truncate fractions of any length, so the explicit truncation changes nothing there; it only keeps the code correct on older versions"
+  }
+ ]
+}

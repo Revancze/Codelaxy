@@ -1,0 +1,232 @@
+{
+ "tests": [
+  "tests.test_freshness",
+  "tests.test_s2_regressions"
+ ],
+ "mutants": [
+  {
+   "id": "FR01",
+   "file": "clxreg/freshness.py",
+   "old": "    if evidence_commit == head:",
+   "new": "    if False:",
+   "note": "the reference commit itself is not current"
+  },
+  {
+   "id": "FR02",
+   "file": "clxreg/freshness.py",
+   "old": "    if anc == 1:",
+   "new": "    if False:",
+   "note": "a non-ancestor accepted"
+  },
+  {
+   "id": "FR03",
+   "file": "clxreg/freshness.py",
+   "old": "    if anc != 0:",
+   "new": "    if False:",
+   "note": "a git failure taken as ancestry"
+  },
+  {
+   "id": "FR04",
+   "file": "clxreg/freshness.py",
+   "old": "    if not masks:",
+   "new": "    if False:",
+   "note": "no scope means everything is current"
+  },
+  {
+   "id": "FR05",
+   "file": "clxreg/freshness.py",
+   "old": "\"--name-only\", \"--no-renames\", \"-z\"",
+   "new": "\"--name-only\", \"-z\"",
+   "note": "git rename detection hides the old path"
+  },
+  {
+   "id": "FR06",
+   "file": "clxreg/freshness.py",
+   "old": "if any(matches(n, m) for m in masks)",
+   "new": "if True",
+   "note": "every change counts"
+  },
+  {
+   "id": "FR07",
+   "file": "clxreg/freshness.py",
+   "old": "    if hit:\n        return Freshness(STALE",
+   "new": "    if False:\n        return Freshness(STALE",
+   "note": "scoped changes not reported"
+  },
+  {
+   "id": "FR08",
+   "file": "clxreg/freshness.py",
+   "old": "    if not (isinstance(evidence_commit, str) and _FULL.fullmatch(evidence_commit)):",
+   "new": "    if False:",
+   "note": "a short commit accepted"
+  },
+  {
+   "id": "FR09",
+   "file": "clxreg/freshness.py",
+   "old": "    if _git(repo, \"cat-file\", \"-e\", evidence_commit + \"^{commit}\").returncode != 0:",
+   "new": "    if False:",
+   "note": "an unknown commit accepted"
+  },
+  {
+   "id": "FR10",
+   "file": "clxreg/freshness.py",
+   "old": "    if not isinstance(mask, str) or not mask or mask.startswith(\"/\")",
+   "new": "    if False or mask.startswith(\"/\")",
+   "note": "empty or non-string mask accepted"
+  },
+  {
+   "id": "FR11",
+   "file": "clxreg/freshness.py",
+   "old": " or mask.startswith(\"/\")",
+   "new": "",
+   "note": "absolute mask accepted"
+  },
+  {
+   "id": "FR12",
+   "file": "clxreg/freshness.py",
+   "old": " or \"\\\\\" in mask",
+   "new": "",
+   "note": "backslash mask accepted"
+  },
+  {
+   "id": "FR13",
+   "file": "clxreg/freshness.py",
+   "old": " or \"..\" in mask.split(\"/\")",
+   "new": "",
+   "note": "mask leaving the repository accepted"
+  },
+  {
+   "id": "FR14",
+   "file": "clxreg/freshness.py",
+   "old": "    if mask.endswith(\"/\"):",
+   "new": "    if False:",
+   "note": "directory masks not special"
+  },
+  {
+   "id": "FR15",
+   "file": "clxreg/freshness.py",
+   "old": "        return path.startswith(mask) and len(path) > len(mask)",
+   "new": "        return path.startswith(mask)",
+   "note": "the directory itself matches its contents mask"
+  },
+  {
+   "id": "FR16",
+   "file": "clxreg/freshness.py",
+   "old": "    return \"*\" not in mask and \"?\" not in mask and path.startswith(mask + \"/\")",
+   "new": "    return False",
+   "note": "a plain directory name does not cover its contents"
+  },
+  {
+   "id": "FR17",
+   "file": "clxreg/freshness.py",
+   "old": "out.append(\"(?:.*/)?\")",
+   "new": "out.append(\".*/\")",
+   "note": "**/ requires a directory"
+  },
+  {
+   "id": "FR18",
+   "file": "clxreg/freshness.py",
+   "old": "out.append(\"[^/]*\")",
+   "new": "out.append(\".*\")",
+   "note": "* crosses directories"
+  },
+  {
+   "id": "FR19",
+   "file": "clxreg/freshness.py",
+   "old": "out.append(\"[^/]\")",
+   "new": "out.append(\".\")",
+   "note": "? matches a separator"
+  },
+  {
+   "id": "FR20",
+   "file": "clxreg/freshness.py",
+   "old": "out.append(\".*\")\n            i += 2",
+   "new": "out.append(\"[^/]*\")\n            i += 2",
+   "note": "** stays within a directory"
+  },
+  {
+   "id": "FR21",
+   "file": "clxreg/freshness.py",
+   "old": "out.append(re.escape(mask[i]))",
+   "new": "out.append(mask[i])",
+   "note": "regular-expression characters in masks are active"
+  },
+  {
+   "id": "FR22",
+   "file": "clxreg/freshness.py",
+   "old": "    if p.returncode != 0 or not _FULL.fullmatch(sha):",
+   "new": "    if p.returncode != 0:",
+   "note": "an unresolved reference accepted"
+  },
+  {
+   "id": "FR23",
+   "file": "clxreg/freshness.py",
+   "old": "    if not isinstance(ref, str) or not ref or ref.startswith(\"-\") or \"\\0\" in ref:",
+   "new": "    if False:",
+   "note": "option-looking references passed to git"
+  },
+  {
+   "id": "FR24",
+   "file": "clxreg/freshness.py",
+   "old": "    if snapshot is None or snapshot == {}:",
+   "new": "    if snapshot is None:",
+   "note": "an empty snapshot is malformed"
+  },
+  {
+   "id": "FR25",
+   "file": "clxreg/freshness.py",
+   "old": "    if not (isinstance(snapshot, dict) and isinstance(current, dict)):",
+   "new": "    if False:",
+   "note": "malformed snapshots accepted"
+  },
+  {
+   "id": "FR26",
+   "file": "clxreg/freshness.py",
+   "old": "        if not (isinstance(ref, str) and type(have) is int and have >= 1):",
+   "new": "        if False:",
+   "note": "a malformed revision accepted"
+  },
+  {
+   "id": "FR27",
+   "file": "clxreg/freshness.py",
+   "old": "        elif ref not in current or type(current[ref]) is not int or current[ref] < have:",
+   "new": "        elif ref not in current:",
+   "note": "a revision that went backwards accepted"
+  },
+  {
+   "id": "FR28",
+   "file": "clxreg/freshness.py",
+   "old": "        elif current[ref] > have:",
+   "new": "        elif current[ref] >= have:",
+   "note": "an unchanged revision is stale"
+  },
+  {
+   "id": "FR29",
+   "file": "clxreg/freshness.py",
+   "old": "    if stale:",
+   "new": "    if False:",
+   "note": "raised revisions ignored"
+  },
+  {
+   "id": "FR30",
+   "file": "clxreg/freshness.py",
+   "old": "    if unknown:",
+   "new": "    if False:",
+   "note": "unknown dependencies ignored"
+  },
+  {
+   "id": "FR31",
+   "file": "clxreg/freshness.py",
+   "old": "    for state in (STALE, UNDETERMINED):",
+   "new": "    for state in (UNDETERMINED, STALE):",
+   "note": "undetermined hides staleness"
+  },
+  {
+   "id": "FR32",
+   "file": "clxreg/freshness.py",
+   "old": "        elif ref not in current or type(current[ref]) is not int or current[ref] < have:",
+   "new": "        elif current.get(ref) is None:",
+   "note": "a dependency known now with another type"
+  }
+ ]
+}

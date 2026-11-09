@@ -1,0 +1,42 @@
+{
+  "tests": [
+    "tests.test_review_followup"
+  ],
+  "mutants": [
+    {
+      "id": "RF01",
+      "file": "clxreg/evidence.py",
+      "old": " and v.get(\"requirement_revision\") in ctx.get(\"revisions\", ())",
+      "new": "",
+      "note": "accepted adequacy from an old normative revision is reused"
+    },
+    {
+      "id": "RF02",
+      "file": "clxreg/validator.py",
+      "old": "                if node in completed: continue",
+      "new": "                if False: continue",
+      "note": "overlapping DAG subgraphs are expanded repeatedly"
+    },
+    {
+      "id": "RF03",
+      "file": "clxreg/validator.py",
+      "old": "                    run.add('DE-04',rid,'cycle in '+field+': '+' -> '.join(trail+[node]))",
+      "new": "                    pass",
+      "note": "real dependency cycle is not reported"
+    },
+    {
+      "id": "RF04",
+      "file": "clxreg/export.py",
+      "old": "(str(state.get('verification', '')) if s == 'VERIFIED' else effective)",
+      "new": "effective",
+      "note": "verification claim is compared against effective status"
+    },
+    {
+      "id": "RF05",
+      "file": "clxreg/evidence.py",
+      "old": "v.get(\"requirement_revision\") in ctx.get(\"revisions\", ())",
+      "new": "v.get(\"requirement_revision\") == max(ctx.get(\"revisions\", (0,)))",
+      "note": "established editorial-equivalent accepted binding is rejected"
+    }
+  ]
+}

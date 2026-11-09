@@ -1,0 +1,30 @@
+{
+  "tests": ["tests.test_units"],
+  "mutants": [
+    {"id": "U01", "file": "clxreg/units.py", "old": "enumerate(text.split(\"\\n\"), 1)", "new": "enumerate(text.splitlines(), 1)", "note": "lines split at every Unicode line separator"},
+    {"id": "U02", "file": "clxreg/units.py", "old": "enumerate(text.split(\"\\n\"), 1)", "new": "enumerate(text.split(\"\\n\"), 0)", "note": "line numbers start at 0"},
+    {"id": "U03", "file": "clxreg/units.py", "old": "text = data.decode(\"utf-8\")", "new": "text = data.decode(\"utf-8\", errors=\"replace\")", "note": "invalid bytes silently replaced"},
+    {"id": "U04", "file": "clxreg/units.py", "old": "    s = suffix.lower()", "new": "    s = suffix", "note": "suffix match case-sensitive"},
+    {"id": "U05", "file": "clxreg/units.py", "old": "ch.get(_TX + \"c\", \"1\")", "new": "ch.get(_TX + \"c\", \"0\")", "note": "a lone space element means no space"},
+    {"id": "U06", "file": "clxreg/units.py", "old": "out.append(\"\\t\")", "new": "out.append(\" \")", "note": "tab turned into a space"},
+    {"id": "U07", "file": "clxreg/units.py", "old": "out.append(\"\\n\")", "new": "out.append(\" \")", "note": "line break turned into a space"},
+    {"id": "U08", "file": "clxreg/units.py", "old": "            if t:\n                out.append((f\"/p{k}\", t))", "new": "            if True:\n                out.append((f\"/p{k}\", t))", "note": "empty paragraphs become units"},
+    {"id": "U09", "file": "clxreg/units.py", "old": "raise UnsupportedSource(f\"ODS cell contains an element this reader does not extract: {ch.tag}\")", "new": "pass", "note": "unknown cell content skipped silently"},
+    {"id": "U10", "file": "clxreg/units.py", "old": "raise UnsupportedSource(f\"ODS paragraph contains an element this reader does not extract: {ch.tag}\")", "new": "pass", "note": "unknown paragraph content skipped silently"},
+    {"id": "U11", "file": "clxreg/units.py", "old": "raise UnsupportedSource(f\"ODS annotation contains an element this reader does not extract: {sub.tag}\")", "new": "pass", "note": "unknown annotation content skipped silently"},
+    {"id": "U12", "file": "clxreg/units.py", "old": "if row_rep * col_rep > MAX_REPEAT:", "new": "if False:", "note": "repetition cap removed"},
+    {"id": "U13", "file": "clxreg/units.py", "old": "if row_rep * col_rep > MAX_REPEAT:", "new": "if row_rep * col_rep >= MAX_REPEAT:", "note": "repetition cap off by one"},
+    {"id": "U14", "file": "clxreg/units.py", "old": "for rr in range(row_rep):", "new": "for rr in range(1):", "note": "repeated rows with text emitted once"},
+    {"id": "U15", "file": "clxreg/units.py", "old": "for cc in range(col_rep):", "new": "for cc in range(1):", "note": "repeated columns with text emitted once"},
+    {"id": "U16", "file": "clxreg/units.py", "old": "cn += col_rep", "new": "cn += 1", "note": "repeated columns do not move the address"},
+    {"id": "U17", "file": "clxreg/units.py", "old": "rn += row_rep", "new": "rn += 1", "note": "repeated rows do not move the address"},
+    {"id": "U18", "file": "clxreg/units.py", "old": "if sub.tag in (_DC + \"creator\", _DC + \"date\"):", "new": "if False:", "note": "annotation metadata not skipped"},
+    {"id": "U19", "file": "clxreg/units.py", "old": "            notes += 1\n            j = 0", "new": "            j = 0", "note": "annotations not numbered"},
+    {"id": "U20", "file": "clxreg/units.py", "old": "    if n < 1:", "new": "    if False:", "note": "zero or negative repetition accepted"},
+    {"id": "U21", "file": "clxreg/units.py", "old": "    if sheet_root is None:", "new": "    if False:", "note": "ODS without a spreadsheet accepted"},
+    {"id": "U22", "file": "clxreg/units.py", "old": "elif ch.tag in (_TX + \"span\", _TX + \"a\"):", "new": "elif ch.tag in (_TX + \"span\",):", "note": "links not read"},
+    {"id": "U23", "file": "clxreg/units.py", "old": "if sub.tag not in (_TX + \"p\", _TX + \"h\"):", "new": "if False:", "note": "annotation content of any kind accepted"},
+    {"id": "U24", "file": "clxreg/units.py", "old": "if ch.tag in (_TX + \"p\", _TX + \"h\"):", "new": "if ch.tag in (_TX + \"p\",):", "note": "headings not read"},
+    {"id": "U25", "file": "clxreg/units.py", "old": "path.replace(\"\\\\\", \"/\")", "new": "path", "note": "backslash paths"}
+  ]
+}

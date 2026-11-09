@@ -1,0 +1,124 @@
+{
+  "schema": "clx.catalog-spec/1",
+  "sources": [
+    {
+      "category": "RATIFIED",
+      "key": "micromap-ratification",
+      "subtype": "RATIFICATION-RECORD",
+      "title": "MICROMAP ratification record 2026-10-25",
+      "versions": [
+        {
+          "basis": {
+            "sha256": {
+              "protected_manifest": true
+            },
+            "status": {
+              "quote": "Decision of the project owner, given in the message",
+              "quote_in": {
+                "source": "micromap-ratification",
+                "version": "2026-10-25"
+              }
+            }
+          },
+          "id": "2026-10-25",
+          "location": {
+            "path": "proposals/docs/MICROMAP.RATIFICATION-2026-10-25.md",
+            "root": "workspace"
+          },
+          "sha256": "9bee10ed585f4fd60e036a85066724d5ef79560b537db4e9c0b21ec78ffdaac4",
+          "status": "RATIFIED"
+        }
+      ]
+    },
+    {
+      "category": "RATIFIED",
+      "key": "micromap",
+      "title": "MICROMAP (working micro-roadmap of P1.2)",
+      "versions": [
+        {
+          "basis": {
+            "sha256": {
+              "quote": "SHA-256 `4397961caffbe5cee87ca734f6b9b07f5b8b24b2e647e62a5bca4e1780889fd5`",
+              "quote_in": {
+                "source": "micromap",
+                "version": "ratified-bytes"
+              }
+            },
+            "status": {
+              "quote": "first draft on `main` = `b05f2d2`",
+              "quote_in": {
+                "source": "micromap",
+                "version": "ratified-bytes"
+              }
+            }
+          },
+          "id": "revision-1",
+          "location": {
+            "path": "proposals/backup/MICROMAP.revision-1.2026-10-18.md",
+            "root": "workspace"
+          },
+          "sha256": "4397961caffbe5cee87ca734f6b9b07f5b8b24b2e647e62a5bca4e1780889fd5",
+          "status": "HISTORICAL"
+        },
+        {
+          "basis": {
+            "sha256": {
+              "quote": "SHA-256 named by the owner | `8178ab3cf2031b5bf1faf4433eff54f4b9becb8ccb04ccc99ae8d4639710f8d3`",
+              "quote_in": {
+                "source": "micromap-ratification",
+                "version": "2026-10-25"
+              }
+            },
+            "status": {
+              "quote": "MICROMAP rev. 2 as identified above, including MD1–MD10.",
+              "quote_in": {
+                "source": "micromap-ratification",
+                "version": "2026-10-25"
+              }
+            }
+          },
+          "id": "ratified-bytes",
+          "location": {
+            "path": "proposals/backup/MICROMAP.revision-2-ratified-content.2026-10-25.md",
+            "root": "workspace"
+          },
+          "ratified_by": {
+            "source": "micromap-ratification",
+            "version": "2026-10-25"
+          },
+          "sha256": "8178ab3cf2031b5bf1faf4433eff54f4b9becb8ccb04ccc99ae8d4639710f8d3",
+          "status": "RATIFIED"
+        },
+        {
+          "basis": {
+            "sha256": {
+              "quote": "SHA-256 of `MICROMAP.md` after marking | `813558f7640854a50e445d7da52c0dcf82cedfde2029b2c50c77cdadf1712272`",
+              "quote_in": {
+                "source": "micromap-ratification",
+                "version": "2026-10-25"
+              }
+            },
+            "status": {
+              "quote": "only the status block (top) and one revision-log row (bottom) were changed",
+              "quote_in": {
+                "source": "micromap-ratification",
+                "version": "2026-10-25"
+              }
+            }
+          },
+          "id": "marked-file",
+          "location": {
+            "path": "proposals/docs/MICROMAP.md",
+            "root": "workspace"
+          },
+          "ratified_by": {
+            "source": "micromap-ratification",
+            "version": "2026-10-25"
+          },
+          "sha256": "813558f7640854a50e445d7da52c0dcf82cedfde2029b2c50c77cdadf1712272",
+          "status": "RATIFIED-MARKED"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+{
+ "tests": [
+  "tests.test_dirty",
+  "tests.test_s2_regressions"
+ ],
+ "mutants": [
+  {
+   "id": "DY01",
+   "file": "clxreg/dirty.py",
+   "old": "\"diff\", \"--name-status\", \"--no-renames\", \"-z\", \"HEAD\"",
+   "new": "\"diff\", \"--name-status\", \"-z\", \"HEAD\"",
+   "note": "git rename detection on: a rename is not a deletion plus an addition"
+  },
+  {
+   "id": "DY02",
+   "file": "clxreg/dirty.py",
+   "old": "\"ls-files\", \"-z\", \"--others\", \"--exclude-standard\"",
+   "new": "\"ls-files\", \"-z\", \"--others\"",
+   "note": "ignored build output enters the fingerprint"
+  },
+  {
+   "id": "DY03",
+   "file": "clxreg/dirty.py",
+   "old": "if status[:1] == b\"D\" or not (full.exists() or full.is_symlink()):",
+   "new": "if status[:1] == b\"D\":",
+   "note": "a file that vanished while reading is not reported as deleted"
+  },
+  {
+   "id": "DY04",
+   "file": "clxreg/dirty.py",
+   "old": "    if len(parts) % 2:",
+   "new": "    if False:",
+   "note": "odd git output accepted"
+  },
+  {
+   "id": "DY05",
+   "file": "clxreg/dirty.py",
+   "old": "    if path.is_symlink() or getattr(info, \"st_file_attributes\", 0) & getattr(stat, \"FILE_ATTRIBUTE_REPARSE_POINT\", 0x400):",
+   "new": "    if False:",
+   "note": "a symbolic link is followed"
+  },
+  {
+   "id": "DY06",
+   "file": "clxreg/dirty.py",
+   "old": "    if not path.is_file():",
+   "new": "    if False:",
+   "note": "a directory entry (nested repository) read as a file"
+  },
+  {
+   "id": "DY07",
+   "file": "clxreg/dirty.py",
+   "old": "\"changed\": sorted(changed, key=key)",
+   "new": "\"changed\": changed",
+   "note": "changed files in the order git gave them"
+  },
+  {
+   "id": "DY08",
+   "file": "clxreg/dirty.py",
+   "old": "\"untracked\": sorted(untracked, key=key)",
+   "new": "\"untracked\": untracked",
+   "note": "untracked files in the order git gave them"
+  },
+  {
+   "id": "DY09",
+   "file": "clxreg/dirty.py",
+   "old": "\"deleted\": sorted(deleted)",
+   "new": "\"deleted\": deleted",
+   "note": "deleted paths in the order git gave them"
+  },
+  {
+   "id": "DY10",
+   "file": "clxreg/dirty.py",
+   "old": "dirnames[:] = sorted(d for d in dirnames if d not in skip)",
+   "new": "dirnames[:] = sorted(dirnames)",
+   "note": "build output directories not excluded"
+  },
+  {
+   "id": "DY11",
+   "file": "clxreg/dirty.py",
+   "old": "skip = set(excludes) | {\".git\"}",
+   "new": "skip = set(excludes)",
+   "note": "the .git directory is part of the tree manifest"
+  },
+  {
+   "id": "DY12",
+   "file": "clxreg/dirty.py",
+   "old": "            if f == \".git\":\n                continue",
+   "new": "            if False:\n                continue",
+   "note": "a .git link file is part of the tree manifest"
+  },
+  {
+   "id": "DY13",
+   "file": "clxreg/dirty.py",
+   "old": "\"excludes\": sorted(set(excludes))",
+   "new": "\"excludes\": list(excludes)",
+   "note": "the order of exclusions changes the fingerprint"
+  },
+  {
+   "id": "DY14",
+   "file": "clxreg/dirty.py",
+   "old": "p.relative_to(root).as_posix()",
+   "new": "str(p.relative_to(root))",
+   "note": "native path separators in the manifest",
+   "platform_specific": {
+    "survives_on": [
+     "linux"
+    ],
+    "reason": "the mutant changes behaviour only on Windows (platform path separator / Git for Windows autocrlf default); on Linux it changes nothing"
+   }
+  },
+  {
+   "id": "DY15",
+   "file": "clxreg/dirty.py",
+   "old": "    if not root.is_dir():",
+   "new": "    if False:",
+   "note": "a missing root gives an empty manifest"
+  },
+  {
+   "id": "DY16",
+   "file": "clxreg/dirty.py",
+   "old": "files.append({\"path\": p.relative_to(root).as_posix(), \"sha256\": _sha(p)})",
+   "new": "files.append({\"path\": p.relative_to(root).as_posix(), \"sha256\": \"0\" * 64})",
+   "note": "content not hashed"
+  },
+  {
+   "id": "DY17",
+   "file": "clxreg/dirty.py",
+   "old": "sorted(files, key=lambda e: e[\"path\"])",
+   "new": "files",
+   "note": "tree manifest files in walk order"
+  },
+  {
+   "id": "DY18",
+   "file": "clxreg/dirty.py",
+   "old": "_GIT = [\"git\", \"-c\", \"core.autocrlf=false\", \"-c\", \"core.safecrlf=false\"]",
+   "new": "_GIT = [\"git\"]",
+   "note": "git's own autocrlf setting changes what counts as dirty",
+   "platform_specific": {
+    "survives_on": [
+     "linux"
+    ],
+    "reason": "the mutant changes behaviour only on Windows (platform path separator / Git for Windows autocrlf default); on Linux it changes nothing"
+   }
+  },
+  {
+   "id": "DY19",
+   "file": "clxreg/dirty.py",
+   "old": "    head = _git(repo, \"rev-parse\", \"--verify\", \"HEAD^{commit}\").decode().strip()",
+   "new": "    head = \"\"",
+   "note": "the HEAD is not part of the manifest"
+  },
+  {
+   "id": "DY20",
+   "file": "clxreg/dirty.py",
+   "old": "raise ManifestError(f\"a path is not valid UTF-8: {b!r}\") from e",
+   "new": "return b.decode('utf-8', 'replace')",
+   "note": "invalid path bytes replaced"
+  }
+ ]
+}

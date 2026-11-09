@@ -61,3 +61,13 @@ jobs:
 
       - name: Golden Git configuration isolation
         run: python -B tests/verify_golden_git_config.py
+
+      - name: RoadmapRegistry portable gate
+        env:
+          CLX_WORKSPACE_ROOT: ${{ runner.temp }}/codelaxy-no-workspace
+          CLX_TESTRUN_ROOT: ${{ runner.temp }}/codelaxy-no-testrun
+        run: >-
+          python -B -X utf8 -W error tools/ci/registry_gate.py
+          --expected-tests 859
+          --expected-skips 30
+          --skip-policy tools/ci/registry-portable-skips.json

@@ -1,0 +1,62 @@
+{
+  "acceptance": [
+    {
+      "id": "AC-1",
+      "kind": "evidence",
+      "requires": {
+        "platforms": [
+          "windows"
+        ]
+      },
+      "resolved": true,
+      "text": "A GATE-RECORD with the fields required by the ratified text shows the suite passing from PowerShell."
+    },
+    {
+      "id": "AC-2",
+      "kind": "decision",
+      "requires": {
+        "decision_kind": "acceptance"
+      },
+      "resolved": true,
+      "text": "The owner accepts the GATE-RECORD."
+    }
+  ],
+  "applies_to": {
+    "platforms": [
+      "windows"
+    ]
+  },
+  "definition": "DEFINED",
+  "id": "CLX-REQ-0005",
+  "kind": "gate-condition",
+  "lifecycle": "ACTIVE",
+  "origin": {
+    "anchor": "P1.2-M1 in detail, row M1-GA",
+    "quote": "M1-GA: the suite passes from PowerShell",
+    "source": "micromap-r2",
+    "version": "ratified-bytes"
+  },
+  "persistence": "ONCE",
+  "ratification": {
+    "source": {
+      "anchor": "P1.2-M1 in detail, row M1-GA",
+      "quote": "M1-GA: the suite passes from PowerShell",
+      "source": "micromap-r2",
+      "version": "ratified-bytes"
+    },
+    "state": "RATIFIED"
+  },
+  "revision": 1,
+  "revisions": [
+    {
+      "change_class": "INITIAL",
+      "digest": "e082fb2487e7c257c5d75ce596d1d6429d961a5624be203a79d36b2e968a5f02",
+      "n": 1
+    }
+  ],
+  "schema_version": 1,
+  "statement": "M1-GA: the suite passes from PowerShell",
+  "statement_origin": "quoted",
+  "title": "M1-GA: the suite passes from PowerShell",
+  "type": "REQ"
+}

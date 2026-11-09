@@ -1,0 +1,63 @@
+{
+  "tests": [
+    "tests.test_ledger_cli_contract"
+  ],
+  "mutants": [
+    {
+      "id": "LCLI01",
+      "file": "clxreg/ledger.py",
+      "old": "        if any(isinstance(row, dict) and row.get(\"status\") == \"PROBLEM\" for row in rows) and not problems:",
+      "new": "        if False:",
+      "note": "a PROBLEM source may lose its required recorded problem"
+    },
+    {
+      "id": "LCLI02",
+      "file": "clxreg/ledger.py",
+      "old": "    catalog_findings = sources.validate_catalog(src_cat)",
+      "new": "    catalog_findings = []",
+      "note": "malformed source locations reach unsafe reads"
+    },
+    {
+      "id": "LCLI03",
+      "file": "clxreg/ledger.py",
+      "old": "        if findings:\n            raise LedgerInputError(f\"invalid {label} ledger: \"",
+      "new": "        if False:\n            raise LedgerInputError(f\"invalid {label} ledger: \"",
+      "note": "diff accepts malformed ledgers"
+    },
+    {
+      "id": "LCLI04",
+      "file": "clxreg/ledger.py",
+      "old": "                if c[\"class\"] == \"SOURCE\":\n                    print(f\"changed  ",
+      "new": "                if False:\n                    print(f\"changed  ",
+      "note": "changed SOURCE uses nonexistent coordinates"
+    },
+    {
+      "id": "LCLI05",
+      "file": "clxreg/ledger.py",
+      "old": "            if s[\"status\"] != \"EXCLUDED\":\n                out.append(advisory",
+      "new": "            if False:\n                out.append(advisory",
+      "note": "incomplete source inventory is silently accepted"
+    },
+    {
+      "id": "LCLI06",
+      "file": "clxreg/ledger.py",
+      "old": "if incomplete and not blocking(findings):",
+      "new": "if False:",
+      "note": "standalone verify treats unavailable or incomplete inventory as success"
+    },
+    {
+      "id": "LCLI07",
+      "file": "clxreg/cli.py",
+      "old": "findings = ledger.verify_ledger(value, catalog, roots)",
+      "new": "findings = ledger.validate_ledger(value) + ledger.verify_ledger(value, catalog, roots)",
+      "note": "integrated verify emits duplicate structure findings"
+    },
+    {
+      "id": "LCLI08",
+      "file": "clxreg/ledger.py",
+      "old": "findings = verify_ledger(led, catalog, roots)",
+      "new": "findings = validate_ledger(led) + verify_ledger(led, catalog, roots)",
+      "note": "standalone verify emits duplicate structure findings"
+    }
+  ]
+}

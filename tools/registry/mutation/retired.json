@@ -1,0 +1,11 @@
+{
+  "_comment": "Mutant ids that existed at some point and were withdrawn. An id is never reused: a retired id must not appear in any spec.",
+  "retired": [
+    {"spec": "store", "id": "S12", "reason": "withdrawn with the redundant id-type check in store.load (the file-name check already pins the type)"},
+    {"spec": "sources", "id": "K04", "reason": "withdrawn with the redundant startswith('/') check in sources._valid_path (an empty first segment is refused anyway); the NUL-in-path mutant that briefly reused this id is now K54"},
+    {"spec": "aliases", "id": "A43", "reason": "withdrawn with the redundant guard before validate_namespaces in aliases.main"},
+    {"spec": "ledger", "id": "LD42", "reason": "withdrawn with the redundant 'only a label can be migrated' check in ledger.validate_ledger (the class/disposition tie covers it)"},
+    {"spec": "evidence", "id": "PS02", "reason": "withdrawn with the clause `not superseded_by_fail` in evidence._platform_state: an ACTIVE failure now always blocks, only its own lifecycle lifts it (conservative; the clause could only matter when the superseding failure was itself not active)"},
+    {"spec": "localcat", "id": "LC18", "reason": "withdrawn with the redundant verify_files call in localcat check (a catalog equal to the build was just built from verified files)"}
+  ]
+}

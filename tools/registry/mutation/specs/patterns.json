@@ -1,0 +1,28 @@
+{
+  "tests": ["tests.test_patterns"],
+  "mutants": [
+    {"id": "PT01", "file": "clxreg/patterns.py", "old": "        if not (s > 0 and textsource.is_word(text[s - 1])) and not (e < len(text) and textsource.is_word(text[e])):", "new": "        if not (e < len(text) and textsource.is_word(text[e])):", "note": "left boundary ignored"},
+    {"id": "PT02", "file": "clxreg/patterns.py", "old": "        if not (s > 0 and textsource.is_word(text[s - 1])) and not (e < len(text) and textsource.is_word(text[e])):", "new": "        if not (s > 0 and textsource.is_word(text[s - 1])):", "note": "right boundary ignored"},
+    {"id": "PT03", "file": "clxreg/patterns.py", "old": "            pos = e\n        else:\n            pos = s + 1", "new": "            pos = e\n        else:\n            pos = e", "note": "a failed boundary hides a match starting inside it"},
+    {"id": "PT04", "file": "clxreg/patterns.py", "old": "        if m.span() not in labels:", "new": "        if True:", "note": "known labels also reported as unclassified"},
+    {"id": "PT05", "file": "clxreg/patterns.py", "old": "(o[1] - o[0]) > (i[1] - i[0])", "new": "(o[1] - o[0]) >= (i[1] - i[0])", "note": "a match contains itself"},
+    {"id": "PT06", "file": "clxreg/patterns.py", "old": "|-(?=\\1))", "new": "|-)", "note": "hyphen between different prefixes read as a range"},
+    {"id": "PT07", "file": "clxreg/patterns.py", "old": "[–—…]", "new": "[–…]", "note": "em dash not a range separator"},
+    {"id": "PT08", "file": "clxreg/patterns.py", "old": "|\\.\\.", "new": "", "note": "two dots not a range separator"},
+    {"id": "PT09", "file": "clxreg/patterns.py", "old": "        if rx.fullmatch(\"\") is not None:", "new": "        if False:", "note": "empty-matching pattern accepted"},
+    {"id": "PT10", "file": "clxreg/patterns.py", "old": "        if not (isinstance(n, dict) and isinstance(n.get(\"key\"), str) and isinstance(n.get(\"label_pattern\"), str)):", "new": "        if False:", "note": "malformed namespace entry accepted"},
+    {"id": "PT11", "file": "clxreg/patterns.py", "old": "        elif isinstance(value, str) and value and not patterns[ns].fullmatch(value):", "new": "        elif False:", "note": "ambiguity value that does not fit the namespace"},
+    {"id": "PT12", "file": "clxreg/patterns.py", "old": "        if n > 1:\n            err(\"DE-01\"", "new": "        if n > 2:\n            err(\"DE-01\"", "note": "duplicate ambiguity rule tolerated"},
+    {"id": "PT13", "file": "clxreg/patterns.py", "old": "len(mean) >= 2", "new": "len(mean) >= 1", "note": "one meaning is not an ambiguity"},
+    {"id": "PT14", "file": "clxreg/patterns.py", "old": " and len(set(mean)) == len(mean)", "new": "", "note": "repeated meanings"},
+    {"id": "PT15", "file": "clxreg/patterns.py", "old": "        if ns not in patterns:", "new": "        if False:", "note": "rule for an unknown namespace"},
+    {"id": "PT16", "file": "clxreg/patterns.py", "old": "            if r.get(\"value\") == value:", "new": "            if False:", "note": "value rule not preferred"},
+    {"id": "PT17", "file": "clxreg/patterns.py", "old": "            if \"value\" not in r:", "new": "            if True:", "note": "a value rule applies to the whole namespace"},
+    {"id": "PT18", "file": "clxreg/patterns.py", "old": "        held[outer].append(i)", "new": "        pass", "note": "contained matches dropped"},
+    {"id": "PT19", "file": "clxreg/patterns.py", "old": "    out.sort(key=lambda m: (m.start, m.end, _RANK[m.cls]))", "new": "    pass", "note": "ranges not merged into position order"},
+    {"id": "PT20", "file": "clxreg/patterns.py", "old": "last = (m.group(4) or \"\") + m.group(5) + m.group(6)", "new": "last = m.group(5) + m.group(6)", "note": "range end loses its prefix"},
+    {"id": "PT21", "file": "clxreg/patterns.py", "old": "        if \"basis\" in r and not (isinstance(r[\"basis\"], str) and r[\"basis\"]):", "new": "        if False:", "note": "ambiguity rule without a basis"},
+    {"id": "PT22", "file": "clxreg/patterns.py", "old": "        if \"value\" in r and not (isinstance(value, str) and value):", "new": "        if False:", "note": "ambiguity value type"},
+    {"id": "PT23", "file": "clxreg/patterns.py", "old": "    for k in sorted(set(obj) - {\"schema\", \"rules\"}):", "new": "    for k in []:", "note": "unknown top-level field in ambiguity rules"}
+  ]
+}

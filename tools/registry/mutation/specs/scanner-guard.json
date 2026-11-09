@@ -1,0 +1,26 @@
+{
+  "tests": ["tests.test_scanner_contract"],
+  "mutants": [
+    {
+      "id": "ZG01",
+      "file": "clxreg/patterns.py",
+      "old": "        if s == e:\n            raise ZeroWidthMatch(s)",
+      "new": "        if False:\n            raise ZeroWidthMatch(s)",
+      "note": "a zero-width match repeats without advancing; the subprocess regression is bounded"
+    },
+    {
+      "id": "ZG02",
+      "file": "clxreg/patterns.py",
+      "old": "            raise ZeroWidthMatch(s)",
+      "new": "            raise ValueError('zero-width namespace match')",
+      "note": "a scanner input failure loses its stable error type"
+    },
+    {
+      "id": "ZG03",
+      "file": "clxreg/ledger.py",
+      "old": "    except patterns.ZeroWidthMatch as exc:",
+      "new": "    except KeyError as exc:",
+      "note": "the real zero-width scanner failure escapes the ledger input contract"
+    }
+  ]
+}

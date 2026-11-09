@@ -1,0 +1,15 @@
+{
+  "tests": ["tests.test_protect"],
+  "mutants": [
+    {"id": "P01", "file": "clxreg/protect.py", "old": "elif sha256_file(p) != want:", "new": "elif False:", "note": "hash comparison skipped"},
+    {"id": "P02", "file": "clxreg/protect.py", "old": "        if not p.is_file():\n            f.append(data_error(\"PR-01\"", "new": "        if False:\n            f.append(data_error(\"PR-01\"", "note": "missing file ignored"},
+    {"id": "P03", "file": "clxreg/protect.py", "old": "    if staged:", "new": "    if False:", "note": "staged files ignored"},
+    {"id": "P04", "file": "clxreg/protect.py", "old": "    if not entries:", "new": "    if False:", "note": "empty manifest passes vacuously"},
+    {"id": "P05", "file": "clxreg/protect.py", "old": "    return not p.is_absolute() and \"..\" not in p.parts and rel.strip() != \"\"", "new": "    return True", "note": "path may escape its root"},
+    {"id": "P06", "file": "clxreg/protect.py", "old": "elif sha256_file(p) != h:", "new": "elif False:", "note": "build ignores a documented-hash mismatch"},
+    {"id": "P07", "file": "clxreg/protect.py", "old": "    if out.exists():\n        raise BuildError(f\"refusing to overwrite {out}\")", "new": "    pass", "note": "build overwrites an existing manifest"},
+    {"id": "P08", "file": "clxreg/protect.py", "old": "    if m.get(\"schema\") != SCHEMA:", "new": "    if False:", "note": "unknown schema accepted"},
+    {"id": "P09", "file": "clxreg/protect.py", "old": "re.fullmatch(r\"[0-9a-f]{64}\", want or \"\")", "new": "True", "note": "malformed hash accepted"},
+    {"id": "P10", "file": "clxreg/protect.py", "old": "    roots.update(root_overrides or {})", "new": "    pass", "note": "root override ignored"}
+  ]
+}

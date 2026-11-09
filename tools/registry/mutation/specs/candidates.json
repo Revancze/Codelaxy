@@ -1,0 +1,33 @@
+{
+  "tests": ["tests.test_candidates"],
+  "mutants": [
+    {"id": "CA01", "file": "clxreg/candidates.py", "old": "    if out.exists():", "new": "    if False:", "note": "existing output directory accepted"},
+    {"id": "CA02", "file": "clxreg/candidates.py", "old": "    if not out.parent.is_dir():", "new": "    if False:", "note": "missing parent accepted"},
+    {"id": "CA03", "file": "clxreg/candidates.py", "old": "        if out == f or f in out.parents:", "new": "        if False:", "note": "output inside the registry or a source root"},
+    {"id": "CA04", "file": "clxreg/candidates.py", "old": "        if after[\"problems\"]:", "new": "        if False:", "note": "an import with problems is used"},
+    {"id": "CA05", "file": "clxreg/candidates.py", "old": "        if not after[\"complete\"]:", "new": "        if False:", "note": "a partial import is used"},
+    {"id": "CA06", "file": "clxreg/candidates.py", "old": "    if f:\n        raise CandidateError(\"the mapping does not account", "new": "    if False:\n        raise CandidateError(\"the mapping does not account", "note": "difference of the imports not checked"},
+    {"id": "CA07", "file": "clxreg/candidates.py", "old": "    if blocking(st.findings):", "new": "    if False:", "note": "invalid store used"},
+    {"id": "CA08", "file": "clxreg/candidates.py", "old": "        if d[\"record\"] not in st.records:", "new": "        if False:", "note": "mapping to a record that does not exist"},
+    {"id": "CA09", "file": "clxreg/candidates.py", "old": "        if d[\"disposition\"] != \"MIGRATED_AS_ALIAS\":", "new": "        if False:", "note": "decisions not to migrate treated as migrations"},
+    {"id": "CA10", "file": "clxreg/candidates.py", "old": "        if have:", "new": "        if False:", "note": "an alias the record already has is proposed again"},
+    {"id": "CA11", "file": "clxreg/candidates.py", "old": "            if have[0].get(\"status\") != d[\"status\"]:", "new": "            if False:", "note": "existing alias with another status skipped silently"},
+    {"id": "CA12", "file": "clxreg/candidates.py", "old": "        first = next((o for o in occ if \"line\" in o), None)", "new": "        first = occ[0]", "note": "evidence taken from a source that cannot be checked"},
+    {"id": "CA13", "file": "clxreg/candidates.py", "old": "        if first is None:", "new": "        if False:", "note": "label found only in an ODS accepted"},
+    {"id": "CA14", "file": "clxreg/candidates.py", "old": "    if problems:\n        raise CandidateError(\"the candidate aliases fail", "new": "    if False:\n        raise CandidateError(\"the candidate aliases fail", "note": "alias checks not enforced"},
+    {"id": "CA15", "file": "clxreg/candidates.py", "old": "\"quote\": unit_text[ref][first[\"unit\"]]", "new": "\"quote\": first[\"text\"]", "note": "quote shortened to the token"},
+    {"id": "CA16", "file": "clxreg/candidates.py", "old": "{len(occ)} occurrence(s)", "new": "{1} occurrence(s)", "note": "occurrence count wrong"},
+    {"id": "CA17", "file": "clxreg/candidates.py", "old": "\"existing\": sorted(existing)", "new": "\"existing\": []", "note": "existing aliases not reported"},
+    {"id": "CA18", "file": "clxreg/candidates.py", "old": "\"declined\": declined,", "new": "\"declined\": [],", "note": "declined decisions not reported"},
+    {"id": "CA19", "file": "clxreg/candidates.py", "old": "        if e[\"disposition\"] != \"MIGRATED_AS_ALIAS\":", "new": "        if True:", "note": "mapped entries counted as not mapped"},
+    {"id": "CA20", "file": "clxreg/candidates.py", "old": "    if diff[\"added\"] or diff[\"removed\"]:", "new": "    if False:", "note": "added or removed entries accepted"},
+    {"id": "CA21", "file": "clxreg/candidates.py", "old": "    for s in diff[\"sources_changed\"]:", "new": "    for s in []:", "note": "changed sources accepted"},
+    {"id": "CA22", "file": "clxreg/candidates.py", "old": "        if e is None or e.get(\"class\") != \"LABEL\" or \"namespace\" not in e:", "new": "        if e is None:", "note": "changes of non-labels accepted"},
+    {"id": "CA23", "file": "clxreg/candidates.py", "old": "        if k not in tokens:", "new": "        if False:", "note": "changes the mapping does not name accepted"},
+    {"id": "CA24", "file": "clxreg/candidates.py", "old": "        if (set(c[\"before\"]) | set(c[\"after\"])) - _MAPPING_FIELDS:", "new": "        if False:", "note": "fields beyond the decision may change"},
+    {"id": "CA25", "file": "clxreg/candidates.py", "old": "    for k in sorted(set(tokens) - touched):", "new": "    for k in []:", "note": "mapping entries that change nothing accepted"},
+    {"id": "CA26", "file": "clxreg/candidates.py", "old": "        canon.write_record(out / rel, obj)", "new": "        canon.write_record(out / rel, obj, overwrite=True)", "note": "candidate files overwrite", "equivalent": "the output directory is new and each record file is written once; exclusive creation is a guard against a future bug, not observable behaviour"},
+    {"id": "CA27", "file": "clxreg/candidates.py", "old": "    for rid in sorted(new_by_record):\n        items = new_by_record[rid]", "new": "    for rid in new_by_record:\n        items = new_by_record[rid]", "note": "candidate files in insertion order", "equivalent": "new_by_record is filled in sorted(mapping) order and every output list is sorted again by record; the files themselves are order-independent"},
+    {"id": "CA28", "file": "clxreg/candidates.py", "old": "    return 0\n\n\nif __name__", "new": "    return 1\n\n\nif __name__", "note": "successful generation exits non-zero"}
+  ]
+}

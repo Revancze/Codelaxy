@@ -1,0 +1,68 @@
+{
+  "schema": "clx.registry-skip-policy/1",
+  "profile": "portable",
+  "expected_tests": 859,
+  "allowed_skips": 30,
+  "groups": [
+    {
+      "class": "tests.test_pilot.PilotTests",
+      "reason_contains": "actual source ledger/local catalog not available",
+      "tests": [
+        "test_incomplete_ledger_is_never_used_for_a_pilot",
+        "test_ledger_location_or_identity_tampering_is_refused",
+        "test_no_mapping_from_ambiguous_or_missing_namespace",
+        "test_pilot_reproducible_and_write_is_exclusive",
+        "test_real_pilot_is_unknown_and_does_not_claim_a_definition",
+        "test_rt2_cannot_be_activated_and_mutant_evidence_cannot_bind"
+      ]
+    },
+    {
+      "class": "tests.test_real_ledger.RealLedgerTests",
+      "reason_contains": "is not a directory on this machine",
+      "tests": [
+        "test_a_dry_run_of_candidates_from_the_real_sources_in_a_scratch_store",
+        "test_counts_equal_an_independent_count_straight_from_the_bytes",
+        "test_nothing_is_dropped_the_coverage_map_accounts_for_every_line",
+        "test_rt2_is_never_an_entry_but_the_range_and_its_ends_are",
+        "test_states_references_and_results_are_all_recorded_literally",
+        "test_the_import_is_complete_and_verifies_against_the_pinned_bytes",
+        "test_the_ledger_is_byte_identical_on_every_machine",
+        "test_the_same_label_of_two_namespaces_stays_ambiguous_and_unmerged"
+      ]
+    },
+    {
+      "class": "tests.test_sources.RealSourcesTests",
+      "reason_contains": "is not a directory on this machine",
+      "tests": [
+        "test_documented_hashes",
+        "test_quote_in_both_ratified_versions",
+        "test_quote_in_only_one_of_them",
+        "test_ratified_bytes_and_marked_file_are_two_versions_of_one_source",
+        "test_rt2_is_not_a_literal_occurrence_but_is_implied_by_the_range",
+        "test_the_catalog_is_valid_and_the_files_match_their_pins"
+      ]
+    },
+    {
+      "class": "tests.test_testrun.RealRecordTests",
+      "reason_contains": "testrun files not present under",
+      "tests": [
+        "test_all_three_records_are_dirty_agent_written_and_not_independent",
+        "test_reading_changes_nothing",
+        "test_the_candidate_from_the_real_run_is_not_a_pass_of_the_pilot_test",
+        "test_the_existing_linux_run_is_unbound_and_its_copy_is_not_treated_as_verified",
+        "test_the_existing_windows_run_is_unbound_with_the_named_points",
+        "test_the_guard_lists_of_the_records_are_truncated_so_a_guard_free_test_cannot_be_proven",
+        "test_the_pilot_test_is_passed_in_both_trx",
+        "test_the_records_agree_with_their_trx",
+        "test_the_two_trx_have_the_documented_hashes_and_counts"
+      ]
+    },
+    {
+      "class": "tests.test_validator.ValidatorTests",
+      "reason_contains": "source proposal is unavailable in this environment",
+      "tests": [
+        "test_catalog_exactly_covers_source_schema_codes_and_extensions"
+      ]
+    }
+  ]
+}

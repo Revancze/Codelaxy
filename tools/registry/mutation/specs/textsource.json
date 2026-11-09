@@ -1,0 +1,22 @@
+{
+  "tests": ["tests.test_textsource"],
+  "mutants": [
+    {"id": "T01", "file": "clxreg/textsource.py", "old": "return data.decode(\"utf-8\")", "new": "return data.decode(\"utf-8\", errors=\"replace\")", "note": "invalid bytes silently replaced"},
+    {"id": "T02", "file": "clxreg/textsource.py", "old": "return c.isalnum() or c == \"_\"", "new": "return c.isalnum()", "note": "underscore is a boundary"},
+    {"id": "T03", "file": "clxreg/textsource.py", "old": "return c.isalnum() or c == \"_\"", "new": "return c in \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_\"", "note": "non-ASCII letters and digits are boundaries"},
+    {"id": "T04", "file": "clxreg/textsource.py", "old": "if not (before and _word(before)) and not (after and _word(after)):", "new": "if not (after and _word(after)):", "note": "left boundary ignored"},
+    {"id": "T05", "file": "clxreg/textsource.py", "old": "if not (before and _word(before)) and not (after and _word(after)):", "new": "if not (before and _word(before)):", "note": "right boundary ignored"},
+    {"id": "T06", "file": "clxreg/textsource.py", "old": "text.count(\"\\n\", 0, offset) + 1", "new": "text.count(\"\\n\", 0, offset)", "note": "line numbers start at 0"},
+    {"id": "T07", "file": "clxreg/textsource.py", "old": "offset - (text.rfind(\"\\n\", 0, offset) + 1) + 1", "new": "offset - (text.rfind(\"\\n\", 0, offset) + 1)", "note": "columns start at 0"},
+    {"id": "T08", "file": "clxreg/textsource.py", "old": "if not label or re.search(r\"\\s\", label):", "new": "if not label:", "note": "labels with whitespace accepted"},
+    {"id": "T09", "file": "clxreg/textsource.py", "old": "    if not quote:\n        raise ValueError", "new": "    if False:\n        raise ValueError", "note": "empty quote accepted"},
+    {"id": "T10", "file": "clxreg/textsource.py", "old": "_NUM = r\"(0|[1-9][0-9]*)\"", "new": "_NUM = r\"([0-9]+)\"", "note": "leading zeros in ranges"},
+    {"id": "T11", "file": "clxreg/textsource.py", "old": "_NUM = r\"(0|[1-9][0-9]*)\"", "new": "_NUM = r\"(0|[1-9]\\d*)\"", "note": "non-ASCII digits after the first in ranges"},
+    {"id": "T12", "file": "clxreg/textsource.py", "old": "[–—-] ?", "new": "[—-] ?", "note": "en dash not a range separator"},
+    {"id": "T13", "file": "clxreg/textsource.py", "old": "m.group(1) != m.group(3)", "new": "False", "note": "prefixes of the two ends may differ"},
+    {"id": "T14", "file": "clxreg/textsource.py", "old": "if lo < hi else None", "new": "if lo <= hi else None", "note": "range of one element"},
+    {"id": "T15", "file": "clxreg/textsource.py", "old": "r[1] < int(m.group(2)) < r[2]", "new": "r[1] <= int(m.group(2)) <= r[2]", "note": "range ends count as implied"},
+    {"id": "T16", "file": "clxreg/textsource.py", "old": "m.group(1) == r[0] and", "new": "True and", "note": "prefix of the label ignored"},
+    {"id": "T17", "file": "clxreg/textsource.py", "old": "return bool(find_quote(text, quote))", "new": "return True", "note": "every quote is present"}
+  ]
+}
