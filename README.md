@@ -131,7 +131,9 @@ Codelaxy
 │
 └── docs/
     ├── architecture.md
-    └── roadmap.md
+    ├── roadmap.md
+    └── adr/
+        └── one detailed record per roadmap phase
 ```
 
 Dependency direction is intentionally constrained.
@@ -169,8 +171,9 @@ The project is being implemented milestone by milestone.
 | Public installation/distribution | Planned |
 | 1.0 | Planned |
 
-The detailed sequence, exit criteria, and integration milestones live in the
-[roadmap](docs/roadmap.md).
+The sequence and status of the phases live in the [roadmap](docs/roadmap.md).
+The scope and exit criteria of each phase live in its record under
+[docs/adr/](docs/adr/).
 
 ## Snapshot work
 
@@ -321,8 +324,9 @@ The two authoritative design documents are:
 
 - [Architecture contract](docs/architecture.md) — invariants, vocabulary,
   responsibility boundaries, result model, and design constraints.
-- [Roadmap](docs/roadmap.md) — implementation milestones, exit criteria, and
-  the path to 1.0.
+- [Roadmap](docs/roadmap.md) — the phases, their order and status, and the
+  path to 1.0. The scope and exit criteria of each phase are in its record
+  under [docs/adr/](docs/adr/).
 
 When this README and the architecture documentation disagree, the architecture
 contract wins.
