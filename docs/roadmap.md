@@ -56,8 +56,15 @@ once revision 8 is merged into `main`.
   evidence under the rules above: a phase recorded as `DONE` can show
   unticked items. Such a status is not evidence that those items are met.
   Each gap is recorded as a change request in the phase record, and the
-  items stay unticked until evidence is recorded. From revision 8 on, a phase
-  is set to `DONE` only when every item of its gate is ticked.
+  items stay unticked until evidence is recorded.
+- From revision 8 on, a phase is set to `DONE` only when every item of its
+  gate is ticked. An empty gate (`0/0`) decides nothing by itself. A phase
+  with an empty gate is set to `DONE` only when every item of its scope is
+  ticked and the binding condition its Gate section points to, if there is
+  one, is met. Today this applies to P1.10 (three scope items and the
+  unfreeze condition) and to P2.6 (six scope items). P0.0 to P0.4 and P1.0
+  have an empty gate and an empty scope; their `DONE` is the status ratified
+  in revision 7.
 - Dependencies and Unlocks in a phase record give the previous and the next
   phase in the order of this file. Revision 7 states an order, not
   dependencies, and these fields claim nothing more.
@@ -168,11 +175,13 @@ that produces no build evidence and satisfies no `BUILD` requirement (I14).
 Structure only:
 
 - the sections P1.1 to P2.6 moved to `docs/adr/`, one file per phase; their
-  scope items and exit criteria are carried over word for word, and the exit
+  scope bullets and exit criteria keep their wording, apart from line breaks,
+  the case of the first letter, and the final `;` or `.`, and the exit
   criteria are listed there under the heading Gate;
 - where revision 7 had a list or a table instead of bullets, each row became
-  one scope item (P2.1, P2.4); each P2.4 item repeats the introductory
-  condition "real third-party repository";
+  one scope item (P2.1, P2.4); each P2.4 item carries the added prefix
+  "Automated run against a real third-party repository:", taken from the
+  introductory sentence of that list in revision 7;
 - P0.0 to P0.4 and P1.0, which revision 7 listed in the status table only,
   each received a phase record that states this;
 - the status list became a table with a link to each phase record; names and
@@ -197,7 +206,9 @@ Interpretations made in revision 8, which need approval as such:
 - P1.10: the unfreeze condition is carried in Notes, not as a gate item; the
   Gate section points to it;
 - P2.6: the six unlabelled lines of revision 7 are placed under Scope, not
-  under Gate. This decides how the phase record counts what blocks 1.0.
+  under Gate. This decides how the phase record counts what blocks 1.0:
+  the gate is empty, so under the rule on `DONE` the six scope items decide.
 
-The wording of every scope item and exit criterion of revision 7 is kept.
-The interpretations above change how some of them are classified and counted.
+The wording of every scope bullet and exit criterion of revision 7 is kept,
+apart from the normalisation named above. The interpretations above change
+how some of them are classified and counted.
