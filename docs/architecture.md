@@ -541,7 +541,7 @@ regression, not a design choice.
 None of these block current work. All of them block the first release.
 
 Settled since revision 3: the CPU Router unfreeze condition, which is now
-stated in the CPU Router integration milestone in `roadmap.md`.
+stated in the CPU Router integration phase record, `docs/adr/P1.10.md`.
 
 ---
 
