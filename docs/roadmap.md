@@ -204,9 +204,12 @@ Interpretations made in revision 8, which need approval as such:
 - P1.1: the phase stays `DONE` as ratified while one scope item and three
   gate criteria are unticked (Scope 7/8, Gate 3/6);
 - P1.10: the unfreeze condition is carried in Notes, not as a gate item; the
-  Gate section points to it;
+  Gate section points to it. Under the rule on `DONE`, the three scope items
+  and that condition decide when the phase is set to `DONE`; revision 7
+  states the condition for the unfreeze only;
 - P2.6: the six unlabelled lines of revision 7 are placed under Scope, not
-  under Gate. This decides how the phase record counts what blocks 1.0:
+  under Gate (approved by the maintainer on 2026-11-12 in a comment on pull
+  request #20). This decides how the phase record counts what blocks 1.0:
   the gate is empty, so under the rule on `DONE` the six scope items decide.
 
 The wording of every scope bullet and exit criterion of revision 7 is kept,
