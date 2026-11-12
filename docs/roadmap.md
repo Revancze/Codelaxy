@@ -37,7 +37,9 @@ status in this file is the authoritative one, and the difference is a defect
 to be fixed.
 
 `docs/Codelaxy-Roadmap.ods` and `docs/roadmap-view/` are derived views. They
-are not independent sources.
+are not independent sources. Both still describe the reference state at commit
+`ab71863`, which is revision 7. They will be regenerated in a separate change
+once revision 8 is merged into `main`.
 
 ### Rules for phase records
 
