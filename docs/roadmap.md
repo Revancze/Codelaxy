@@ -49,6 +49,18 @@ once revision 8 is merged into `main`.
   with its branch and reason, never as a ticked checkbox.
 - `0/0` in a counter means that nothing is defined, not that something was
   verified.
+- `0/0` in the Gate counter does not mean that a phase has no binding
+  condition. Where revision 7 states a condition in another form, the phase
+  record carries it in Notes and its Gate section points to it (P1.10).
+- A status ratified in revision 7 is kept as ratified. It may predate full
+  evidence under the rules above: a phase recorded as `DONE` can show
+  unticked items. Such a status is not evidence that those items are met.
+  Each gap is recorded as a change request in the phase record, and the
+  items stay unticked until evidence is recorded. From revision 8 on, a phase
+  is set to `DONE` only when every item of its gate is ticked.
+- Dependencies and Unlocks in a phase record give the previous and the next
+  phase in the order of this file. Revision 7 states an order, not
+  dependencies, and these fields claim nothing more.
 - A phase record refers to architecture documents instead of repeating them.
 
 ### Allowed values
@@ -158,6 +170,9 @@ Structure only:
 - the sections P1.1 to P2.6 moved to `docs/adr/`, one file per phase; their
   scope items and exit criteria are carried over word for word, and the exit
   criteria are listed there under the heading Gate;
+- where revision 7 had a list or a table instead of bullets, each row became
+  one scope item (P2.1, P2.4); each P2.4 item repeats the introductory
+  condition "real third-party repository";
 - P0.0 to P0.4 and P1.0, which revision 7 listed in the status table only,
   each received a phase record that states this;
 - the status list became a table with a link to each phase record; names and
@@ -168,8 +183,21 @@ New in revision 8, not present in revision 7:
 - the section "How this roadmap is organised", with the rules for phase
   records, the allowed values, and the identifiers;
 - evidence and ticked checkboxes in `docs/adr/P1.1.md` and `docs/adr/P1.2.md`;
-- open decisions, change requests, and risks in `docs/adr/P1.2.md`, and one
-  change request and one risk in `docs/adr/P1.1.md`;
-- Dependencies, Unlocks, and References in every phase record.
+- open decisions, change requests, and risks in `docs/adr/P1.2.md`, and two
+  change requests and one risk in `docs/adr/P1.1.md`;
+- Dependencies, Unlocks, and References in every phase record; Dependencies
+  and Unlocks give the roadmap order only.
 
-No requirement of revision 7 was changed or removed.
+Interpretations made in revision 8, which need approval as such:
+
+- P1.1: the list "Non-happy-path coverage required" is counted as the eighth
+  scope item, so the Scope counter includes that test coverage;
+- P1.1: the phase stays `DONE` as ratified while one scope item and three
+  gate criteria are unticked (Scope 7/8, Gate 3/6);
+- P1.10: the unfreeze condition is carried in Notes, not as a gate item; the
+  Gate section points to it;
+- P2.6: the six unlabelled lines of revision 7 are placed under Scope, not
+  under Gate. This decides how the phase record counts what blocks 1.0.
+
+The wording of every scope item and exit criterion of revision 7 is kept.
+The interpretations above change how some of them are classified and counted.
