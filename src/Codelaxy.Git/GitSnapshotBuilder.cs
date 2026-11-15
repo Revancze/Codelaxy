@@ -559,12 +559,22 @@ public sealed class GitSnapshotBuilder
             {
                 var fullPath = Path.Combine(fileSystemTopLevel, untrackedPath);
                 var linkTarget = new FileInfo(fullPath).LinkTarget;
+                var regularMode = string.Empty;
+
+                // F10: Git enumerated this path, but it may have vanished since.
+                if (
+                    linkTarget is null
+                    && !TryGetUntrackedRegularFileMode(fullPath, out regularMode)
+                )
+                {
+                    return Failure("Repository changed during snapshot capture.");
+                }
 
                 if (linkTarget is null)
                 {
                     regularUntrackedPaths.Add(untrackedPath);
                     untrackedKinds[untrackedPath] = "regular";
-                    untrackedModes[untrackedPath] = GetUntrackedRegularFileMode(fullPath);
+                    untrackedModes[untrackedPath] = regularMode;
 
                     continue;
                 }
@@ -912,15 +922,32 @@ public sealed class GitSnapshotBuilder
         hash.AppendData(bytes);
     }
 
-    private static string GetUntrackedRegularFileMode(string path)
+    // Returns false only when the path no longer exists (F10). Any other I/O
+    // failure is outside F10 and keeps propagating as before.
+    private static bool TryGetUntrackedRegularFileMode(string path, out string mode)
     {
-        if (OperatingSystem.IsWindows())
+        mode = string.Empty;
+
+        try
         {
-            return "100644";
+            if (OperatingSystem.IsWindows())
+            {
+                // Windows has no executable bit, but existence must still be proven.
+                _ = File.GetAttributes(path);
+                mode = "100644";
+
+                return true;
+            }
+
+            var unixMode = File.GetUnixFileMode(path);
+            mode = (unixMode & UnixFileMode.UserExecute) != UnixFileMode.None ? "100755" : "100644";
+
+            return true;
         }
-
-        var mode = File.GetUnixFileMode(path);
-
-        return (mode & UnixFileMode.UserExecute) != UnixFileMode.None ? "100755" : "100644";
+        catch (Exception exception)
+            when (exception is FileNotFoundException or DirectoryNotFoundException)
+        {
+            return false;
+        }
     }
 }
