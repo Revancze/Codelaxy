@@ -26,6 +26,9 @@
   <ProjectReference
       Include="..\Codelaxy.ProcessTestHelper\Codelaxy.ProcessTestHelper.csproj"
       ReferenceOutputAssembly="false" />
+  <ProjectReference
+      Include="..\Codelaxy.F10GitProxy\Codelaxy.F10GitProxy.csproj"
+      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>
