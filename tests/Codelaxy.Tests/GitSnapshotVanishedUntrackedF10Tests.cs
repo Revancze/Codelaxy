@@ -25,6 +25,8 @@ public sealed class GitSnapshotVanishedUntrackedF10Tests
     [InlineData("victim.txt")]
     [InlineData("name with spaces.txt")]
     [InlineData("příliš-žluťoučký-kůň.txt")]
+    // Whole untracked directory vanishes: reaches the DirectoryNotFoundException branch.
+    [InlineData("sub/victim.txt")]
     public async Task BuildAsync_ReturnsDiagnosticWhenEnumeratedUntrackedFileVanished(
         string victimName
     )
@@ -39,6 +41,7 @@ public sealed class GitSnapshotVanishedUntrackedF10Tests
             await InitializeRepositoryAsync(realGit, repositoryPath);
 
             var victimPath = Path.Combine(repositoryPath, victimName);
+            Directory.CreateDirectory(Path.GetDirectoryName(victimPath)!);
             await File.WriteAllTextAsync(victimPath, "F10 payload\n");
 
             // Positive control: the same repository is observable before the race.
@@ -119,6 +122,48 @@ public sealed class GitSnapshotVanishedUntrackedF10Tests
                 StringComparison.Ordinal
             );
             Assert.True(File.Exists(foreignVictim), "Proxy must not delete foreign files.");
+            Assert.False(File.Exists(Path.Combine(proxyDirectory, "f10-hit.bin")));
+        }
+        finally
+        {
+            DeleteTestDirectory(root);
+        }
+    }
+
+    [Theory]
+    [InlineData("../victim.txt")]
+    [InlineData("sub/../victim.txt")]
+    [InlineData("./victim.txt")]
+    [InlineData("/victim.txt")]
+    [InlineData("a/b/victim.txt")]
+    [InlineData("sub\\victim.txt")]
+    [InlineData("sub/")]
+    public async Task Proxy_RejectsVictimOutsidePlainRepositoryPath(string victimName)
+    {
+        var root = CreateTestRoot();
+        var proxyDirectory = Path.Combine(root, "proxy");
+        var repositoryPath = Path.Combine(root, "repository");
+
+        try
+        {
+            var realGit = new GitProcessRunner();
+            await InitializeRepositoryAsync(realGit, repositoryPath);
+
+            var proxyExecutable = await DeployProxyAsync(realGit, proxyDirectory, victimName);
+
+            var result = await new GitProcessRunner(proxyExecutable).RunReadOnlyAsync(
+                repositoryPath,
+                ["--version"],
+                TimeSpan.FromMinutes(2),
+                CancellationToken.None
+            );
+
+            Assert.False(result.Succeeded);
+            Assert.Contains(
+                "Invalid F10 Git proxy configuration",
+                result.StandardError,
+                StringComparison.Ordinal
+            );
             Assert.False(File.Exists(Path.Combine(proxyDirectory, "f10-hit.bin")));
         }
         finally
