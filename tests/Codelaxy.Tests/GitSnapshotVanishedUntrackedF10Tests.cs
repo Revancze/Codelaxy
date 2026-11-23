@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using System.Text;
 using Codelaxy.Git;
 
@@ -180,18 +181,13 @@ public sealed class GitSnapshotVanishedUntrackedF10Tests
     [Theory]
     [InlineData("victim.txt", false)]
     [InlineData("sub/victim.txt", false)]
-    // Symbolic links are created only on Linux; on other systems the case returns early.
-    [InlineData("link.txt", true)]
+    // Symbolic links are created only on Linux; on other systems the case is skipped.
+    [LinuxOnlyInlineData("link.txt", true)]
     public async Task BuildAsync_ReturnsSnapshotOfMissingPathWhenTrackedPathVanishedBeforeObservation(
         string victimName,
         bool symlink
     )
     {
-        if (symlink && !OperatingSystem.IsLinux())
-        {
-            return;
-        }
-
         var root = CreateTestRoot();
         var repositoryPath = Path.Combine(root, "repository");
         var proxyDirectory = Path.Combine(root, "proxy");
@@ -266,19 +262,14 @@ public sealed class GitSnapshotVanishedUntrackedF10Tests
     [Theory]
     [InlineData("victim.txt", false, "Unable to hash tracked working-tree files: ")]
     [InlineData("sub/victim.txt", false, "Unable to hash tracked working-tree files: ")]
-    // Symbolic links are created only on Linux; on other systems the case returns early.
-    [InlineData("link.txt", true, "Unable to read tracked symbolic link 'link.txt'.")]
+    // Symbolic links are created only on Linux; on other systems the case is skipped.
+    [LinuxOnlyInlineData("link.txt", true, "Unable to read tracked symbolic link 'link.txt'.")]
     public async Task BuildAsync_ReturnsDiagnosticWhenTrackedPathVanishedAfterObservation(
         string victimName,
         bool symlink,
         string expectedDiagnosticStart
     )
     {
-        if (symlink && !OperatingSystem.IsLinux())
-        {
-            return;
-        }
-
         var root = CreateTestRoot();
         var repositoryPath = Path.Combine(root, "repository");
         var proxyDirectory = Path.Combine(root, "proxy");
@@ -341,14 +332,9 @@ public sealed class GitSnapshotVanishedUntrackedF10Tests
     // named NUL, and File.GetAttributes for that path throws IOException ('\\.\NUL'),
     // which is neither FileNotFoundException nor DirectoryNotFoundException.
     // BuildAsync must fail closed with a diagnostic instead of throwing.
-    [Fact]
+    [WindowsOnlyFact]
     public async Task BuildAsync_ReturnsDiagnosticWhenUntrackedPathCannotBeObservedOnWindows()
     {
-        if (!OperatingSystem.IsWindows())
-        {
-            return;
-        }
-
         var root = CreateTestRoot();
         var repositoryPath = Path.Combine(root, "repository");
         var devicePath = @"\\?\" + Path.Combine(repositoryPath, "NUL");
@@ -399,6 +385,91 @@ public sealed class GitSnapshotVanishedUntrackedF10Tests
             if (File.Exists(devicePath))
             {
                 File.Delete(devicePath);
+            }
+
+            DeleteTestDirectory(root);
+        }
+    }
+
+    // CR-003 audit G-1: F-2 also exists on Linux. In a directory that can be listed
+    // but not searched (r--r--r--), `git ls-files --others` still lists the untracked
+    // file, but File.GetUnixFileMode throws UnauthorizedAccessException, which
+    // escaped BuildAsync before the fix. A privileged process bypasses the
+    // permissions, so the attribute skips the test visibly for it.
+    [LinuxUnprivilegedFact]
+    [SupportedOSPlatform("linux")]
+    public async Task BuildAsync_ReturnsDiagnosticWhenUntrackedPathCannotBeObservedOnLinux()
+    {
+        var root = CreateTestRoot();
+        var repositoryPath = Path.Combine(root, "repository");
+        var directoryPath = Path.Combine(repositoryPath, "sub");
+        var entryPath = Path.Combine(directoryPath, "entry.txt");
+
+        try
+        {
+            var realGit = new GitProcessRunner();
+            await InitializeRepositoryAsync(realGit, repositoryPath);
+
+            Directory.CreateDirectory(directoryPath);
+            await File.WriteAllTextAsync(entryPath, "G-1 payload\n");
+
+            // Listable but not searchable: names can be read, entries cannot be reached.
+            File.SetUnixFileMode(
+                directoryPath,
+                UnixFileMode.UserRead | UnixFileMode.GroupRead | UnixFileMode.OtherRead
+            );
+
+            // Positive control: Git lists the path, and reading its mode is refused.
+            var listed = await realGit.RunReadOnlyAsync(
+                repositoryPath,
+                [
+                    "-C",
+                    repositoryPath,
+                    "ls-files",
+                    "--others",
+                    "--exclude-per-directory=.gitignore",
+                    "-z",
+                ],
+                TimeSpan.FromMinutes(2),
+                CancellationToken.None
+            );
+            Assert.True(listed.Succeeded, listed.StandardError);
+            Assert.Equal("sub/entry.txt\0", listed.StandardOutput);
+
+            var modeException = Record.Exception(() => File.GetUnixFileMode(entryPath));
+            Assert.True(
+                modeException is UnauthorizedAccessException,
+                "Precondition failed: this test needs an unprivileged user for whom reading "
+                    + "a file mode in a r--r--r-- directory is refused; got "
+                    + (modeException?.GetType().FullName ?? "no exception")
+                    + "."
+            );
+
+            GitSnapshotBuildResult? observed = null;
+            var exception = await Record.ExceptionAsync(async () =>
+            {
+                observed = await new GitSnapshotBuilder(realGit).BuildAsync(repositoryPath);
+            });
+
+            Assert.Null(exception);
+            Assert.NotNull(observed);
+            Assert.False(observed.Succeeded);
+            Assert.Null(observed.Snapshot);
+            Assert.StartsWith(
+                "Unable to observe untracked path 'sub/entry.txt': ",
+                observed.Diagnostic,
+                StringComparison.Ordinal
+            );
+        }
+        finally
+        {
+            // Restore the permissions first, or the directory cannot be deleted.
+            if (Directory.Exists(directoryPath))
+            {
+                File.SetUnixFileMode(
+                    directoryPath,
+                    UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
+                );
             }
 
             DeleteTestDirectory(root);
