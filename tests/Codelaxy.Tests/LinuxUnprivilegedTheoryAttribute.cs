@@ -1,7 +1,8 @@
 namespace Codelaxy.Tests;
 
-// The theory form of LinuxUnprivilegedFact: Linux file permissions must be enforced,
-// so the theory is reported as skipped on other systems and for a privileged process.
+// A theory that needs Linux file permissions to be enforced. A privileged process
+// (root) bypasses them, so the theory is reported as skipped on other systems and
+// for a privileged process instead of passing without checking anything.
 [AttributeUsage(AttributeTargets.Method)]
 public sealed class LinuxUnprivilegedTheoryAttribute : TheoryAttribute
 {

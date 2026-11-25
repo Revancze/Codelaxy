@@ -239,10 +239,12 @@ internal static class GitProxy
         return 0;
     }
 
-    // N-2: a complete listing with a message on standard error.
+    // N-2: a complete listing with a message on standard error. The text shares no
+    // word with Git's own messages (warning, error, fatal, could not, unable, denied,
+    // hint), so a check narrowed to such words cannot pass the test (audit H-1).
     private static async Task<int> AddStandardErrorAsync()
     {
-        await Console.Error.WriteLineAsync("warning: added by the Codelaxy test Git proxy (N-2)");
+        await Console.Error.WriteLineAsync("codelaxy test proxy line (N-2)");
 
         return 0;
     }
