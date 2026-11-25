@@ -562,12 +562,21 @@ public sealed class GitSnapshotBuilder
                 var regularMode = string.Empty;
 
                 // F10: Git enumerated this path, but it may have vanished since.
-                if (
-                    linkTarget is null
-                    && !TryGetUntrackedRegularFileMode(fullPath, out regularMode)
-                )
+                // F-2: any other failure to observe it fails closed (see the helper).
+                string? observationFailure = null;
+
+                if (linkTarget is null)
                 {
-                    return Failure("Repository changed during snapshot capture.");
+                    observationFailure = ObserveUntrackedRegularFileMode(
+                        fullPath,
+                        untrackedPath,
+                        out regularMode
+                    );
+                }
+
+                if (observationFailure is not null)
+                {
+                    return Failure(observationFailure);
                 }
 
                 if (linkTarget is null)
@@ -922,9 +931,16 @@ public sealed class GitSnapshotBuilder
         hash.AppendData(bytes);
     }
 
-    // Returns false only when the path no longer exists (F10). Any other I/O
-    // failure is outside F10 and keeps propagating as before.
-    private static bool TryGetUntrackedRegularFileMode(string path, out string mode)
+    // Reads the mode of an untracked regular file that Git has just listed.
+    // Returns null on success, otherwise the failure diagnostic: a path that no
+    // longer exists is a repository change (F10); any other I/O failure, for example
+    // a file named NUL on Windows (F-2), is reported with the path instead of
+    // escaping BuildAsync.
+    private static string? ObserveUntrackedRegularFileMode(
+        string fullPath,
+        string untrackedPath,
+        out string mode
+    )
     {
         mode = string.Empty;
 
@@ -933,21 +949,25 @@ public sealed class GitSnapshotBuilder
             if (OperatingSystem.IsWindows())
             {
                 // Windows has no executable bit, but existence must still be proven.
-                _ = File.GetAttributes(path);
+                _ = File.GetAttributes(fullPath);
                 mode = "100644";
 
-                return true;
+                return null;
             }
 
-            var unixMode = File.GetUnixFileMode(path);
+            var unixMode = File.GetUnixFileMode(fullPath);
             mode = (unixMode & UnixFileMode.UserExecute) != UnixFileMode.None ? "100755" : "100644";
 
-            return true;
+            return null;
         }
         catch (Exception exception)
             when (exception is FileNotFoundException or DirectoryNotFoundException)
         {
-            return false;
+            return "Repository changed during snapshot capture.";
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return $"Unable to observe untracked path '{untrackedPath}': {exception.Message}";
         }
     }
 }
