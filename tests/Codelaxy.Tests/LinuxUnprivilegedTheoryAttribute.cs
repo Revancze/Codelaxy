@@ -1,12 +1,11 @@
 namespace Codelaxy.Tests;
 
-// A fact that needs Linux file permissions to be enforced. A privileged process
-// (root) bypasses directory permissions, so the test's precondition cannot hold
-// there; the test is then reported as skipped instead of passing silently.
+// The theory form of LinuxUnprivilegedFact: Linux file permissions must be enforced,
+// so the theory is reported as skipped on other systems and for a privileged process.
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class LinuxUnprivilegedFactAttribute : FactAttribute
+public sealed class LinuxUnprivilegedTheoryAttribute : TheoryAttribute
 {
-    public LinuxUnprivilegedFactAttribute()
+    public LinuxUnprivilegedTheoryAttribute()
     {
         if (!OperatingSystem.IsLinux())
         {
