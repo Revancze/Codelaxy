@@ -534,6 +534,17 @@ public sealed class GitSnapshotBuilder
             );
         }
 
+        // N-2: a directory Git cannot read is reported only as a warning, with exit code
+        // 0 and its content missing from the listing. Any message on standard error
+        // therefore makes the listing untrustworthy; Git's language is not set, so the
+        // text itself is not inspected.
+        if (!string.IsNullOrWhiteSpace(untrackedResult.StandardError))
+        {
+            return Failure(
+                CreateGitDiagnostic("Unable to enumerate untracked files", untrackedResult)
+            );
+        }
+
         var untrackedPaths = untrackedResult.StandardOutput.Split(
             '\0',
             StringSplitOptions.RemoveEmptyEntries

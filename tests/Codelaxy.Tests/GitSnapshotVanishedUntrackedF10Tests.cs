@@ -20,7 +20,7 @@ namespace Codelaxy.Tests;
 //   because the vanished file surfaced later as a `git hash-object` failure.
 //   On Windows this test therefore pins the diagnostic classification only.
 [Collection("GitWrapperIsolation")]
-public sealed class GitSnapshotVanishedUntrackedF10Tests
+public sealed partial class GitSnapshotVanishedUntrackedF10Tests
 {
     [Theory]
     [InlineData("victim.txt")]
@@ -391,19 +391,28 @@ public sealed class GitSnapshotVanishedUntrackedF10Tests
         }
     }
 
-    // CR-003 audit G-1: F-2 also exists on Linux. In a directory that can be listed
-    // but not searched (r--r--r--), `git ls-files --others` still lists the untracked
-    // file, but File.GetUnixFileMode throws UnauthorizedAccessException, which
-    // escaped BuildAsync before the fix. A privileged process bypasses the
-    // permissions, so the attribute skips the test visibly for it.
-    [LinuxUnprivilegedFact]
+    // CR-003 audit G-1: F-2 also exists on Linux. When the directory of an entry that
+    // `git ls-files --others` has just listed loses its search permission (r--r--r--),
+    // File.GetUnixFileMode can no longer reach the entry (for a symbolic link,
+    // FileInfo.LinkTarget returns null first) and throws UnauthorizedAccessException,
+    // which escaped BuildAsync before the fix. The test proxy makes that change right
+    // after Git's clean listing: a directory that is already r--r--r-- makes Git warn,
+    // which is the N-2 case. A privileged process bypasses the permissions, so the
+    // attribute skips the test visibly for it.
+    [LinuxUnprivilegedTheory]
+    [InlineData("sub/entry.txt", false)]
+    [InlineData("sub/entry-link", true)]
     [SupportedOSPlatform("linux")]
-    public async Task BuildAsync_ReturnsDiagnosticWhenUntrackedPathCannotBeObservedOnLinux()
+    public async Task BuildAsync_ReturnsDiagnosticWhenUntrackedPathCannotBeObservedOnLinux(
+        string victimName,
+        bool symlink
+    )
     {
         var root = CreateTestRoot();
         var repositoryPath = Path.Combine(root, "repository");
+        var proxyDirectory = Path.Combine(root, "proxy");
         var directoryPath = Path.Combine(repositoryPath, "sub");
-        var entryPath = Path.Combine(directoryPath, "entry.txt");
+        var entryPath = Path.Combine(repositoryPath, victimName);
 
         try
         {
@@ -411,30 +420,34 @@ public sealed class GitSnapshotVanishedUntrackedF10Tests
             await InitializeRepositoryAsync(realGit, repositoryPath);
 
             Directory.CreateDirectory(directoryPath);
-            await File.WriteAllTextAsync(entryPath, "G-1 payload\n");
 
-            // Listable but not searchable: names can be read, entries cannot be reached.
-            File.SetUnixFileMode(
-                directoryPath,
-                UnixFileMode.UserRead | UnixFileMode.GroupRead | UnixFileMode.OtherRead
-            );
+            if (symlink)
+            {
+                File.CreateSymbolicLink(entryPath, "entry-target");
+            }
+            else
+            {
+                await File.WriteAllTextAsync(entryPath, "G-1 payload\n");
+            }
 
-            // Positive control: Git lists the path, and reading its mode is refused.
-            var listed = await realGit.RunReadOnlyAsync(
-                repositoryPath,
-                [
-                    "-C",
-                    repositoryPath,
-                    "ls-files",
-                    "--others",
-                    "--exclude-per-directory=.gitignore",
-                    "-z",
-                ],
-                TimeSpan.FromMinutes(2),
-                CancellationToken.None
+            await DeployProxyAsync(realGit, proxyDirectory, victimName);
+            var proxyExecutable = await ArmProxyModeAsync(proxyDirectory, "deny-traverse");
+            var builder = new GitSnapshotBuilder(new GitProcessRunner(proxyExecutable));
+
+            GitSnapshotBuildResult? observed = null;
+            var exception = await Record.ExceptionAsync(async () =>
+            {
+                observed = await builder.BuildAsync(repositoryPath);
+            });
+
+            // Positive control: the proxy acted on Git's clean listing of the victim, and
+            // the entry can no longer be reached.
+            var hitPath = Path.Combine(proxyDirectory, "f10-hit.bin");
+            Assert.True(File.Exists(hitPath), "The proxy did not intercept the enumeration.");
+            Assert.Equal(
+                victimName + "\0",
+                Encoding.UTF8.GetString(await File.ReadAllBytesAsync(hitPath))
             );
-            Assert.True(listed.Succeeded, listed.StandardError);
-            Assert.Equal("sub/entry.txt\0", listed.StandardOutput);
 
             var modeException = Record.Exception(() => File.GetUnixFileMode(entryPath));
             Assert.True(
@@ -445,18 +458,12 @@ public sealed class GitSnapshotVanishedUntrackedF10Tests
                     + "."
             );
 
-            GitSnapshotBuildResult? observed = null;
-            var exception = await Record.ExceptionAsync(async () =>
-            {
-                observed = await new GitSnapshotBuilder(realGit).BuildAsync(repositoryPath);
-            });
-
             Assert.Null(exception);
             Assert.NotNull(observed);
             Assert.False(observed.Succeeded);
             Assert.Null(observed.Snapshot);
             Assert.StartsWith(
-                "Unable to observe untracked path 'sub/entry.txt': ",
+                $"Unable to observe untracked path '{victimName}': ",
                 observed.Diagnostic,
                 StringComparison.Ordinal
             );

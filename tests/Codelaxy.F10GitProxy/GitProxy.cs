@@ -14,8 +14,13 @@ namespace Codelaxy.F10GitProxy;
 //                whose whole output is exactly the victim (F10, unchanged)
 //     index:     after the first `ls-files --stage -t -z` that lists the victim
 //     hash:      before the first `hash-object --no-filters --stdin-paths`
-//   "index" and "hash" fire once: when f10-hit.bin exists the proxy only forwards,
-//   so the builder's later reads of the index see the real state, not a proxy error.
+//     deny-traverse (Unix only, victim needs a directory part): after the untracked
+//                enumeration whose whole output is exactly the victim, the victim's
+//                directory becomes r--r--r-- (listable, not searchable)
+//     stderr:    after an untracked enumeration that lists the victim, a line is
+//                added to Git's standard error; the output stays complete (N-2)
+//   All modes except "untracked" fire once: when f10-hit.bin exists the proxy only
+//   forwards, so the builder's later Git calls see the real state, not a proxy error.
 internal static class GitProxy
 {
     private const string ConfigurationFileName = "f10-git-proxy.conf";
@@ -24,6 +29,8 @@ internal static class GitProxy
     private const string UntrackedMode = "untracked";
     private const string IndexMode = "index";
     private const string HashMode = "hash";
+    private const string DenyTraverseMode = "deny-traverse";
+    private const string StandardErrorMode = "stderr";
 
     public static async Task<int> RunAsync(string[] arguments)
     {
@@ -109,6 +116,11 @@ internal static class GitProxy
             || !File.Exists(lines[0])
             || !IsAllowedVictim(lines[1])
             || (lines.Length == 3 && !IsKnownMode(lines[2]))
+            || (
+                lines.Length == 3
+                && lines[2] == DenyTraverseMode
+                && GetVictimDirectory(lines[1]) is null
+            )
         )
         {
             await Console.Error.WriteLineAsync("Invalid F10 Git proxy configuration.");
@@ -122,8 +134,9 @@ internal static class GitProxy
         );
     }
 
-    // Deletes the victim after a listing that names it: the untracked enumeration
-    // (F10) or, once, the index listing (CR-003). Returns 0 when nothing applies.
+    // Acts on the victim after a listing that names it: the untracked enumeration
+    // (F10, and once for "deny-traverse" and "stderr") or, once, the index listing
+    // (CR-003). Returns 0 when nothing applies.
     private static async Task<int> TriggerAfterListingAsync(
         ProxyConfiguration configuration,
         bool armed,
@@ -133,18 +146,9 @@ internal static class GitProxy
         string hitPath
     )
     {
-        bool victimListed;
+        var victimListed = GetVictimListed(configuration, armed, arguments, output);
 
-        if (configuration.Mode == UntrackedMode && IsUntrackedEnumeration(arguments))
-        {
-            var expected = Encoding.UTF8.GetBytes(configuration.Victim + "\0");
-            victimListed = output.AsSpan().SequenceEqual(expected);
-        }
-        else if (armed && configuration.Mode == IndexMode && IsIndexEnumeration(arguments))
-        {
-            victimListed = IndexListsPath(output, configuration.Victim);
-        }
-        else
+        if (victimListed is null)
         {
             return 0;
         }
@@ -155,20 +159,92 @@ internal static class GitProxy
             return 5;
         }
 
-        if (!victimListed)
+        if (victimListed == false)
         {
             await Console.Error.WriteLineAsync("F10 victim not enumerated.");
             return 3;
         }
 
-        var deleted = await DeleteVictimAsync(expectedRepository, configuration.Victim);
-
-        if (deleted != 0)
+        var acted = configuration.Mode switch
         {
-            return deleted;
+            DenyTraverseMode => await DenyTraverseAsync(expectedRepository, configuration.Victim),
+            StandardErrorMode => await AddStandardErrorAsync(),
+            _ => await DeleteVictimAsync(expectedRepository, configuration.Victim),
+        };
+
+        if (acted != 0)
+        {
+            return acted;
         }
 
         await File.WriteAllBytesAsync(hitPath, output);
+
+        return 0;
+    }
+
+    // null when the call is not the listing this mode acts on; otherwise whether the
+    // listing names the victim the way the mode requires.
+    private static bool? GetVictimListed(
+        ProxyConfiguration configuration,
+        bool armed,
+        string[] arguments,
+        byte[] output
+    )
+    {
+        var untracked = IsUntrackedEnumeration(arguments);
+
+        return configuration.Mode switch
+        {
+            UntrackedMode when untracked => IsExactlyVictim(output, configuration.Victim),
+            DenyTraverseMode when armed && untracked => IsExactlyVictim(
+                output,
+                configuration.Victim
+            ),
+            StandardErrorMode when armed && untracked => ZeroTerminatedListContains(
+                output,
+                configuration.Victim
+            ),
+            IndexMode when armed && IsIndexEnumeration(arguments) => IndexListsPath(
+                output,
+                configuration.Victim
+            ),
+            _ => null,
+        };
+    }
+
+    private static bool IsExactlyVictim(byte[] output, string victim) =>
+        output.AsSpan().SequenceEqual(Encoding.UTF8.GetBytes(victim + "\0"));
+
+    private static bool ZeroTerminatedListContains(byte[] output, string path) =>
+        Encoding
+            .UTF8.GetString(output)
+            .Split('\0', StringSplitOptions.RemoveEmptyEntries)
+            .Contains(path, StringComparer.Ordinal);
+
+    // The victim's directory stays listable but is no longer searchable, so the entry
+    // Git has just listed can no longer be reached (CR-003 audit G-1).
+    private static async Task<int> DenyTraverseAsync(string repository, string victimName)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            await Console.Error.WriteLineAsync("F10 deny-traverse mode needs Unix permissions.");
+            return 6;
+        }
+
+        File.SetUnixFileMode(
+            Path.Combine(repository, GetVictimDirectory(victimName)!),
+            UnixFileMode.UserRead | UnixFileMode.GroupRead | UnixFileMode.OtherRead
+        );
+
+        return 0;
+    }
+
+    // N-2: a complete listing with a message on standard error. The text shares no
+    // word with Git's own messages (warning, error, fatal, could not, unable, denied,
+    // hint), so a check narrowed to such words cannot pass the test (audit H-1).
+    private static async Task<int> AddStandardErrorAsync()
+    {
+        await Console.Error.WriteLineAsync("codelaxy test proxy line (N-2)");
 
         return 0;
     }
@@ -252,7 +328,8 @@ internal static class GitProxy
                 : StringComparison.Ordinal
         );
 
-    private static bool IsKnownMode(string mode) => mode is UntrackedMode or IndexMode or HashMode;
+    private static bool IsKnownMode(string mode) =>
+        mode is UntrackedMode or IndexMode or HashMode or DenyTraverseMode or StandardErrorMode;
 
     // "name" or "directory/name"; every part is a plain name (never ".", "..", empty,
     // rooted or containing a separator), so the victim always lies inside ../repository.
